@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .app-office {
+    --bg: #f5f5f4;
+    --surface: #ffffff;
+    --surface-2: #fafaf9;
+    --surface-solid: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+    --accent: #5b8def;
+    --pending: #5b8def;
+    --query: #dc2626;
+    --ordered: #16a34a;
+    --ref: #1e4a7a;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background-color: var(--bg);
+  }
+  .app-office .font-mono { font-family: 'JetBrains Mono', monospace; }
+}
+
+@keyframes query-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.3); }
+  50%       { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0); }
+}
+.animate-query-pulse { animation: query-pulse 1.8s ease-in-out infinite; }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateX(6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-panel-in { animation: panel-in 0.2s ease-out; }
+
+.office-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(91, 141, 239, 0.07), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(22, 163, 74, 0.05), transparent),
+    var(--bg);
+}
+
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover {
+  border-color: #d6d3d1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.input-field {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--pending);
+  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
+}
+
+.chat-in {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: var(--text);
+  border-radius: 0.25rem 1rem 1rem 1rem;
+}
+.chat-out {
+  background: #f5f5f4;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 1rem 0.25rem 1rem 1rem;
+}
+
+/* Queue list | ticket details | messages — messages gets the most room */
+.office-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+@media (min-width: 1024px) {
+  .office-workspace {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.85fr) minmax(300px, 1fr) minmax(320px, 1.15fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
