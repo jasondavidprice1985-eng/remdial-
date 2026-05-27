@@ -8,6 +8,32 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
+router.get('/tickets/:id/messages', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { viewer } = req.query;
+    const role = viewer === 'manager' ? 'manager' : 'office';
+    const r = await pool.query(`
+      SELECT id, ticket_id, sender, text, audio_path, image_path, is_query, read_at,
+        created_at AT TIME ZONE 'UTC' AS created_at
+      FROM messages WHERE ticket_id=$1 ORDER BY created_at ASC
+    `, [req.params.id]);
+    const messages = r.rows.map(m => ({
+      id: m.id, ticket_id: m.ticket_id, sender: m.sender,
+      text: m.text ?? null, audio_path: m.audio_path ?? null,
+      image_path: m.image_path ?? null, is_query: m.is_query,
+      read_at: m.read_at ? (m.read_at instanceof Date ? m.read_at.toISOString() : String(m.read_at)) : null,
+      created_at: m.created_at instanceof Date ? m.created_at.toISOString() : String(m.created_at),
+    }));
+    // Mark unread messages as read
+    const otherSender = role === 'office' ? 'manager' : 'office';
+    await pool.query(
+      `UPDATE messages SET read_at=NOW() WHERE ticket_id=$1 AND sender=$2 AND read_at IS NULL`,
+      [req.params.id, otherSender]
+    );
+    return res.json({ messages });
+  } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
+});
+
 router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   const { sender, text, audio, audio_mime, image, is_query } = req.body;
