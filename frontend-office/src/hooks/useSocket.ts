@@ -23,9 +23,17 @@ export function useSocket(token: string | null): Socket {
     }
     function identify() { socket.emit('client:identify', { role: 'office' }); }
     socket.auth = { token };
-    if (socket.connected) socket.disconnect();
-    socket.once('connect', identify);
-    socket.connect();
+    // Re-identify on every (re)connect — socket.io auto-reconnects after
+    // network blips; without this we'd silently drop out of the 'office'
+    // room and stop receiving ticket:updated broadcasts.
+    socket.on('connect', identify);
+    if (socket.connected) {
+      socket.disconnect();
+      socket.connect();
+    } else {
+      socket.connect();
+    }
+    return () => { socket.off('connect', identify); };
   }, [token]);
 
   return socketRef.current;
