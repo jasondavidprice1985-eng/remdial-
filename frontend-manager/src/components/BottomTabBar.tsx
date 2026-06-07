@@ -1,16 +1,16 @@
-type Tab = 'new' | 'reports';
+type Tab = 'reports' | 'new' | 'archive';
 
 interface Props {
   active: Tab;
   onChange: (tab: Tab) => void;
-  reportCount: number;
-  unreadTotal: number;
+  attentionCount: number;
 }
 
-export default function BottomTabBar({ active, onChange, reportCount, unreadTotal }: Props) {
+export default function BottomTabBar({ active, onChange, attentionCount }: Props) {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'reports', label: 'Reports' },
-    { id: 'new', label: 'New Report' },
+    { id: 'new', label: 'New Remedial' },
+    { id: 'archive', label: 'Archive' },
   ];
 
   return (
@@ -19,7 +19,7 @@ export default function BottomTabBar({ active, onChange, reportCount, unreadTota
       <div className="max-w-lg mx-auto flex">
         {tabs.map(tab => {
           const isActive = active === tab.id;
-          const showUnread = tab.id === 'reports' && unreadTotal > 0;
+          const showAttention = tab.id === 'reports' && attentionCount > 0;
           return (
             <button key={tab.id} type="button" onClick={() => onChange(tab.id)}
               className="relative flex-1 flex flex-col items-center justify-center min-h-[56px] transition-colors"
@@ -28,16 +28,10 @@ export default function BottomTabBar({ active, onChange, reportCount, unreadTota
                 <span className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-full bg-[var(--action)]" />
               )}
               <span className="text-base font-semibold">{tab.label}</span>
-              {tab.id === 'reports' && reportCount > 0 && (
-                <span className="absolute top-2 right-[calc(50%-2.75rem)] min-w-[20px] h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center text-white bg-stone-400"
-                  title={`${reportCount} report${reportCount > 1 ? 's' : ''}`}>
-                  {reportCount}
-                </span>
-              )}
-              {showUnread && (
-                <span className="absolute top-2 right-[calc(50%-4.5rem)] min-w-[20px] h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center text-white bg-[var(--danger)]"
-                  title={`${unreadTotal} report${unreadTotal > 1 ? 's' : ''} need your reply`}>
-                  {unreadTotal}
+              {showAttention && (
+                <span className="absolute top-2 right-[calc(50%-2.75rem)] min-w-[20px] h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center text-white bg-[var(--danger)]"
+                  title={`${attentionCount} report${attentionCount > 1 ? 's' : ''} need your reply`}>
+                  {attentionCount}
                 </span>
               )}
             </button>

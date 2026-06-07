@@ -7,6 +7,12 @@ import { createSchema } from './db/schema';
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/jason-price/remedial/backend/uploads';
 
+function swallowIfAlreadyExists(e: unknown): void {
+  const code = (e as { code?: string }).code;
+  if (code === '42701' || code === '42P07' || code === '42710') return; // duplicate_column, duplicate_table, duplicate_object
+  throw e;
+}
+
 export async function initDB(): Promise<void> {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -19,12 +25,12 @@ export async function initDB(): Promise<void> {
   );
 
   // Migrations: add columns added after initial deploy
-  await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ`).catch(() => null);
-  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ`).catch(() => null);
-  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_path VARCHAR(255)`).catch(() => null);
+  await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_path VARCHAR(255)`).catch(swallowIfAlreadyExists);
   // Allow image-only messages
-  await pool.query(`ALTER TABLE messages DROP CONSTRAINT IF EXISTS chk_has_content`).catch(() => null);
-  await pool.query(`ALTER TABLE messages ADD CONSTRAINT chk_has_content CHECK (text IS NOT NULL OR audio_path IS NOT NULL OR image_path IS NOT NULL)`).catch(() => null);
+  await pool.query(`ALTER TABLE messages DROP CONSTRAINT IF EXISTS chk_has_content`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE messages ADD CONSTRAINT chk_has_content CHECK (text IS NOT NULL OR audio_path IS NOT NULL OR image_path IS NOT NULL)`).catch(swallowIfAlreadyExists);
 
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_tickets_status  ON tickets(status)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_tickets_created ON tickets(created_at DESC)`);

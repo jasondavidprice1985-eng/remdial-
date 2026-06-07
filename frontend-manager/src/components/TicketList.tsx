@@ -12,9 +12,17 @@ interface Props {
   respondedQueries: Set<string>;
   onTicketUpdate: (ticket: Ticket) => void;
   onManagerResponded: (ticketId: string) => void;
+  emptyTitle?: string;
+  emptySubtitle?: string;
+  emptyIcon?: 'reports' | 'archive';
 }
 
-export default function TicketList({ tickets, loading, respondedQueries, onTicketUpdate, onManagerResponded }: Props) {
+export default function TicketList({
+  tickets, loading, respondedQueries, onTicketUpdate, onManagerResponded,
+  emptyTitle = 'No reports yet',
+  emptySubtitle = 'Tap New Remedial below to submit your first remedial ticket.',
+  emptyIcon = 'reports',
+}: Props) {
   const [selected, setSelected] = useState<Ticket | null>(null);
   const sorted = useMemo(() => sortTickets(tickets, respondedQueries), [tickets, respondedQueries]);
   const needsAttention = countNeedingAttention(tickets, respondedQueries);
@@ -29,10 +37,7 @@ export default function TicketList({ tickets, loading, respondedQueries, onTicke
   }
 
   if (tickets.length === 0) {
-    return (
-      <EmptyState icon="reports" title="No reports yet"
-        subtitle="Tap New Report below to submit your first remedial ticket." />
-    );
+    return <EmptyState icon={emptyIcon} title={emptyTitle} subtitle={emptySubtitle} />;
   }
 
   return (

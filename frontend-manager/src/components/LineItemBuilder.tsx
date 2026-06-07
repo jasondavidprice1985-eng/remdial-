@@ -1,5 +1,7 @@
-import { LineItemInput, TicketReason } from '@shared/types';
-import { REASONS } from '../constants/reasons';
+import { useState } from 'react';
+import { LineItemInput } from '@shared/types';
+import { REASON_LABEL } from '../constants/reasons';
+import LineItemSheet from './LineItemSheet';
 
 interface Props {
   items: LineItemInput[];
@@ -7,48 +9,79 @@ interface Props {
   disabled: boolean;
 }
 
+const EMPTY: LineItemInput = { description: '', quantity: 1, reason: '' };
+
+function isFilled(row: LineItemInput): boolean {
+  return row.description.trim().length > 0 && row.quantity >= 1 && row.reason !== '';
+}
+
 export default function LineItemBuilder({ items, onChange, disabled }: Props) {
-  function update(i: number, patch: Partial<LineItemInput>) {
-    onChange(items.map((row, idx) => idx === i ? { ...row, ...patch } : row));
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  function save(i: number, patch: LineItemInput) {
+    onChange(items.map((row, idx) => idx === i ? patch : row));
+    setEditingIndex(null);
+  }
+
+  function clearRow(i: number) {
+    onChange(items.map((row, idx) => idx === i ? { ...EMPTY } : row));
+    setEditingIndex(null);
+  }
+
+  function addRow() {
+    onChange([...items, { ...EMPTY }]);
   }
 
   return (
     <div className="space-y-2">
-      {items.map((row, i) => (
-        <div key={i} className="p-4 rounded-xl space-y-3 animate-slide-up bg-stone-50 border border-[var(--border)]">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-[var(--muted)] tracking-wider">ITEM {i + 1}</span>
-            {items.length > 1 && (
-              <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} disabled={disabled}
-                className="text-[var(--danger)] text-sm font-semibold min-h-[36px] px-2">Remove</button>
+      {items.map((row, i) => {
+        const filled = isFilled(row);
+        return (
+          <button key={i} type="button" disabled={disabled}
+            onClick={() => setEditingIndex(i)}
+            className={`w-full text-left p-3 rounded-xl border transition-colors ${
+              filled
+                ? 'bg-white border-[var(--border)]'
+                : 'bg-stone-50 border-dashed border-stone-300'
+            }`}>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-bold text-[var(--muted)] tracking-wider">ITEM {i + 1}</span>
+              <span className="text-sm font-semibold text-[var(--action)]">
+                {filled ? 'Edit' : 'Tap to add'}
+              </span>
+            </div>
+            {filled && (
+              <div className="mt-1.5 space-y-0.5">
+                <p className="text-sm font-medium">{row.description} <span className="text-[var(--muted)]">× {row.quantity}</span></p>
+                <p className="text-xs text-[var(--muted)]">{REASON_LABEL[row.reason] || row.reason}</p>
+              </div>
             )}
-          </div>
-          <input className="input-field" placeholder="Description *" maxLength={200} value={row.description}
-            onChange={e => update(i, { description: e.target.value })} disabled={disabled} required />
-          <input type="number" min={1} className="input-field w-20 text-center font-mono" value={row.quantity}
-            onChange={e => update(i, { quantity: Math.max(1, parseInt(e.target.value) || 1) })} disabled={disabled} required />
-          <div className="flex flex-wrap gap-2">
-            {REASONS.map(r => {
-              const selected = row.reason === r.value;
-              return (
-                <button key={r.value} type="button" disabled={disabled}
-                  onClick={() => update(i, { reason: r.value as TicketReason })}
-                  className={`min-h-[40px] px-3.5 py-2 text-sm font-medium rounded-full border transition-colors ${
-                    selected
-                      ? 'bg-stone-800 text-white border-stone-800'
-                      : 'bg-white text-stone-700 border-stone-300'
-                  }`}>
-                  {r.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-      <button type="button" onClick={() => onChange([...items, { description: '', quantity: 1, reason: '' }])}
-        disabled={disabled} className="text-base font-semibold text-[var(--action)] min-h-[44px]">
+          </button>
+        );
+      })}
+      <button type="button" onClick={addRow} disabled={disabled}
+        className="text-base font-semibold text-[var(--action)] min-h-[44px]">
         + Add Item
       </button>
+
+      {editingIndex !== null && (
+        <LineItemSheet
+          index={editingIndex}
+          initial={items[editingIndex]}
+          canDelete={items.length > 1}
+          onSave={(item) => save(editingIndex, item)}
+          onDelete={() => {
+            // If more than 1 row, remove it; otherwise just clear it.
+            if (items.length > 1) {
+              onChange(items.filter((_, idx) => idx !== editingIndex));
+              setEditingIndex(null);
+            } else {
+              clearRow(editingIndex);
+            }
+          }}
+          onClose={() => setEditingIndex(null)}
+        />
+      )}
     </div>
   );
 }

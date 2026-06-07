@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Ticket } from '@shared/types';
 import { useSocket } from './hooks/useSocket';
 import { useTicketSubmit } from './hooks/useTicketSubmit';
@@ -18,7 +18,9 @@ export default function App() {
   const socket = useSocket();
   const [tab, setTab] = useState<Tab>('reports');
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [archivedTickets, setArchivedTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingArchive, setLoadingArchive] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [banner, setBanner] = useState<BannerState>('none');
   const [submittedRef, setSubmittedRef] = useState('');
@@ -29,6 +31,14 @@ export default function App() {
     setTickets(data.tickets || []);
   }, []);
 
+  const loadArchive = useCallback(async () => {
+    setLoadingArchive(true);
+    try {
+      const data = await (await fetch(`${API}/tickets?viewer=manager&status=archived`)).json();
+      setArchivedTickets(data.tickets || []);
+    } finally { setLoadingArchive(false); }
+  }, []);
+
   const onSynced = useCallback(() => setBanner('synced'), []);
   const { submitViaSocket, formLocked } = useTicketSubmit(socket, { onSynced, refreshTickets });
 
@@ -37,12 +47,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (tab === 'archive') loadArchive();
+  }, [tab, loadArchive]);
+
+  useEffect(() => {
     const onUpdated = ({ ticket }: { ticket: Ticket }) => handleTicketUpdate(ticket, setTickets);
-    const onArchived = ({ ticketId }: { ticketId: string }) => setTickets(prev => prev.filter(t => t.id !== ticketId));
+    const onArchived = ({ ticketId }: { ticketId: string }) => {
+      setTickets(prev => prev.filter(t => t.id !== ticketId));
+      // If archive tab is currently shown, refresh it so the new one appears
+      if (tab === 'archive') loadArchive();
+    };
     socket.on('ticket:updated', onUpdated);
     socket.on('ticket:archived', onArchived);
     return () => { socket.off('ticket:updated', onUpdated); socket.off('ticket:archived', onArchived); };
-  }, [socket]);
+  }, [socket, tab, loadArchive]);
 
   useEffect(() => {
     if (banner === 'offline' || banner === 'none') return;
@@ -75,14 +93,21 @@ export default function App() {
       <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">
         <FieldRemHeader />
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
-          {tab === 'new' ? (
+          {tab === 'new' && (
             <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />
-          ) : (
+          )}
+          {tab === 'reports' && (
             <TicketList tickets={tickets} loading={loading} respondedQueries={respondedQueries}
               onTicketUpdate={t => handleTicketUpdate(t, setTickets)} onManagerResponded={handleManagerResponded} />
           )}
+          {tab === 'archive' && (
+            <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
+              onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
+              emptyIcon="archive" emptyTitle="No archived reports"
+              emptySubtitle="Reports you mark as fitted will appear here." />
+          )}
         </main>
-        <BottomTabBar active={tab} onChange={setTab} reportCount={tickets.length} unreadTotal={attentionCount(tickets)} />
+        <BottomTabBar active={tab} onChange={setTab} attentionCount={attentionCount(tickets)} />
       </div>
     </div>
   );

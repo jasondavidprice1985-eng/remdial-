@@ -67,14 +67,25 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
       const payloadPromise = getAudioPayload();
       stopRecording();
       const payload = await payloadPromise;
-      if (!payload) return;
+      if (!payload) {
+        alert('No audio was captured. Try recording for a couple of seconds before stopping.');
+        return;
+      }
       setSending(true);
       try {
         const res = await fetch(`${API}/tickets/${ticketId}/messages`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender: role, text: null, audio: payload.audio, audio_mime: payload.audio_mime, is_query: false }),
         });
-        if (res.ok && role === 'manager') onManagerResponded?.();
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          alert(`Failed to send voice note (HTTP ${res.status}): ${body.error || 'unknown error'}`);
+          return;
+        }
+        if (role === 'manager') onManagerResponded?.();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Network error';
+        alert(`Failed to send voice note: ${msg}`);
       } finally { setSending(false); }
     } else {
       await startRecording();

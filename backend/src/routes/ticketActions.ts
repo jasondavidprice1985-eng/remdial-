@@ -2,7 +2,6 @@ import { Router, Request, Response } from 'express';
 import { Server } from 'socket.io';
 import { pool } from '../db';
 import { getTicketById, rowToTicket } from '../services/ticketService';
-import { saveAudio } from '../utils/media';
 import { sanitise } from '../utils/sanitise';
 import { requireAuth } from '../middleware/auth';
 
@@ -60,13 +59,13 @@ router.patch('/tickets/:id/order', requireAuth, async (req: Request, res: Respon
   const io: Server = req.app.get('io');
   let { po_number, delivery_date } = req.body;
   if (!po_number || String(po_number).length > 100) return res.status(400).json({ error: 'po_number required (max 100)' });
-  // If delivery_date not supplied, fall back to the stored next_delivery_date
-  if (!delivery_date) {
-    const setting = await pool.query(`SELECT value FROM settings WHERE key='next_delivery_date'`);
-    delivery_date = setting.rows[0]?.value ?? null;
-  }
-  if (!delivery_date || !/^\d{4}-\d{2}-\d{2}$/.test(delivery_date)) return res.status(400).json({ error: 'delivery_date must be YYYY-MM-DD' });
   try {
+    // If delivery_date not supplied, fall back to the stored next_delivery_date
+    if (!delivery_date) {
+      const setting = await pool.query(`SELECT value FROM settings WHERE key='next_delivery_date'`);
+      delivery_date = setting.rows[0]?.value ?? null;
+    }
+    if (!delivery_date || !/^\d{4}-\d{2}-\d{2}$/.test(delivery_date)) return res.status(400).json({ error: 'delivery_date must be YYYY-MM-DD' });
     const r = await pool.query(`
       UPDATE tickets SET status='ordered',po_number=$1,delivery_date=$2,updated_at=NOW() WHERE id=$3
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,

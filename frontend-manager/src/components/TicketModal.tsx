@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Ticket } from '@shared/types';
 import StatusBadge from './StatusBadge';
 import ChatPanel from './ChatPanel';
@@ -5,6 +6,7 @@ import ImageLightbox, { useLightbox } from './ImageLightbox';
 import { useSwipeToClose } from '../hooks/useSwipeToClose';
 import { LineItemsList, ImageStrip } from '../utils/ticketDisplay';
 
+const API = import.meta.env.VITE_API_URL as string;
 
 interface Props {
   ticket: Ticket;
@@ -16,6 +18,21 @@ interface Props {
 export default function TicketModal({ ticket, onClose, onTicketUpdate, onManagerResponded }: Props) {
   const lightbox = useLightbox();
   const swipe = useSwipeToClose(onClose);
+  const [archiving, setArchiving] = useState(false);
+
+  async function confirmFitted() {
+    if (archiving) return;
+    if (!window.confirm('Mark this remedial as fitted? It will be archived.')) return;
+    setArchiving(true);
+    try {
+      const res = await fetch(`${API}/tickets/${ticket.id}/archive`, { method: 'PATCH' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      onClose();
+    } catch {
+      setArchiving(false);
+      window.alert('Could not archive ticket. Please try again.');
+    }
+  }
 
   const delivery = ticket.delivery_request?.type === 'specific_date'
     ? ticket.delivery_request.date : 'Next delivery';
@@ -56,6 +73,16 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
               <LineItemsList ticket={ticket} />
             </div>
             <ImageStrip images={ticket.images} onSelect={lightbox.open} />
+            {ticket.status === 'ordered' && (
+              <button
+                onClick={confirmFitted}
+                disabled={archiving}
+                className="w-full py-3 rounded-xl font-semibold text-white disabled:opacity-50"
+                style={{ background: 'var(--success)' }}
+              >
+                {archiving ? 'Archiving…' : 'Confirm Fitted'}
+              </button>
+            )}
           </div>
           <div className="border-t border-[var(--border)]" style={{ height: '300px' }}>
             <ChatPanel ticketId={ticket.id} role="manager"

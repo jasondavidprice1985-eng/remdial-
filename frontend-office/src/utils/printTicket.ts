@@ -1,6 +1,12 @@
 import { Ticket } from '@shared/types';
 import { REASON_LABEL } from '../constants/reasons';
 
+function escapeHtml(s: string): string {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
 function getLineItems(ticket: Ticket) {
   if (ticket.line_items?.length) return ticket.line_items;
   return [{ description: ticket.items, quantity: ticket.quantity, reason: ticket.reason }];
@@ -16,16 +22,16 @@ export function printTicket(ticket: Ticket, origin: string) {
 
   const rows = items.map((i, idx) => `
     <tr class="${idx % 2 === 1 ? 'alt' : ''}">
-      <td class="desc">${i.description}</td>
+      <td class="desc">${escapeHtml(i.description)}</td>
       <td class="center">${i.quantity}</td>
-      <td>${REASON_LABEL[i.reason] || i.reason}</td>
+      <td>${escapeHtml(REASON_LABEL[i.reason] || i.reason)}</td>
     </tr>`).join('');
 
   const deliveryType = ticket.delivery_request?.type === 'specific_date' ? 'Specific Date' : 'Next Delivery';
 
   const orderBlock = ticket.po_number ? `
     <div class="order-box">
-      <div class="order-row"><span class="order-label">Order Number</span><span class="order-val">${ticket.po_number}</span></div>
+      <div class="order-row"><span class="order-label">Order Number</span><span class="order-val">${escapeHtml(ticket.po_number)}</span></div>
       <div class="order-row"><span class="order-label">Delivery</span><span class="order-val">${ticket.delivery_date ? fmt(ticket.delivery_date) : deliveryType}</span></div>
     </div>` : '';
 
@@ -46,7 +52,7 @@ export function printTicket(ticket: Ticket, origin: string) {
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Works Order ${ticket.ref}</title>
+<title>Works Order ${escapeHtml(ticket.ref)}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Arial', sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; }
@@ -119,26 +125,26 @@ export function printTicket(ticket: Ticket, origin: string) {
     </div>
     <div class="ref-block">
       <div class="ref-label">Reference</div>
-      <div class="ref-num">${ticket.ref}</div>
+      <div class="ref-num">${escapeHtml(ticket.ref)}</div>
     </div>
   </div>
 
   <div class="meta-grid">
     <div class="meta-cell">
       <div class="meta-label">Developer</div>
-      <div class="meta-val">${ticket.developer}</div>
+      <div class="meta-val">${escapeHtml(ticket.developer)}</div>
     </div>
     <div class="meta-cell">
       <div class="meta-label">Status</div>
-      <div class="meta-val"><span class="status-badge">${statusLabel[ticket.status] || ticket.status}</span></div>
+      <div class="meta-val"><span class="status-badge">${escapeHtml(statusLabel[ticket.status] || ticket.status)}</span></div>
     </div>
     <div class="meta-cell">
       <div class="meta-label">Site</div>
-      <div class="meta-val">${ticket.site}</div>
+      <div class="meta-val">${escapeHtml(ticket.site)}</div>
     </div>
     <div class="meta-cell">
       <div class="meta-label">Plot Number</div>
-      <div class="meta-val">${ticket.plot_number}</div>
+      <div class="meta-val">${escapeHtml(ticket.plot_number)}</div>
     </div>
     <div class="meta-cell">
       <div class="meta-label">Date Raised</div>
