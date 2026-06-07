@@ -34,6 +34,19 @@ export async function initDB(): Promise<void> {
   // SAP-ordered items: what office actually ordered, may differ from what manager requested
   await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ordered_items JSONB`).catch(swallowIfAlreadyExists);
 
+  // Web Push subscriptions — one row per device/browser per user
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id          SERIAL PRIMARY KEY,
+      user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      endpoint    TEXT NOT NULL UNIQUE,
+      p256dh      TEXT NOT NULL,
+      auth        TEXT NOT NULL,
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `).catch(swallowIfAlreadyExists);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id)`);
+
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_tickets_status  ON tickets(status)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_tickets_created ON tickets(created_at DESC)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_messages_ticket ON messages(ticket_id)`);

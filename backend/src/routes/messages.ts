@@ -5,6 +5,7 @@ import { getTicketById, getUnreadCount } from '../services/ticketService';
 import { saveAudio, saveImage } from '../utils/media';
 import { sanitise } from '../utils/sanitise';
 import { requireAuth } from '../middleware/auth';
+import { sendPushToRole } from '../services/pushService';
 
 const router = Router();
 
@@ -92,6 +93,17 @@ router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Resp
       } else {
         io.to('office').emit('ticket:updated', { ticket: forOffice });
       }
+
+      // Push notification to the opposite role
+      const target: 'manager' | 'office' = sender === 'office' ? 'manager' : 'office';
+      const preview = text
+        ? String(text).slice(0, 80)
+        : (audio ? '🎤 Voice note' : (image ? '📷 Photo' : 'New message'));
+      sendPushToRole(target, {
+        title: `${updated.ref} · ${sender === 'office' ? 'Office' : 'Manager'}`,
+        body:  preview,
+        tag:   `ticket:${updated.id}`,
+      }).catch(err => console.error('[push] message', err));
     }
     return res.status(201).json({ message });
   } catch (e) { console.error('[MSG] Error:', e); return res.status(500).json({ error: 'Internal server error' }); }

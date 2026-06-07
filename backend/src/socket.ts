@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { validateCreatePayload, createTicket } from './services/ticketService';
+import { sendPushToRole } from './services/pushService';
 
 export function setupSocket(io: Server): void {
   io.use((socket, next) => {
@@ -63,6 +64,12 @@ export function setupSocket(io: Server): void {
         console.log(`[SOCKET] ticket created ${ticket.ref} in ${elapsed}ms — emitting ack to id=${socket.id}`);
 
         io.to('office').emit('ticket:created', { ticket });
+        sendPushToRole('office', {
+          title: `New remedial ${ticket.ref}`,
+          body:  `${ticket.developer} · ${ticket.site} · Plot ${ticket.plot_number}`,
+          url:   '/',
+          tag:   `ticket:${ticket.id}`,
+        }).catch(err => console.error('[push] new-ticket', err));
 
         const ackPayload = { ticketId: ticket.id, ref: ticket.ref };
         socket.emit('report_acknowledged', ackPayload);

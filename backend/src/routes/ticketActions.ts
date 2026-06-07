@@ -4,6 +4,7 @@ import { pool } from '../db';
 import { getTicketById, rowToTicket } from '../services/ticketService';
 import { sanitise } from '../utils/sanitise';
 import { requireAuth } from '../middleware/auth';
+import { sendPushToRole } from '../services/pushService';
 
 export const router = Router();
 
@@ -53,6 +54,11 @@ router.patch('/tickets/:id/accept', requireAuth, async (req: Request, res: Respo
     const ticket = rowToTicket(r.rows[0]);
     io.to('office').emit('ticket:updated', { ticket });
     io.to('manager').emit('ticket:updated', { ticket });
+    sendPushToRole('manager', {
+      title: `${ticket.ref} accepted`,
+      body:  `Office accepted ${ticket.developer} · Plot ${ticket.plot_number}.`,
+      tag:   `ticket:${ticket.id}`,
+    }).catch(err => console.error('[push] accept', err));
     return res.json({ ticket });
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
@@ -97,6 +103,11 @@ router.patch('/tickets/:id/order', requireAuth, async (req: Request, res: Respon
     io.to('office').emit('ticket:updated', { ticket });
     io.to('manager').emit('ticket:updated', { ticket });
     io.to(`job_${ticket.id}`).emit('ticket:updated', { ticket });
+    sendPushToRole('manager', {
+      title: `${ticket.ref} ordered`,
+      body:  `PO ${ticket.po_number} placed — review and confirm the SAP items.`,
+      tag:   `ticket:${ticket.id}`,
+    }).catch(err => console.error('[push] order', err));
     return res.json({ ticket });
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
@@ -117,6 +128,11 @@ router.patch('/tickets/:id/archive', requireAuth, async (req: Request, res: Resp
     const ticket = rowToTicket(r.rows[0]);
     io.to('office').emit('ticket:archived', { ticketId: ticket.id });
     io.to('manager').emit('ticket:archived', { ticketId: ticket.id });
+    sendPushToRole('office', {
+      title: `${ticket.ref} confirmed`,
+      body:  `Manager confirmed the order — ${ticket.developer} · Plot ${ticket.plot_number}.`,
+      tag:   `ticket:${ticket.id}`,
+    }).catch(err => console.error('[push] archive', err));
     return res.json({ ticket });
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
@@ -143,6 +159,11 @@ router.patch('/tickets/:id/clarified', requireAuth, async (req: Request, res: Re
     io.to('office').emit('ticket:updated', { ticket });
     io.to('manager').emit('ticket:updated', { ticket });
     io.to(`job_${ticket.id}`).emit('ticket:updated', { ticket });
+    sendPushToRole('manager', {
+      title: `${ticket.ref} clarified`,
+      body:  `Office marked the query clarified — back to ${nextStatus}.`,
+      tag:   `ticket:${ticket.id}`,
+    }).catch(err => console.error('[push] clarified', err));
     return res.json({ ticket });
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });

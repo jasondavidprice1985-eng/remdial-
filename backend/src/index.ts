@@ -11,6 +11,7 @@ import messagesRouter from './routes/messages';
 import authRouter from './routes/auth';
 import locationsRouter from './routes/locations';
 import developersRouter from './routes/developers';
+import pushRouter from './routes/push';
 import { apiLimiter } from './middleware/rateLimiter';
 import { setupSocket } from './socket';
 
@@ -39,6 +40,7 @@ async function main(): Promise<void> {
   app.use('/api/v1', messagesRouter);
   app.use('/api/v1', locationsRouter);
   app.use('/api/v1', developersRouter);
+  app.use('/api/v1', pushRouter);
 
   const httpServer = http.createServer(app);
   const io = new Server(httpServer, { cors: { origin: CORS_ORIGIN } });
