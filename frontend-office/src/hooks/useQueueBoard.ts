@@ -72,6 +72,14 @@ export function useQueueBoard(tickets: Ticket[], onUpdate: (t: Ticket) => void, 
     if (tq !== queue) setQueue(tq);
   }
 
+  // Used after a terminal action (Mark Ordered) — go back to the inbox-like
+  // landing state so the user can pick the next ticket instead of being parked
+  // on the one they just finished with. Data update has already happened via handleUpdate.
+  function goHome() {
+    setSelected(null);
+    setQueue('inbox');
+  }
+
   useEffect(() => {
     if (!isDesktop || selected) return;
     setSelected(queueTickets[0] ?? null);
@@ -79,6 +87,6 @@ export function useQueueBoard(tickets: Ticket[], onUpdate: (t: Ticket) => void, 
 
   return {
     queue, counts, unread, queueTickets, selected, setSelected,
-    pickQueue, handleUpdate, showMobileWork: !!(selected && !isDesktop),
+    pickQueue, handleUpdate, goHome, showMobileWork: !!(selected && !isDesktop),
   };
 }

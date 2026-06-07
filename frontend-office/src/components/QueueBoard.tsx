@@ -41,6 +41,7 @@ export default function QueueBoard({ tickets, onUpdate }: Props) {
             isDesktop={isDesktop}
             onSelect={board.setSelected}
             onUpdate={board.handleUpdate}
+            onDeselect={board.goHome}
           />
         )}
         {board.showMobileWork && board.selected && (

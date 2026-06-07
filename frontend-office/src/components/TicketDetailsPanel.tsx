@@ -13,11 +13,12 @@ const ORIGIN = (import.meta.env.VITE_SOCKET_URL as string) || '';
 interface Props {
   ticket: Ticket;
   onUpdate: (ticket: Ticket) => void;
+  onCompleted?: () => void;
   chatOpen?: boolean;
   onToggleChat?: () => void;
 }
 
-export default function TicketDetailsPanel({ ticket, onUpdate, chatOpen, onToggleChat }: Props) {
+export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chatOpen, onToggleChat }: Props) {
   const [clarifying, setClarifying] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [flagging, setFlagging] = useState(false);
@@ -62,6 +63,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate, chatOpen, onToggl
       const d = await res.json();
       if (d.ticket) onUpdate(d.ticket);
     }
+    onCompleted?.();
   }
 
   return (

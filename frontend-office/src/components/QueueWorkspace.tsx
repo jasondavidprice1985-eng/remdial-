@@ -10,9 +10,10 @@ interface Props {
   isDesktop: boolean;
   onSelect: (t: Ticket) => void;
   onUpdate: (t: Ticket) => void;
+  onDeselect: () => void;
 }
 
-export default function QueueWorkspace({ queueTickets, selected, isDesktop, onSelect, onUpdate }: Props) {
+export default function QueueWorkspace({ queueTickets, selected, isDesktop, onSelect, onUpdate, onDeselect }: Props) {
   const [chatOpen, setChatOpen] = useState(false);
 
   // Auto-open chat when the selected ticket has an active conversation
@@ -46,6 +47,7 @@ export default function QueueWorkspace({ queueTickets, selected, isDesktop, onSe
             <TicketDetailsPanel
               ticket={selected}
               onUpdate={onUpdate}
+              onCompleted={onDeselect}
               chatOpen={chatOpen}
               onToggleChat={() => setChatOpen(o => !o)}
             />
