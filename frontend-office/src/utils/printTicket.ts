@@ -1,4 +1,4 @@
-import { Ticket } from '@shared/types';
+import { Message, Ticket } from '@shared/types';
 import { REASON_LABEL } from '../constants/reasons';
 
 function escapeHtml(s: string): string {
@@ -16,7 +16,13 @@ function fmt(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
-export function printTicket(ticket: Ticket, origin: string) {
+function fmtDateTime(dateStr: string) {
+  return new Date(dateStr).toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+export function printTicket(ticket: Ticket, origin: string, messages: Message[] = []) {
   const items = getLineItems(ticket);
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
 
@@ -39,6 +45,31 @@ export function printTicket(ticket: Ticket, origin: string) {
     <div class="section-title">Supporting Images</div>
     <div class="images">${ticket.images.map((u, i) =>
       `<img src="${origin}${u}" alt="Photo ${i + 1}" />`).join('')}
+    </div>` : '';
+
+  const messageBlock = messages.length ? `
+    <div class="section-title">Messages</div>
+    <div class="messages">
+      ${messages.map(m => {
+        const sender = escapeHtml(m.sender === 'office' ? 'Office' : 'Manager');
+        const when = escapeHtml(fmtDateTime(m.created_at));
+        const queryFlag = m.is_query
+          ? `<span class="msg-flag">Needs Clarification</span>`
+          : '';
+        const body: string[] = [];
+        if (m.text) body.push(`<p class="msg-text">${escapeHtml(m.text)}</p>`);
+        if (m.image_path) body.push(`<img class="msg-image" src="${origin}${escapeHtml(m.image_path)}" alt="Attachment" />`);
+        if (m.audio_path) body.push(`<p class="msg-audio">🔊 Voice note (audio not printable)</p>`);
+        return `
+          <div class="msg ${m.sender === 'office' ? 'office' : 'manager'}">
+            <div class="msg-header">
+              <span class="msg-sender">${sender}</span>
+              <span class="msg-time">${when}</span>
+              ${queryFlag}
+            </div>
+            ${body.join('')}
+          </div>`;
+      }).join('')}
     </div>` : '';
 
   const statusLabel: Record<string, string> = {
@@ -104,6 +135,19 @@ export function printTicket(ticket: Ticket, origin: string) {
   .images { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
   .images img { width: 110px; height: 110px; object-fit: cover; border: 1px solid #e2e8f0; border-radius: 4px; }
 
+  /* Messages */
+  .messages { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .msg { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; background: #fff; page-break-inside: avoid; }
+  .msg.office { background: #f8fafc; border-color: #cbd5e1; }
+  .msg.manager { background: #eff6ff; border-color: #bfdbfe; }
+  .msg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 10px; }
+  .msg-sender { font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; }
+  .msg-time { color: #94a3b8; }
+  .msg-flag { background: #dc2626; color: #fff; padding: 1px 6px; border-radius: 100px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .msg-text { font-size: 12px; color: #1e293b; white-space: pre-wrap; }
+  .msg-image { display: block; max-width: 200px; max-height: 200px; margin-top: 4px; border-radius: 4px; border: 1px solid #e2e8f0; }
+  .msg-audio { font-size: 11px; color: #64748b; font-style: italic; margin-top: 2px; }
+
   /* Footer */
   .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
   .footer-col { font-size: 10px; color: #94a3b8; line-height: 1.7; }
@@ -112,6 +156,8 @@ export function printTicket(ticket: Ticket, origin: string) {
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page { padding: 16px 24px; }
+    .msg { page-break-inside: avoid; }
+    .images img { page-break-inside: avoid; }
   }
 </style>
 </head>
@@ -174,6 +220,7 @@ export function printTicket(ticket: Ticket, origin: string) {
 
   ${orderBlock}
   ${imageBlock}
+  ${messageBlock}
 
   <div class="footer">
     <div class="footer-col">
