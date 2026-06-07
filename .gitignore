@@ -5,3 +5,9 @@ build/
 *.log
 .DS_Store
 certs/
+
+# Agent scratch / planning workspaces
+.omo/
+
+# Stray TS->JS compile artifacts in shared/ (shared/ is TS-only)
+shared/*.js

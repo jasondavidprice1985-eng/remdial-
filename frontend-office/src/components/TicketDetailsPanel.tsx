@@ -5,8 +5,8 @@ import OrderForm from './OrderForm';
 import ImageLightbox, { useLightbox } from './ImageLightbox';
 import { LineItemsTable, ImageStrip } from '../utils/ticketDisplay';
 import { printTicket } from '../utils/printTicket';
+import { apiFetch } from '../auth/apiClient';
 
-const API = import.meta.env.VITE_API_URL as string;
 const ORIGIN = (import.meta.env.VITE_SOCKET_URL as string) || '';
 
 interface Props {
@@ -26,7 +26,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate }: Props) {
   async function handleAccept() {
     setAccepting(true);
     try {
-      const res = await fetch(`${API}/tickets/${ticket.id}/accept`, {
+      const res = await apiFetch(`/tickets/${ticket.id}/accept`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}',
       });
       if (res.ok) onUpdate((await res.json()).ticket);
@@ -36,7 +36,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate }: Props) {
   async function handleFlagQuery() {
     setFlagging(true);
     try {
-      const res = await fetch(`${API}/tickets/${ticket.id}/query`, {
+      const res = await apiFetch(`/tickets/${ticket.id}/query`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}',
       });
       if (res.ok) onUpdate((await res.json()).ticket);
@@ -46,7 +46,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate }: Props) {
   async function handleClarified() {
     setClarifying(true);
     try {
-      const res = await fetch(`${API}/tickets/${ticket.id}/clarified`, {
+      const res = await apiFetch(`/tickets/${ticket.id}/clarified`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}',
       });
       if (res.ok) onUpdate((await res.json()).ticket);
@@ -54,7 +54,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate }: Props) {
   }
 
   async function handleOrdered() {
-    const res = await fetch(`${API}/tickets/${ticket.id}?viewer=office`);
+    const res = await apiFetch(`/tickets/${ticket.id}?viewer=office`);
     if (res.ok) {
       const d = await res.json();
       if (d.ticket) onUpdate(d.ticket);

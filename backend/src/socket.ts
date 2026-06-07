@@ -1,11 +1,28 @@
 import { Server, Socket } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import { validateCreatePayload, createTicket } from './services/ticketService';
 
 export function setupSocket(io: Server): void {
+  io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error('Authentication required'));
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET!) as { username: string; role: string };
+      socket.data.user = payload;
+      next();
+    } catch {
+      next(new Error('Invalid or expired token'));
+    }
+  });
+
   io.on('connection', (socket: Socket) => {
     console.log(`[SOCKET] Connected  id=${socket.id} transport=${socket.conn.transport.name}`);
 
     socket.on('client:identify', ({ role }: { role: 'manager' | 'office' }) => {
+      const userRole = socket.data.user?.role;
+      if (userRole && userRole !== role) {
+        console.warn(`[SOCKET] Role mismatch: token says ${userRole}, client claims ${role}`);
+      }
       socket.data.role = role;
       console.log(`[SOCKET] Identified id=${socket.id} role=${role}`);
       if (role === 'office') {
@@ -47,7 +64,6 @@ export function setupSocket(io: Server): void {
 
         io.to('office').emit('ticket:created', { ticket });
 
-        // Dual delivery: named event + optional callback acknowledgement
         const ackPayload = { ticketId: ticket.id, ref: ticket.ref };
         socket.emit('report_acknowledged', ackPayload);
         socket.emit('ticket:submitted', { ticket });

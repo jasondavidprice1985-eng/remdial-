@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../auth/apiClient';
 
 interface Props {
   ticketId: string;
   onOrdered: () => void;
 }
-
-const API = import.meta.env.VITE_API_URL as string;
 
 export default function OrderForm({ ticketId, onOrdered }: Props) {
   const [poNumber, setPoNumber] = useState('');
@@ -14,7 +13,7 @@ export default function OrderForm({ ticketId, onOrdered }: Props) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`${API}/settings/next-delivery`)
+    apiFetch('/settings/next-delivery')
       .then(r => r.json())
       .then(d => { if (d.next_delivery_date) setDeliveryDate(d.next_delivery_date); })
       .catch(() => {});
@@ -25,7 +24,7 @@ export default function OrderForm({ ticketId, onOrdered }: Props) {
     if (!poNumber.trim() || !deliveryDate) return;
     setLoading(true); setError('');
     try {
-      const res = await fetch(`${API}/tickets/${ticketId}/order`, {
+      const res = await apiFetch(`/tickets/${ticketId}/order`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ po_number: poNumber.trim(), delivery_date: deliveryDate }),
       });

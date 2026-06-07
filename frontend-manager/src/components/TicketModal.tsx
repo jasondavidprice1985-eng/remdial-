@@ -5,8 +5,7 @@ import ChatPanel from './ChatPanel';
 import ImageLightbox, { useLightbox } from './ImageLightbox';
 import { useSwipeToClose } from '../hooks/useSwipeToClose';
 import { LineItemsList, ImageStrip } from '../utils/ticketDisplay';
-
-const API = import.meta.env.VITE_API_URL as string;
+import { apiFetch } from '../auth/apiClient';
 
 interface Props {
   ticket: Ticket;
@@ -25,7 +24,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
     if (!window.confirm('Mark this remedial as fitted? It will be archived.')) return;
     setArchiving(true);
     try {
-      const res = await fetch(`${API}/tickets/${ticket.id}/archive`, { method: 'PATCH' });
+      const res = await apiFetch(`/tickets/${ticket.id}/archive`, { method: 'PATCH' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       onClose();
     } catch {

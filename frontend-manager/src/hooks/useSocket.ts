@@ -12,19 +12,21 @@ export function getSocket(): Socket {
   return _socket;
 }
 
-export function useSocket(): Socket {
+export function useSocket(token: string | null): Socket {
   const socketRef = useRef<Socket>(getSocket());
 
   useEffect(() => {
     const socket = socketRef.current;
-    function identify() { socket.emit('client:identify', { role: 'manager' }); }
-    if (!socket.connected) {
-      socket.once('connect', identify);
-      socket.connect();
-    } else {
-      identify();
+    if (!token) {
+      if (socket.connected) socket.disconnect();
+      return;
     }
-  }, []);
+    function identify() { socket.emit('client:identify', { role: 'manager' }); }
+    socket.auth = { token };
+    if (socket.connected) socket.disconnect();
+    socket.once('connect', identify);
+    socket.connect();
+  }, [token]);
 
   return socketRef.current;
 }

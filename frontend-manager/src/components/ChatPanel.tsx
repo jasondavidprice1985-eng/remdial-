@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Message, MessageSender, Ticket } from '@shared/types';
 import { getSocket } from '../hooks/useSocket';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { apiFetch } from '../auth/apiClient';
 import ChatMessageList from './ChatMessageList';
 import ChatInputBar from './ChatInputBar';
 
@@ -11,8 +12,6 @@ interface Props {
   onTicketViewed?: (ticket: Ticket) => void;
   onManagerResponded?: () => void;
 }
-
-const API = import.meta.env.VITE_API_URL as string;
 
 export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerResponded }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -24,12 +23,13 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
   const { recording, startRecording, stopRecording, getAudioPayload } = useAudioRecorder();
 
   const loadMessages = useCallback(() => {
-    fetch(`${API}/tickets/${ticketId}?viewer=${role}`)
+    apiFetch(`/tickets/${ticketId}?viewer=${role}`)
       .then(r => r.json())
       .then(d => {
         setMessages(d.messages || []);
         if (d.ticket) onViewedRef.current?.(d.ticket);
-      });
+      })
+      .catch(() => {});
   }, [ticketId, role]);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
     if (!text.trim()) return;
     setSending(true);
     try {
-      const res = await fetch(`${API}/tickets/${ticketId}/messages`, {
+      const res = await apiFetch(`/tickets/${ticketId}/messages`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sender: role, text: text.trim(), audio: null, audio_mime: null, is_query: false }),
       });
@@ -73,7 +73,7 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
       }
       setSending(true);
       try {
-        const res = await fetch(`${API}/tickets/${ticketId}/messages`, {
+        const res = await apiFetch(`/tickets/${ticketId}/messages`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender: role, text: null, audio: payload.audio, audio_mime: payload.audio_mime, is_query: false }),
         });

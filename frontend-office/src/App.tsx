@@ -1,15 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Ticket } from '@shared/types';
+import { useAuth } from './auth/AuthContext';
+import LoginPage from './auth/LoginPage';
+import { apiFetch } from './auth/apiClient';
 import { useSocket } from './hooks/useSocket';
 import { initAudioContext, playChime } from './utils/chime';
 import QueueBoard from './components/QueueBoard';
 import ArchiveView from './components/ArchiveView';
 import OfficeHeader from './components/OfficeHeader';
 
-const API = import.meta.env.VITE_API_URL as string;
-
 export default function App() {
-  const socket = useSocket();
+  const { token, loading: authLoading, user } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="app-office h-screen flex items-center justify-center office-bg">
+        <span className="w-8 h-8 border-2 border-stone-300 border-t-blue-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user || !token) return <LoginPage />;
+
+  return <AuthedApp token={token} />;
+}
+
+function AuthedApp({ token }: { token: string }) {
+  const socket = useSocket(token);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [archiveMode, setArchiveMode] = useState(false);
   const [archivedTickets, setArchivedTickets] = useState<Ticket[]>([]);
@@ -23,12 +40,12 @@ export default function App() {
   }
 
   useEffect(() => {
-    fetch(`${API}/tickets?viewer=office`).then(r => r.json()).then(d => setTickets(d.tickets || []));
+    apiFetch('/tickets?viewer=office').then(r => r.json()).then(d => setTickets(d.tickets || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!archiveMode) return;
-    fetch(`${API}/tickets?status=archived&viewer=office`).then(r => r.json()).then(d => setArchivedTickets(d.tickets || []));
+    apiFetch('/tickets?status=archived&viewer=office').then(r => r.json()).then(d => setArchivedTickets(d.tickets || [])).catch(() => {});
   }, [archiveMode]);
 
   useEffect(() => {
@@ -36,7 +53,7 @@ export default function App() {
     const onUpdated = ({ ticket }: { ticket: Ticket }) => setTickets(prev => prev.map(t => t.id === ticket.id ? ticket : t));
     const onArchived = ({ ticketId }: { ticketId: string }) => {
       setTickets(prev => prev.filter(t => t.id !== ticketId));
-      if (archiveMode) fetch(`${API}/tickets?status=archived&viewer=office`).then(r => r.json()).then(d => setArchivedTickets(d.tickets || []));
+      if (archiveMode) apiFetch('/tickets?status=archived&viewer=office').then(r => r.json()).then(d => setArchivedTickets(d.tickets || [])).catch(() => {});
     };
     socket.on('ticket:created', onCreated);
     socket.on('ticket:updated', onUpdated);

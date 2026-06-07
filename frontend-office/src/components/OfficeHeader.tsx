@@ -1,3 +1,5 @@
+import { useAuth } from '../auth/AuthContext';
+
 interface Props {
   archiveMode: boolean;
   unreadTotal: number;
@@ -5,6 +7,7 @@ interface Props {
 }
 
 export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive }: Props) {
+  const { user, logout } = useAuth();
   return (
     <header className="glass-panel mx-4 mt-3 mb-0 px-4 py-2.5 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-3">
@@ -33,6 +36,13 @@ export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive
           }`}>
           {archiveMode ? 'Active' : 'Archive'}
         </button>
+        {user && (
+          <button onClick={e => { e.stopPropagation(); logout(); }}
+            className="text-xs px-3 py-1.5 rounded-lg font-semibold border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--surface-2)]"
+            title={`Signed in as ${user.username}`}>
+            Sign out
+          </button>
+        )}
       </div>
     </header>
   );

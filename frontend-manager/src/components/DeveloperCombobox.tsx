@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-const API = import.meta.env.VITE_API_URL as string;
+import { apiFetch } from '../auth/apiClient';
 
 interface Props {
   value: string;
@@ -16,7 +15,7 @@ export default function DeveloperCombobox({ value, onChange, disabled }: Props) 
   useEffect(() => {
     if (!value.trim()) { setMatches([]); return; }
     const t = setTimeout(() => {
-      fetch(`${API}/developers?q=${encodeURIComponent(value.trim())}`)
+      apiFetch(`/developers?q=${encodeURIComponent(value.trim())}`)
         .then(r => r.json()).then(d => setMatches(d.developers || [])).catch(() => setMatches([]));
     }, 300);
     return () => clearTimeout(t);

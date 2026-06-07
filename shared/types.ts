@@ -84,3 +84,9 @@ export interface LineItemInput {
   quantity:    number;
   reason:      string;
 }
+
+export interface JWTPayload {
+  userId:   string;
+  username: string;
+  role:     'manager' | 'office';
+}

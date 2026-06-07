@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Ticket } from '@shared/types';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { useTicketChatMessages } from '../hooks/useTicketChatMessages';
+import { apiFetch } from '../auth/apiClient';
 import ChatMessageList from './ChatMessageList';
 import ChatInputBar from './ChatInputBar';
 
@@ -9,8 +10,6 @@ interface Props {
   ticketId: string;
   onTicketViewed?: (ticket: Ticket) => void;
 }
-
-const API = import.meta.env.VITE_API_URL as string;
 
 export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
   const { messages, loading, loadError, loadMessages, bottomRef } = useTicketChatMessages(ticketId, onTicketViewed);
@@ -23,7 +22,7 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
     if (!text.trim()) return;
     setSending(true);
     try {
-      const res = await fetch(`${API}/tickets/${ticketId}/messages`, {
+      const res = await apiFetch(`/tickets/${ticketId}/messages`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sender: 'office', text: text.trim(), audio: null, audio_mime: null, is_query: isQuery }),
       });
@@ -43,7 +42,7 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
       }
       setSending(true);
       try {
-        const res = await fetch(`${API}/tickets/${ticketId}/messages`, {
+        const res = await apiFetch(`/tickets/${ticketId}/messages`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sender: 'office', text: null, audio: payload.audio, audio_mime: payload.audio_mime, is_query: isQuery,

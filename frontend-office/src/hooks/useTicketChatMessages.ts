@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Message, Ticket } from '@shared/types';
 import { getSocket } from './useSocket';
+import { apiFetch } from '../auth/apiClient';
 
-const API = import.meta.env.VITE_API_URL as string;
 const VIEWER = 'office' as const;
 
 export function useTicketChatMessages(ticketId: string, onTicketViewed?: (ticket: Ticket) => void) {
@@ -16,7 +16,7 @@ export function useTicketChatMessages(ticketId: string, onTicketViewed?: (ticket
   const loadMessages = useCallback(() => {
     setLoading(true);
     setLoadError(false);
-    fetch(`${API}/tickets/${ticketId}?viewer=${VIEWER}`)
+    apiFetch(`/tickets/${ticketId}?viewer=${VIEWER}`)
       .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.json(); })
       .then(d => {
         setMessages(d.messages || []);
