@@ -18,10 +18,20 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const onViewedRef = useRef(onTicketViewed);
   onViewedRef.current = onTicketViewed;
   const { recording, startRecording, stopRecording, getAudioPayload } = useAudioRecorder();
+
+  // Auto-dismiss error banner after 4s
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(null), 4000);
+    return () => clearTimeout(t);
+  }, [error]);
+
+  const flash = useCallback((msg: string) => setError(msg), []);
 
   const loadMessages = useCallback(() => {
     apiFetch(`/tickets/${ticketId}?viewer=${role}`)
@@ -30,8 +40,11 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
         setMessages(d.messages || []);
         if (d.ticket) onViewedRef.current?.(d.ticket);
       })
-      .catch(() => {});
-  }, [ticketId, role]);
+      .catch(err => {
+        console.error('[chat] load messages failed', err);
+        flash('Could not load messages.');
+      });
+  }, [ticketId, role, flash]);
 
   useEffect(() => {
     loadMessages();
@@ -74,13 +87,13 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        alert(`Failed to send photo (HTTP ${res.status}): ${body.error || 'unknown error'}`);
+        flash(`Couldn't send photo (${res.status}). ${body.error || ''}`.trim());
         return;
       }
       if (role === 'manager') onManagerResponded?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Network error';
-      alert(`Failed to send photo: ${msg}`);
+      flash(`Couldn't send photo. ${msg}`);
     } finally { setSending(false); }
   }
 
@@ -90,7 +103,7 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
       stopRecording();
       const payload = await payloadPromise;
       if (!payload) {
-        alert('No audio was captured. Try recording for a couple of seconds before stopping.');
+        flash('No audio captured. Hold the mic for a couple of seconds before stopping.');
         return;
       }
       setSending(true);
@@ -101,13 +114,13 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          alert(`Failed to send voice note (HTTP ${res.status}): ${body.error || 'unknown error'}`);
+          flash(`Couldn't send voice note (${res.status}). ${body.error || ''}`.trim());
           return;
         }
         if (role === 'manager') onManagerResponded?.();
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Network error';
-        alert(`Failed to send voice note: ${msg}`);
+        flash(`Couldn't send voice note. ${msg}`);
       } finally { setSending(false); }
     } else {
       await startRecording();
@@ -122,6 +135,12 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
       <div className="flex-1 overflow-y-auto min-h-0 p-3 space-y-3">
         <ChatMessageList messages={messages} role={role} bottomRef={bottomRef} />
       </div>
+      {error && (
+        <div className="px-3 py-2 text-xs font-medium text-white bg-[var(--danger)] flex items-center justify-between gap-2 shrink-0">
+          <span className="truncate">⚠ {error}</span>
+          <button onClick={() => setError(null)} className="text-white/80 text-base leading-none px-1" aria-label="Dismiss">×</button>
+        </div>
+      )}
       <ChatInputBar text={text} sending={sending} recording={recording}
         onTextChange={setText} onSend={sendTextMessage} onMicClick={handleMicClick}
         onPhotoSelect={handlePhotoSelect} />

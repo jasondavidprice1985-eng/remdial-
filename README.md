@@ -121,7 +121,6 @@ Postgres is on the host, so use a host `pg_dump`:
 
 ## Known limitations / deferred work
 
-- **Backend auth is currently a no-op in production.** `requireAuth` middleware does not verify the JWT. A JWT-enforcing version exists in the working tree but is held back until the frontends also send `Authorization: Bearer` headers — shipping the backend alone would 401 every request. The full security pass (login UI → token storage → fetch/socket headers → enforce on backend) is pending.
 - **Test infrastructure** (vitest + tests + CI workflows) exists locally but is not yet pushed — separate change from the feature work.
 - **PWA service worker caches API responses.** After a deploy that changes URLs, clients may need to clear site data (Chrome: Site Settings → Clear & reset) before they see new behaviour.
 - **Builds on the production VPS need swap.** 3.8 GB RAM is not enough for parallel vite builds; a 4 GB swap file is configured on the live box.

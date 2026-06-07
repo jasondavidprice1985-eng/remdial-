@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Ticket } from '@shared/types';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { useTicketChatMessages } from '../hooks/useTicketChatMessages';
@@ -17,7 +17,16 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
   const [text, setText] = useState('');
   const [isQuery, setIsQuery] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { recording, startRecording, stopRecording, getAudioPayload } = useAudioRecorder();
+
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(null), 4000);
+    return () => clearTimeout(t);
+  }, [error]);
+
+  const flash = useCallback((m: string) => setError(m), []);
 
   async function sendText() {
     if (!text.trim()) return;
@@ -43,13 +52,13 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        alert(`Failed to send photo (HTTP ${res.status}): ${body.error || 'unknown error'}`);
+        flash(`Couldn't send photo (${res.status}). ${body.error || ''}`.trim());
         return;
       }
       setIsQuery(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Network error';
-      alert(`Failed to send photo: ${msg}`);
+      flash(`Couldn't send photo. ${msg}`);
     } finally { setSending(false); }
   }
 
@@ -59,7 +68,7 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
       stopRecording();
       const payload = await payloadPromise;
       if (!payload) {
-        alert('No audio was captured. Try recording for a couple of seconds before stopping.');
+        flash('No audio captured. Hold the mic for a couple of seconds before stopping.');
         return;
       }
       setSending(true);
@@ -72,13 +81,13 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
         });
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
-          alert(`Failed to send voice note (HTTP ${res.status}): ${body.error || 'unknown error'}`);
+          flash(`Couldn't send voice note (${res.status}). ${body.error || ''}`.trim());
           return;
         }
         setIsQuery(false);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Network error';
-        alert(`Failed to send voice note: ${msg}`);
+        flash(`Couldn't send voice note. ${msg}`);
       } finally { setSending(false); }
     } else {
       await startRecording();
@@ -90,6 +99,12 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
       <div className="flex-1 min-h-[160px] overflow-y-auto p-4 space-y-4 bg-[var(--surface)]">
         <ChatMessageList loading={loading} loadError={loadError} messages={messages} bottomRef={bottomRef} onRetry={loadMessages} />
       </div>
+      {error && (
+        <div className="px-3 py-2 text-xs font-medium text-white bg-[var(--query)] flex items-center justify-between gap-2 shrink-0">
+          <span className="truncate">⚠ {error}</span>
+          <button onClick={() => setError(null)} className="text-white/80 text-base leading-none px-1" aria-label="Dismiss">×</button>
+        </div>
+      )}
       <ChatInputBar text={text} isQuery={isQuery} sending={sending} recording={recording}
         onTextChange={setText} onQueryChange={setIsQuery} onSend={sendText} onMicClick={handleMicClick}
         onPhotoSelect={handlePhotoSelect} />

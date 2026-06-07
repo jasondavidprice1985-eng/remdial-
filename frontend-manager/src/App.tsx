@@ -14,7 +14,7 @@ import PwaInstallBanner from './components/PwaInstallBanner';
 import FieldRemHeader from './components/FieldRemHeader';
 import BottomTabBar, { Tab } from './components/BottomTabBar';
 
-type BannerState = 'none' | 'sending' | 'submitted' | 'offline' | 'synced';
+type BannerState = 'none' | 'sending' | 'submitted' | 'offline' | 'synced' | 'error';
 
 export default function App() {
   const { token, loading: authLoading, user } = useAuth();
@@ -42,22 +42,36 @@ function AuthedApp({ token }: { token: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [banner, setBanner] = useState<BannerState>('none');
   const [submittedRef, setSubmittedRef] = useState('');
+  const [errorText, setErrorText] = useState('');
   const { respondedQueries, handleTicketUpdate, handleManagerResponded, attentionCount } = useRespondedQueries();
 
-  const refreshTickets = useCallback(async () => {
-    const res = await apiFetch('/tickets?viewer=manager');
-    const data = await res.json().catch(() => ({}));
-    setTickets(data.tickets || []);
+  const showError = useCallback((message: string) => {
+    setErrorText(message);
+    setBanner('error');
   }, []);
+
+  const refreshTickets = useCallback(async () => {
+    try {
+      const res = await apiFetch('/tickets?viewer=manager');
+      const data = await res.json();
+      setTickets(data.tickets || []);
+    } catch (err) {
+      console.error('[tickets] refresh failed', err);
+      showError('Could not refresh reports.');
+    }
+  }, [showError]);
 
   const loadArchive = useCallback(async () => {
     setLoadingArchive(true);
     try {
       const res = await apiFetch('/tickets?viewer=manager&status=archived');
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json();
       setArchivedTickets(data.tickets || []);
+    } catch (err) {
+      console.error('[archive] load failed', err);
+      showError('Could not load archive.');
     } finally { setLoadingArchive(false); }
-  }, []);
+  }, [showError]);
 
   const onSynced = useCallback(() => setBanner('synced'), []);
   const { submitViaSocket, formLocked } = useTicketSubmit(socket, { onSynced, refreshTickets });
@@ -66,7 +80,10 @@ function AuthedApp({ token }: { token: string }) {
     apiFetch('/tickets?viewer=manager')
       .then(r => r.json())
       .then(d => setTickets(d.tickets || []))
-      .catch(() => {})
+      .catch(err => {
+        console.error('[tickets] initial load failed', err);
+        showError('Could not load reports.');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -111,7 +128,7 @@ function AuthedApp({ token }: { token: string }) {
 
   return (
     <div className="app-fieldrem min-h-screen mesh-bg flex flex-col">
-      <StatusBanner banner={banner} submittedRef={submittedRef} />
+      <StatusBanner banner={banner} submittedRef={submittedRef} errorText={errorText} />
       <PwaInstallBanner />
       <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">
         <FieldRemHeader />
