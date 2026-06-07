@@ -76,6 +76,7 @@ router.patch('/tickets/:id/order', requireAuth, async (req: Request, res: Respon
     if (r.rows.length === 0) return res.status(404).json({ error: 'Ticket not found' });
     const ticket = rowToTicket(r.rows[0]);
     io.to('office').emit('ticket:updated', { ticket });
+    io.to('manager').emit('ticket:updated', { ticket });
     io.to(`job_${ticket.id}`).emit('ticket:updated', { ticket });
     return res.json({ ticket });
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
@@ -96,6 +97,7 @@ router.patch('/tickets/:id/archive', requireAuth, async (req: Request, res: Resp
     `, [req.params.id]);
     const ticket = rowToTicket(r.rows[0]);
     io.to('office').emit('ticket:archived', { ticketId: ticket.id });
+    io.to('manager').emit('ticket:archived', { ticketId: ticket.id });
     return res.json({ ticket });
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
@@ -115,6 +117,7 @@ router.patch('/tickets/:id/clarified', requireAuth, async (req: Request, res: Re
     `, [req.params.id]);
     const ticket = rowToTicket(r.rows[0]);
     io.to('office').emit('ticket:updated', { ticket });
+    io.to('manager').emit('ticket:updated', { ticket });
     io.to(`job_${ticket.id}`).emit('ticket:updated', { ticket });
     return res.json({ ticket });
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
