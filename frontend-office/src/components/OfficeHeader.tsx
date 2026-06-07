@@ -37,11 +37,16 @@ export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive
           {archiveMode ? 'Active' : 'Archive'}
         </button>
         {user && (
-          <button onClick={e => { e.stopPropagation(); logout(); }}
-            className="text-xs px-3 py-1.5 rounded-lg font-semibold border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--surface-2)]"
-            title={`Signed in as ${user.username}`}>
-            Sign out
-          </button>
+          <div className="flex items-center gap-2 pl-2 ml-1 border-l border-[var(--border)]">
+            <span className="text-[11px] text-[var(--muted)] tabular-nums">
+              {user.username}
+            </span>
+            <button onClick={e => { e.stopPropagation(); logout(); }}
+              className="text-[11px] font-medium text-[var(--muted)] underline-offset-2 hover:underline hover:text-[var(--text)]"
+              title={`Sign out ${user.username}`}>
+              Sign out
+            </button>
+          </div>
         )}
       </div>
     </header>

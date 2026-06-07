@@ -38,7 +38,7 @@ export default function OrderForm({ ticketId, onOrdered }: Props) {
       <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Mark as ordered</p>
       {error && <p className="text-xs text-[var(--query)]">{error}</p>}
       <div className="grid grid-cols-2 gap-2">
-        <input className="input-field col-span-2 sm:col-span-1" placeholder="PO number *" maxLength={100} value={poNumber}
+        <input className="input-field col-span-2 sm:col-span-1" placeholder="Order number *" maxLength={100} value={poNumber}
           onChange={e => setPoNumber(e.target.value)} disabled={loading} required />
         <input type="date" className="input-field col-span-2 sm:col-span-1" value={deliveryDate}
           onChange={e => setDeliveryDate(e.target.value)} disabled={loading} required />

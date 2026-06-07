@@ -94,7 +94,7 @@
   border-radius: 1rem 0.25rem 1rem 1rem;
 }
 
-/* Queue list | ticket details | messages — messages gets the most room */
+/* Queue list | ticket details (| messages — only when active conversation) */
 .office-workspace {
   display: flex;
   flex-direction: column;
@@ -104,7 +104,10 @@
 @media (min-width: 1024px) {
   .office-workspace {
     display: grid;
-    grid-template-columns: minmax(220px, 0.85fr) minmax(300px, 1fr) minmax(320px, 1.15fr);
+    grid-template-columns: minmax(220px, 0.85fr) minmax(420px, 1fr);
+  }
+  .office-workspace.with-chat {
+    grid-template-columns: minmax(220px, 0.7fr) minmax(360px, 1fr) minmax(300px, 0.95fr);
   }
 }
 

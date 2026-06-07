@@ -12,9 +12,11 @@ const ORIGIN = (import.meta.env.VITE_SOCKET_URL as string) || '';
 interface Props {
   ticket: Ticket;
   onUpdate: (ticket: Ticket) => void;
+  chatOpen?: boolean;
+  onToggleChat?: () => void;
 }
 
-export default function TicketDetailsPanel({ ticket, onUpdate }: Props) {
+export default function TicketDetailsPanel({ ticket, onUpdate, chatOpen, onToggleChat }: Props) {
   const [clarifying, setClarifying] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [flagging, setFlagging] = useState(false);
@@ -65,13 +67,37 @@ export default function TicketDetailsPanel({ ticket, onUpdate }: Props) {
     <>
       <div className="flex flex-col h-full min-h-0">
         <div className="px-4 py-3 border-b border-[var(--border)] shrink-0 bg-[var(--surface-2)]">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono font-bold text-base text-[var(--ref)]">{ticket.ref}</span>
-            <StatusBadge status={ticket.status} />
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono font-bold text-base text-[var(--ref)]">{ticket.ref}</span>
+                <StatusBadge status={ticket.status} />
+              </div>
+              <p className="text-xs text-[var(--muted)] mt-1">
+                {ticket.developer} · {ticket.site} · Plot {ticket.plot_number}
+              </p>
+            </div>
+            {onToggleChat && (
+              <button type="button" onClick={onToggleChat}
+                className={`shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-colors ${
+                  chatOpen
+                    ? 'bg-[var(--pending)] text-white border-transparent'
+                    : 'bg-[var(--surface)] text-[var(--text)] border-[var(--border)] hover:bg-[var(--surface-2)]'
+                }`}
+                title={chatOpen ? 'Hide messages' : 'Show messages'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Messages
+                {(ticket.unread_count ?? 0) > 0 && !chatOpen && (
+                  <span className="ml-1 px-1.5 rounded-full bg-[var(--query)] text-white text-[10px]">
+                    {ticket.unread_count}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
-          <p className="text-xs text-[var(--muted)] mt-1">
-            {ticket.developer} · {ticket.site} · Plot {ticket.plot_number}
-          </p>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
           <LineItemsTable ticket={ticket} />
@@ -79,7 +105,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate }: Props) {
           {ticket.status === 'ordered' && ticket.po_number && (
             <div className="card p-3 text-sm text-[var(--ordered)]">
               <p className="font-semibold">Ordered</p>
-              <p className="mt-1">PO: {ticket.po_number}</p>
+              <p className="mt-1">Order Number: {ticket.po_number}</p>
               <p className="text-[var(--muted)]">Delivery: {ticket.delivery_date}</p>
             </div>
           )}

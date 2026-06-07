@@ -29,7 +29,9 @@ export default function QueueNav({ active, counts, unread, onChange }: Props) {
               boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.08)' : undefined,
             }}>
             {q.label}
-            <span className="ml-1.5 tabular-nums font-bold">{counts[q.id]}</span>
+            <span className={`ml-1.5 tabular-nums font-bold ${counts[q.id] === 0 && !isActive ? 'text-stone-300' : ''}`}>
+              {counts[q.id]}
+            </span>
             {msgs > 0 && (
               <span className="ml-1 text-[10px] font-bold" style={{ color: q.accent }}>· {msgs}</span>
             )}
