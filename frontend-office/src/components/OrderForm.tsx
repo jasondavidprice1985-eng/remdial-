@@ -1,16 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { OrderedLineItem, Ticket } from '@shared/types';
 import { apiFetch } from '../auth/apiClient';
 
 interface Props {
-  ticketId: string;
+  ticket: Ticket;
   onOrdered: () => void;
 }
 
-export default function OrderForm({ ticketId, onOrdered }: Props) {
+function requestedToOrdered(ticket: Ticket): OrderedLineItem[] {
+  const src = ticket.line_items?.length
+    ? ticket.line_items.map(i => ({ description: i.description, quantity: i.quantity }))
+    : [{ description: ticket.items, quantity: ticket.quantity }];
+  return src.map(s => ({ ...s, sap_code: '' }));
+}
+
+export default function OrderForm({ ticket, onOrdered }: Props) {
   const [poNumber, setPoNumber] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
+  const [orderedItems, setOrderedItems] = useState<OrderedLineItem[]>(() => requestedToOrdered(ticket));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // If the ticket changes (different selection), reset the editor
+  useEffect(() => {
+    setOrderedItems(requestedToOrdered(ticket));
+    setPoNumber('');
+    setError('');
+  }, [ticket.id]);
 
   useEffect(() => {
     apiFetch('/settings/next-delivery')
@@ -19,32 +35,81 @@ export default function OrderForm({ ticketId, onOrdered }: Props) {
       .catch(() => {});
   }, []);
 
+  function updateRow(i: number, patch: Partial<OrderedLineItem>) {
+    setOrderedItems(prev => prev.map((row, idx) => idx === i ? { ...row, ...patch } : row));
+  }
+
+  function removeRow(i: number) {
+    setOrderedItems(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  function addRow() {
+    setOrderedItems(prev => [...prev, { description: '', quantity: 1, sap_code: '' }]);
+  }
+
+  const validItems = orderedItems
+    .map(it => ({ ...it, description: it.description.trim(), sap_code: it.sap_code?.trim() || undefined }))
+    .filter(it => it.description.length > 0 && it.quantity >= 1);
+
+  const canSubmit = !!poNumber.trim() && !!deliveryDate && validItems.length > 0 && !loading;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!poNumber.trim() || !deliveryDate) return;
+    if (!canSubmit) return;
     setLoading(true); setError('');
     try {
-      const res = await apiFetch(`/tickets/${ticketId}/order`, {
+      const res = await apiFetch(`/tickets/${ticket.id}/order`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ po_number: poNumber.trim(), delivery_date: deliveryDate }),
+        body: JSON.stringify({
+          po_number: poNumber.trim(),
+          delivery_date: deliveryDate,
+          ordered_items: validItems,
+        }),
       });
-      if (!res.ok) { const d = await res.json(); setError(d.error || 'Failed to mark as ordered'); }
+      if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error || 'Failed to mark as ordered'); }
       else { onOrdered(); setPoNumber(''); }
     } finally { setLoading(false); }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Mark as ordered</p>
+
+      <div className="space-y-2">
+        <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">SAP items ordered</p>
+        <p className="text-[11px] text-[var(--muted)]">
+          Pre-filled from the request. Edit the description and add the SAP code for each item before sending.
+        </p>
+        {orderedItems.map((row, i) => (
+          <div key={i} className="grid grid-cols-12 gap-1.5 items-center">
+            <input className="input-field col-span-7 text-xs" placeholder="Description"
+              value={row.description} onChange={e => updateRow(i, { description: e.target.value })}
+              disabled={loading} />
+            <input className="input-field col-span-3 text-xs font-mono uppercase" placeholder="SAP code"
+              value={row.sap_code || ''} onChange={e => updateRow(i, { sap_code: e.target.value })}
+              disabled={loading} />
+            <input type="number" min={1} className="input-field col-span-1 text-xs text-center font-mono"
+              value={row.quantity} onChange={e => updateRow(i, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
+              disabled={loading} />
+            <button type="button" onClick={() => removeRow(i)} disabled={loading || orderedItems.length <= 1}
+              className="col-span-1 text-[var(--query)] text-base disabled:opacity-30"
+              aria-label="Remove">×</button>
+          </div>
+        ))}
+        <button type="button" onClick={addRow} disabled={loading}
+          className="text-xs font-semibold text-[var(--pending)]">+ Add row</button>
+      </div>
+
       {error && <p className="text-xs text-[var(--query)]">{error}</p>}
+
       <div className="grid grid-cols-2 gap-2">
         <input className="input-field col-span-2 sm:col-span-1" placeholder="Order number *" maxLength={100} value={poNumber}
           onChange={e => setPoNumber(e.target.value)} disabled={loading} required />
         <input type="date" className="input-field col-span-2 sm:col-span-1" value={deliveryDate}
           onChange={e => setDeliveryDate(e.target.value)} disabled={loading} required />
       </div>
-      <button type="submit" disabled={!poNumber.trim() || !deliveryDate || loading}
-        className="w-full h-9 rounded-lg text-sm font-semibold text-white disabled:opacity-40 bg-[var(--ordered)] hover:opacity-90">
+      <button type="submit" disabled={!canSubmit}
+        className="w-full h-10 rounded-lg text-sm font-semibold text-white disabled:opacity-40 bg-[var(--ordered)] hover:opacity-90">
         {loading ? 'Saving…' : 'Mark ordered'}
       </button>
     </form>

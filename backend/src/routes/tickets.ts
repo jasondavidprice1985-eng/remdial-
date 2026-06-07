@@ -20,7 +20,7 @@ router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
     const r = await pool.query(`
       SELECT t.id,t.ref,t.status,t.developer,t.site,t.plot_number,t.items,t.quantity,t.reason,
         t.delivery_request, to_char(t.delivery_date,'YYYY-MM-DD') AS delivery_date,
-        t.po_number, t.accepted_at AT TIME ZONE 'UTC' AS accepted_at, t.images,
+        t.po_number, t.accepted_at AT TIME ZONE 'UTC' AS accepted_at, t.ordered_items, t.images,
         t.created_at AT TIME ZONE 'UTC' AS created_at,
         t.updated_at AT TIME ZONE 'UTC' AS updated_at,
         COUNT(m.id) FILTER (WHERE m.read_at IS NULL AND m.sender = $2) AS unread_count

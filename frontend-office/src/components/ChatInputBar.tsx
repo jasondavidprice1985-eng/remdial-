@@ -2,25 +2,19 @@ import { useRef } from 'react';
 
 interface Props {
   text: string;
-  isQuery: boolean;
   sending: boolean;
   recording: boolean;
   onTextChange: (v: string) => void;
-  onQueryChange: (v: boolean) => void;
   onSend: () => void;
   onMicClick: () => void;
   onPhotoSelect: (file: File) => void;
 }
 
-export default function ChatInputBar({ text, isQuery, sending, recording, onTextChange, onQueryChange, onSend, onMicClick, onPhotoSelect }: Props) {
+export default function ChatInputBar({ text, sending, recording, onTextChange, onSend, onMicClick, onPhotoSelect }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="border-t border-[var(--border)] p-3 space-y-2 shrink-0 bg-[var(--surface)]">
-      <label className="flex items-center gap-2 text-[11px] cursor-pointer">
-        <input type="checkbox" checked={isQuery} onChange={e => onQueryChange(e.target.checked)} disabled={sending} className="accent-[var(--query)]" />
-        <span className={isQuery ? 'text-[var(--query)] font-semibold' : 'text-[var(--muted)]'}>Flag as Needs Clarification</span>
-      </label>
+    <div className="border-t border-[var(--border)] p-3 shrink-0 bg-[var(--surface)]">
       <div className="flex gap-2 items-center">
         <input className="input-field flex-1" placeholder="Type a message…" value={text}
           onChange={e => onTextChange(e.target.value)}

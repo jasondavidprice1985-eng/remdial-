@@ -107,10 +107,28 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
           <LineItemsTable ticket={ticket} />
           <PhotoGrid images={ticket.images} onSelect={lightbox.open} />
           {ticket.status === 'ordered' && ticket.po_number && (
-            <div className="card p-3 text-sm text-[var(--ordered)]">
-              <p className="font-semibold">Ordered</p>
-              <p className="mt-1">Order Number: {ticket.po_number}</p>
-              <p className="text-[var(--muted)]">Delivery: {ticket.delivery_date}</p>
+            <div className="card p-3 text-sm space-y-2">
+              <div className="text-[var(--ordered)]">
+                <p className="font-semibold">Ordered</p>
+                <p className="mt-1">Order Number: {ticket.po_number}</p>
+                <p className="text-[var(--muted)]">Delivery: {ticket.delivery_date}</p>
+              </div>
+              {ticket.ordered_items && ticket.ordered_items.length > 0 && (
+                <div className="pt-2 border-t border-[var(--border)]">
+                  <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-1.5">SAP items sent</p>
+                  <ul className="space-y-0.5 text-xs">
+                    {ticket.ordered_items.map((it, i) => (
+                      <li key={i} className="flex justify-between gap-2">
+                        <span className="truncate">
+                          {it.description}
+                          {it.sap_code && <span className="ml-1.5 font-mono text-[var(--muted)]">[{it.sap_code}]</span>}
+                        </span>
+                        <span className="font-mono text-[var(--muted)] shrink-0">×{it.quantity}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
           {showPrint && (
@@ -144,7 +162,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
         )}
         {showOrder && (
           <div className="shrink-0 border-t border-[var(--border)] p-4 bg-[var(--surface-2)] space-y-3">
-            <OrderForm ticketId={ticket.id} onOrdered={handleOrdered} />
+            <OrderForm ticket={ticket} onOrdered={handleOrdered} />
             {ticket.status === 'query' && (
               <button onClick={handleClarified} disabled={clarifying}
                 className="w-full h-9 rounded-lg text-sm font-semibold text-[var(--pending)] border border-[var(--pending)] bg-white hover:bg-blue-50 disabled:opacity-50">

@@ -45,6 +45,9 @@ export function rowToTicket(row: any): Ticket {
     delivery_date:    row.delivery_date ?? null,
     po_number:        row.po_number ?? null,
     accepted_at:      row.accepted_at instanceof Date ? row.accepted_at.toISOString() : (row.accepted_at ? String(row.accepted_at) : null),
+    ordered_items:    row.ordered_items
+                        ? (typeof row.ordered_items === 'string' ? JSON.parse(row.ordered_items) : row.ordered_items)
+                        : null,
     images:           row.images ?? [],
     created_at:       row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
     updated_at:       row.updated_at instanceof Date ? row.updated_at.toISOString() : String(row.updated_at),

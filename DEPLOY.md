@@ -14,11 +14,11 @@ git pull
 
 Backend (only if anything in `backend/` changed):
 
+> **`JWT_SECRET`** must be set in `backend/.env` for auth to work. Without it, all API requests will return 401.
+
 ```bash
 cd backend
 npm run build
-pm2 restart remedial-backend
-pm2 logs remedial-backend --lines 20 --nostream
 ```
 
 Manager frontend (only if `frontend-manager/` or `shared/` changed):
@@ -34,6 +34,15 @@ Office frontend (only if `frontend-office/` or `shared/` changed):
 cd /home/pricej/remedial/frontend-office
 npm run build
 ```
+
+After all builds complete, restart the backend:
+
+```bash
+pm2 restart remedial-backend
+pm2 logs remedial-backend --lines 20 --nostream
+```
+
+> **Auth rebuild order**: Frontends now depend on backend auth. When making auth-related changes, rebuild in this order: backend build → both frontends build → backend restart.
 
 No `npm install` is needed unless `package.json` / `package-lock.json` changed.
 
@@ -59,4 +68,4 @@ pm2 startup   # follow the printed command (it'll need sudo once)
   location /uploads/ { proxy_pass http://localhost:3003; }
   ```
 - **PostgreSQL credentials** live in `backend/.env`, **not** at project root. Docker-compose-style `${POSTGRES_*}` env interpolation does nothing here.
-- **JWT auth is intentionally a no-op** on the backend until the frontends are wired to send tokens. See README → Known limitations.
+

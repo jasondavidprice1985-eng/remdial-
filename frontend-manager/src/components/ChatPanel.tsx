@@ -12,11 +12,19 @@ interface Props {
   role: MessageSender;
   onTicketViewed?: (ticket: Ticket) => void;
   onManagerResponded?: () => void;
+  draft?: string;
+  draftToken?: number;
 }
 
-export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerResponded }: Props) {
+export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerResponded, draft, draftToken }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
+
+  // When a new draft is pushed in from outside (e.g. per-item "Query this item"),
+  // replace the input text. The token forces this to fire even if draft is the same.
+  useEffect(() => {
+    if (draft !== undefined) setText(draft);
+  }, [draftToken]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);

@@ -27,7 +27,7 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
     RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,
       delivery_request, to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,
-      po_number, accepted_at AT TIME ZONE 'UTC' AS accepted_at, images,
+      po_number, accepted_at AT TIME ZONE 'UTC' AS accepted_at, ordered_items, images,
       created_at AT TIME ZONE 'UTC' AS created_at,
       updated_at AT TIME ZONE 'UTC' AS updated_at
   `, [ref, sanitise(payload.developer), sanitise(payload.site), sanitise(payload.plot_number),
@@ -71,7 +71,7 @@ export async function getTicketById(id: string): Promise<Ticket | null> {
   const r = await pool.query(`
     SELECT id,ref,status,developer,site,plot_number,items,quantity,reason,
       delivery_request, to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,
-      po_number, accepted_at AT TIME ZONE 'UTC' AS accepted_at, images,
+      po_number, accepted_at AT TIME ZONE 'UTC' AS accepted_at, ordered_items, images,
       created_at AT TIME ZONE 'UTC' AS created_at,
       updated_at AT TIME ZONE 'UTC' AS updated_at
     FROM tickets WHERE id=$1`, [id]);

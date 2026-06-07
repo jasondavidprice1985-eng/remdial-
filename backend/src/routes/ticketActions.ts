@@ -19,12 +19,14 @@ router.patch('/tickets/:id/query', requireAuth, async (req: Request, res: Respon
   try {
     const cur = await pool.query('SELECT status FROM tickets WHERE id=$1', [req.params.id]);
     if (cur.rows.length === 0) return res.status(404).json({ error: 'Ticket not found' });
-    if (cur.rows[0].status !== 'pending') return res.status(409).json({ error: 'Ticket must be pending' });
+    if (cur.rows[0].status !== 'pending' && cur.rows[0].status !== 'ordered') {
+      return res.status(409).json({ error: 'Only pending or ordered tickets can be queried' });
+    }
     const r = await pool.query(`
       UPDATE tickets SET status='query',updated_at=NOW() WHERE id=$1
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,
         to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,po_number,
-        accepted_at AT TIME ZONE 'UTC' AS accepted_at,images,
+        accepted_at AT TIME ZONE 'UTC' AS accepted_at,ordered_items,images,
         created_at AT TIME ZONE 'UTC' AS created_at, updated_at AT TIME ZONE 'UTC' AS updated_at
     `, [req.params.id]);
     const ticket = rowToTicket(r.rows[0]);
@@ -45,7 +47,7 @@ router.patch('/tickets/:id/accept', requireAuth, async (req: Request, res: Respo
       UPDATE tickets SET accepted_at=NOW(),updated_at=NOW() WHERE id=$1
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,
         to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,po_number,
-        accepted_at AT TIME ZONE 'UTC' AS accepted_at,images,
+        accepted_at AT TIME ZONE 'UTC' AS accepted_at,ordered_items,images,
         created_at AT TIME ZONE 'UTC' AS created_at, updated_at AT TIME ZONE 'UTC' AS updated_at
     `, [req.params.id]);
     const ticket = rowToTicket(r.rows[0]);
@@ -57,8 +59,25 @@ router.patch('/tickets/:id/accept', requireAuth, async (req: Request, res: Respo
 
 router.patch('/tickets/:id/order', requireAuth, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
-  let { po_number, delivery_date } = req.body;
+  let { po_number, delivery_date, ordered_items } = req.body;
   if (!po_number || String(po_number).length > 100) return res.status(400).json({ error: 'po_number required (max 100)' });
+  // Validate ordered_items: must be a non-empty array of {description, quantity, sap_code?}
+  if (ordered_items !== undefined && ordered_items !== null) {
+    if (!Array.isArray(ordered_items)) return res.status(400).json({ error: 'ordered_items must be an array' });
+    for (const it of ordered_items) {
+      if (!it || typeof it !== 'object') return res.status(400).json({ error: 'each ordered item must be an object' });
+      if (!it.description || String(it.description).trim().length === 0) return res.status(400).json({ error: 'each ordered item needs a description' });
+      if (!Number.isInteger(it.quantity) || it.quantity < 1) return res.status(400).json({ error: 'each ordered item quantity must be int >= 1' });
+      if (it.sap_code !== undefined && it.sap_code !== null && typeof it.sap_code !== 'string') return res.status(400).json({ error: 'sap_code must be a string' });
+    }
+  }
+  const orderedJson = ordered_items && Array.isArray(ordered_items) && ordered_items.length > 0
+    ? JSON.stringify(ordered_items.map((it: { description: string; quantity: number; sap_code?: string }) => ({
+        description: sanitise(String(it.description)).trim(),
+        quantity:    it.quantity,
+        sap_code:    it.sap_code ? sanitise(String(it.sap_code)).trim() : undefined,
+      })))
+    : null;
   try {
     // If delivery_date not supplied, fall back to the stored next_delivery_date
     if (!delivery_date) {
@@ -67,12 +86,12 @@ router.patch('/tickets/:id/order', requireAuth, async (req: Request, res: Respon
     }
     if (!delivery_date || !/^\d{4}-\d{2}-\d{2}$/.test(delivery_date)) return res.status(400).json({ error: 'delivery_date must be YYYY-MM-DD' });
     const r = await pool.query(`
-      UPDATE tickets SET status='ordered',po_number=$1,delivery_date=$2,updated_at=NOW() WHERE id=$3
+      UPDATE tickets SET status='ordered',po_number=$1,delivery_date=$2,ordered_items=$3::jsonb,updated_at=NOW() WHERE id=$4
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,
         to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,po_number,
-        accepted_at AT TIME ZONE 'UTC' AS accepted_at,images,
+        accepted_at AT TIME ZONE 'UTC' AS accepted_at,ordered_items,images,
         created_at AT TIME ZONE 'UTC' AS created_at, updated_at AT TIME ZONE 'UTC' AS updated_at
-    `, [sanitise(po_number), delivery_date, req.params.id]);
+    `, [sanitise(po_number), delivery_date, orderedJson, req.params.id]);
     if (r.rows.length === 0) return res.status(404).json({ error: 'Ticket not found' });
     const ticket = rowToTicket(r.rows[0]);
     io.to('office').emit('ticket:updated', { ticket });
@@ -92,7 +111,7 @@ router.patch('/tickets/:id/archive', requireAuth, async (req: Request, res: Resp
       UPDATE tickets SET status='archived',updated_at=NOW() WHERE id=$1
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,
         to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,po_number,
-        accepted_at AT TIME ZONE 'UTC' AS accepted_at,images,
+        accepted_at AT TIME ZONE 'UTC' AS accepted_at,ordered_items,images,
         created_at AT TIME ZONE 'UTC' AS created_at, updated_at AT TIME ZONE 'UTC' AS updated_at
     `, [req.params.id]);
     const ticket = rowToTicket(r.rows[0]);
@@ -105,14 +124,19 @@ router.patch('/tickets/:id/archive', requireAuth, async (req: Request, res: Resp
 router.patch('/tickets/:id/clarified', requireAuth, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   try {
-    const cur = await pool.query('SELECT status FROM tickets WHERE id=$1', [req.params.id]);
+    const cur = await pool.query('SELECT status, accepted_at, ordered_items FROM tickets WHERE id=$1', [req.params.id]);
     if (cur.rows.length === 0) return res.status(404).json({ error: 'Ticket not found' });
     if (cur.rows[0].status !== 'query') return res.status(409).json({ error: 'Ticket must be in query state' });
+    // If the ticket was already accepted AND had ordered items submitted before the
+    // query was raised, return it to 'ordered' (manager queried something about the
+    // SAP order). Otherwise return to 'pending' (pre-acceptance clarification).
+    const wasOrdered = cur.rows[0].accepted_at && cur.rows[0].ordered_items;
+    const nextStatus = wasOrdered ? 'ordered' : 'pending';
     const r = await pool.query(`
-      UPDATE tickets SET status='pending',updated_at=NOW() WHERE id=$1
+      UPDATE tickets SET status='${nextStatus}',updated_at=NOW() WHERE id=$1
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,
         to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,po_number,
-        accepted_at AT TIME ZONE 'UTC' AS accepted_at,images,
+        accepted_at AT TIME ZONE 'UTC' AS accepted_at,ordered_items,images,
         created_at AT TIME ZONE 'UTC' AS created_at, updated_at AT TIME ZONE 'UTC' AS updated_at
     `, [req.params.id]);
     const ticket = rowToTicket(r.rows[0]);

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Ticket } from '@shared/types';
+import { useRef, useState } from 'react';
+import { OrderedLineItem, Ticket } from '@shared/types';
 import StatusBadge from './StatusBadge';
 import StatusStepper from './StatusStepper';
 import ChatPanel from './ChatPanel';
@@ -19,10 +19,13 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
   const lightbox = useLightbox();
   const swipe = useSwipeToClose(onClose);
   const [archiving, setArchiving] = useState(false);
+  const [chatDraft, setChatDraft] = useState<string | undefined>(undefined);
+  const [draftToken, setDraftToken] = useState(0);
+  const chatAnchorRef = useRef<HTMLDivElement>(null);
 
-  async function confirmFitted() {
+  async function confirmOrder() {
     if (archiving) return;
-    if (!window.confirm('Mark this remedial as fitted? It will be archived.')) return;
+    if (!window.confirm('Confirm the SAP order is correct? The ticket will close.')) return;
     setArchiving(true);
     try {
       const res = await apiFetch(`/tickets/${ticket.id}/archive`, { method: 'PATCH' });
@@ -30,12 +33,26 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
       onClose();
     } catch {
       setArchiving(false);
-      window.alert('Could not archive ticket. Please try again.');
+      window.alert('Could not confirm order. Please try again.');
     }
+  }
+
+  async function queryItem(item: OrderedLineItem) {
+    // Move ticket into 'query' state if it isn't already, then pre-fill chat with context.
+    if (ticket.status !== 'query') {
+      try {
+        await apiFetch(`/tickets/${ticket.id}/query`, { method: 'PATCH' });
+      } catch { /* server will validate; UI continues */ }
+    }
+    const codePart = item.sap_code ? ` [${item.sap_code}]` : '';
+    setChatDraft(`Re: ${item.description}${codePart} (x${item.quantity}) — `);
+    setDraftToken(t => t + 1);
+    setTimeout(() => chatAnchorRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
   }
 
   const delivery = ticket.delivery_request?.type === 'specific_date'
     ? ticket.delivery_request.date : 'Next delivery';
+  const hasOrdered = ticket.status === 'ordered' && Array.isArray(ticket.ordered_items) && ticket.ordered_items.length > 0;
 
   return (
     <>
@@ -76,25 +93,58 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
                 </p>
               )}
             </div>
+
             <div>
-              <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-2">Line Items</p>
+              <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-2">
+                What you requested
+              </p>
               <LineItemsList ticket={ticket} />
             </div>
+
             <ImageStrip images={ticket.images} onSelect={lightbox.open} />
+
+            {hasOrdered && (
+              <div>
+                <p className="text-[10px] font-bold text-[var(--success)] uppercase tracking-widest mb-2">
+                  What was ordered
+                </p>
+                <div className="space-y-2">
+                  {ticket.ordered_items!.map((it, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{it.description}</p>
+                        {it.sap_code && (
+                          <p className="text-[11px] font-mono text-[var(--muted)] mt-0.5">SAP: {it.sap_code}</p>
+                        )}
+                      </div>
+                      <span className="font-mono font-semibold px-2.5 py-1 rounded-lg shrink-0 text-sm bg-white text-[var(--success)] border border-emerald-200">
+                        ×{it.quantity}
+                      </span>
+                      <button type="button" onClick={() => queryItem(it)}
+                        className="text-[var(--danger)] text-xs font-semibold underline-offset-2 hover:underline shrink-0">
+                        Query
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {ticket.status === 'ordered' && (
               <button
-                onClick={confirmFitted}
+                onClick={confirmOrder}
                 disabled={archiving}
                 className="w-full py-3 rounded-xl font-semibold text-white disabled:opacity-50"
                 style={{ background: 'var(--success)' }}
               >
-                {archiving ? 'Archiving…' : 'Confirm Fitted'}
+                {archiving ? 'Confirming…' : 'Confirm Order'}
               </button>
             )}
           </div>
-          <div className="border-t border-[var(--border)]" style={{ height: '300px' }}>
+          <div ref={chatAnchorRef} className="border-t border-[var(--border)]" style={{ height: '300px' }}>
             <ChatPanel ticketId={ticket.id} role="manager"
-              onTicketViewed={onTicketUpdate} onManagerResponded={onManagerResponded} />
+              onTicketViewed={onTicketUpdate} onManagerResponded={onManagerResponded}
+              draft={chatDraft} draftToken={draftToken} />
           </div>
         </div>
       </div>

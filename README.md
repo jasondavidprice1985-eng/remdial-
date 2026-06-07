@@ -97,11 +97,11 @@ Per-service `.env` files at `backend/.env`, `frontend-manager/.env`, `frontend-o
 ## State Machine
 
 ```
-PENDING → QUERY    (office sends message with is_query=true)
-QUERY   → PENDING  (office clicks Mark Clarified)
-PENDING → ORDERED  (office submits PO + delivery date)
-QUERY   → ORDERED  (office submits PO + delivery date)
-ORDERED → ARCHIVED (manager taps Confirm Fitted)
+PENDING → QUERY    (office clicks Needs Clarification, OR manager queries an ordered ticket)
+QUERY   → PENDING  (office Mark Clarified — when no SAP order was previously submitted)
+QUERY   → ORDERED  (office Mark Clarified — when SAP order was previously submitted)
+PENDING → ORDERED  (office submits PO + delivery date + SAP ordered_items)
+ORDERED → ARCHIVED (manager taps Confirm Order — the SAP items look right)
 ```
 
 Invalid transitions return HTTP 409.

@@ -15,7 +15,6 @@ interface Props {
 export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
   const { messages, loading, loadError, loadMessages, bottomRef } = useTicketChatMessages(ticketId, onTicketViewed);
   const [text, setText] = useState('');
-  const [isQuery, setIsQuery] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { recording, startRecording, stopRecording, getAudioPayload } = useAudioRecorder();
@@ -34,10 +33,9 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
     try {
       const res = await apiFetch(`/tickets/${ticketId}/messages`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender: 'office', text: text.trim(), audio: null, audio_mime: null, is_query: isQuery }),
+        body: JSON.stringify({ sender: 'office', text: text.trim(), audio: null, audio_mime: null, is_query: false }),
       });
       if (res.ok) setText('');
-      setIsQuery(false);
     } finally { setSending(false); }
   }
 
@@ -48,14 +46,13 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
       const image = await resizeImageToBase64(file);
       const res = await apiFetch(`/tickets/${ticketId}/messages`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sender: 'office', text: null, image, is_query: isQuery }),
+        body: JSON.stringify({ sender: 'office', text: null, image, is_query: false }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         flash(`Couldn't send photo (${res.status}). ${body.error || ''}`.trim());
         return;
       }
-      setIsQuery(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Network error';
       flash(`Couldn't send photo. ${msg}`);
@@ -76,7 +73,7 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
         const res = await apiFetch(`/tickets/${ticketId}/messages`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            sender: 'office', text: null, audio: payload.audio, audio_mime: payload.audio_mime, is_query: isQuery,
+            sender: 'office', text: null, audio: payload.audio, audio_mime: payload.audio_mime, is_query: false,
           }),
         });
         if (!res.ok) {
@@ -84,8 +81,7 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
           flash(`Couldn't send voice note (${res.status}). ${body.error || ''}`.trim());
           return;
         }
-        setIsQuery(false);
-      } catch (err) {
+        } catch (err) {
         const msg = err instanceof Error ? err.message : 'Network error';
         flash(`Couldn't send voice note. ${msg}`);
       } finally { setSending(false); }
@@ -105,8 +101,8 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
           <button onClick={() => setError(null)} className="text-white/80 text-base leading-none px-1" aria-label="Dismiss">×</button>
         </div>
       )}
-      <ChatInputBar text={text} isQuery={isQuery} sending={sending} recording={recording}
-        onTextChange={setText} onQueryChange={setIsQuery} onSend={sendText} onMicClick={handleMicClick}
+      <ChatInputBar text={text} sending={sending} recording={recording}
+        onTextChange={setText} onSend={sendText} onMicClick={handleMicClick}
         onPhotoSelect={handlePhotoSelect} />
     </div>
   );

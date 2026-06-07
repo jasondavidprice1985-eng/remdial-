@@ -20,6 +20,12 @@ export interface TicketItem {
   reason:      TicketReason;
 }
 
+export interface OrderedLineItem {
+  description: string;
+  quantity:    number;
+  sap_code?:   string;
+}
+
 export interface Ticket {
   id:               string;
   unread_count?:    number;
@@ -36,6 +42,7 @@ export interface Ticket {
   delivery_date:    string | null;
   po_number:        string | null;
   accepted_at:      string | null;
+  ordered_items:    OrderedLineItem[] | null;
   images:           string[];
   created_at:       string;
   updated_at:       string;
