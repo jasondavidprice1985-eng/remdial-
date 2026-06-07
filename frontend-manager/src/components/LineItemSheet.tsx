@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { LineItemInput, TicketReason } from '@shared/types';
+import { LineItemInput } from '@shared/types';
 import { REASONS } from '../constants/reasons';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 export default function LineItemSheet({ index, initial, canDelete, onSave, onDelete, onClose }: Props) {
   const [description, setDescription] = useState(initial.description);
   const [quantity, setQuantity] = useState(initial.quantity || 1);
-  const [reason, setReason] = useState<TicketReason | ''>(initial.reason);
+  const [reason, setReason] = useState<string>(initial.reason);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -26,7 +26,7 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
 
   function handleSave() {
     if (!canSave) return;
-    onSave({ description: description.trim(), quantity, reason: reason as TicketReason });
+    onSave({ description: description.trim(), quantity, reason });
   }
 
   return (
