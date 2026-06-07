@@ -72,7 +72,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate, chatOpen, onToggl
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono font-bold text-base text-[var(--ref)]">{ticket.ref}</span>
-                <StatusBadge status={ticket.status} />
+                <StatusBadge status={ticket.status} ticket={ticket} />
               </div>
               <p className="text-xs text-[var(--muted)] mt-1">
                 {ticket.developer} · {ticket.site} · Plot {ticket.plot_number}

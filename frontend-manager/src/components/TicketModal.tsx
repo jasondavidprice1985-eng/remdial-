@@ -43,7 +43,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
         <div className="flex items-center justify-between px-4 py-3 glass border-b border-[var(--border)] shrink-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono font-bold text-base text-[var(--ref)]">{ticket.ref}</span>
-            <StatusBadge status={ticket.status} />
+            <StatusBadge status={ticket.status} ticket={ticket} />
             {ticket.status === 'pending' && !ticket.accepted_at && (
               <span className="text-[10px] font-semibold text-[var(--muted)] bg-stone-100 px-2 py-0.5 rounded-full">Awaiting acceptance</span>
             )}

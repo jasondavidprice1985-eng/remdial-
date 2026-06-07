@@ -44,10 +44,10 @@ export default function TicketListCard({ ticket, respondedQueries, onClick }: Pr
             <p className="text-sm font-semibold text-[var(--action)] mt-2">New message{unread > 1 ? 's' : ''} from office</p>
           )}
           {ticket.status === 'ordered' && ticket.po_number && (
-            <p className="text-sm text-[var(--success)] mt-1">PO: {ticket.po_number}</p>
+            <p className="text-sm text-[var(--success)] mt-1">Order: {ticket.po_number}</p>
           )}
         </div>
-        <StatusBadge status={ticket.status} />
+        <StatusBadge status={ticket.status} ticket={ticket} />
       </div>
     </button>
   );

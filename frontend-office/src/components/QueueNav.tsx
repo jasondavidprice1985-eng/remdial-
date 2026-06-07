@@ -2,9 +2,9 @@ export type Queue = 'inbox' | 'pending' | 'query' | 'ordered';
 
 const QUEUES: { id: Queue; label: string; accent: string }[] = [
   { id: 'inbox',   label: 'Inbox',    accent: '#7c3aed' },
-  { id: 'pending', label: 'Pending',  accent: 'var(--pending)' },
+  { id: 'pending', label: 'Accepted', accent: 'var(--pending)' },
   { id: 'query',   label: 'Query',    accent: 'var(--query)' },
-  { id: 'ordered', label: 'Complete', accent: 'var(--ordered)' },
+  { id: 'ordered', label: 'Ordered',  accent: 'var(--ordered)' },
 ];
 
 interface Props {
