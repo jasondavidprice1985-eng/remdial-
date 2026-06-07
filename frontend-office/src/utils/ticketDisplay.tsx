@@ -47,3 +47,22 @@ export function ImageStrip({ images, onSelect }: { images: string[]; onSelect: (
     </div>
   );
 }
+
+export function PhotoGrid({ images, onSelect }: { images: string[]; onSelect: (src: string) => void }) {
+  if (!images.length) return null;
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">
+        Photos · {images.length}
+      </p>
+      <div className="grid grid-cols-3 gap-2">
+        {images.map((uri, i) => (
+          <button key={i} type="button" onClick={() => onSelect(`${ORIGIN}${uri}`)}
+            className="aspect-square rounded-lg overflow-hidden ring-1 ring-[var(--border)] hover:ring-[var(--accent)] transition-all">
+            <img src={`${ORIGIN}${uri}`} alt={`photo ${i + 1}`} className="w-full h-full object-cover" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

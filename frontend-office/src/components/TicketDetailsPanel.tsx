@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Ticket } from '@shared/types';
 import StatusBadge from './StatusBadge';
+import StatusStepper from './StatusStepper';
 import OrderForm from './OrderForm';
 import ImageLightbox, { useLightbox } from './ImageLightbox';
-import { LineItemsTable, ImageStrip } from '../utils/ticketDisplay';
+import { LineItemsTable, PhotoGrid } from '../utils/ticketDisplay';
 import { printTicket } from '../utils/printTicket';
 import { apiFetch } from '../auth/apiClient';
 
@@ -100,8 +101,9 @@ export default function TicketDetailsPanel({ ticket, onUpdate, chatOpen, onToggl
           </div>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+          <StatusStepper ticket={ticket} />
           <LineItemsTable ticket={ticket} />
-          <ImageStrip images={ticket.images} onSelect={lightbox.open} />
+          <PhotoGrid images={ticket.images} onSelect={lightbox.open} />
           {ticket.status === 'ordered' && ticket.po_number && (
             <div className="card p-3 text-sm text-[var(--ordered)]">
               <p className="font-semibold">Ordered</p>

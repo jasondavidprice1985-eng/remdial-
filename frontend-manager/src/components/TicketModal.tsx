@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Ticket } from '@shared/types';
 import StatusBadge from './StatusBadge';
+import StatusStepper from './StatusStepper';
 import ChatPanel from './ChatPanel';
 import ImageLightbox, { useLightbox } from './ImageLightbox';
 import { useSwipeToClose } from '../hooks/useSwipeToClose';
@@ -51,6 +52,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
         </div>
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-4 space-y-4">
+            <StatusStepper ticket={ticket} />
             <div className="card p-4 space-y-2 text-sm">
               {[
                 ['Developer', ticket.developer], ['Site', ticket.site],
@@ -63,7 +65,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
               ))}
               {ticket.po_number && (
                 <p className="text-sm pt-2 border-t border-[var(--border)]" style={{ color: 'var(--success)' }}>
-                  PO: {ticket.po_number} · {ticket.delivery_date}
+                  Order: {ticket.po_number} · {ticket.delivery_date}
                 </p>
               )}
             </div>

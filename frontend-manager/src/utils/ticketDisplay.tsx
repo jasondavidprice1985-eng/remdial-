@@ -31,13 +31,18 @@ export function LineItemsList({ ticket }: { ticket: Ticket }) {
 export function ImageStrip({ images, onSelect }: { images: string[]; onSelect: (src: string) => void }) {
   if (!images.length) return null;
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 snap-x">
-      {images.map((uri, i) => (
-        <button key={i} type="button" onClick={() => onSelect(`${ORIGIN}${uri}`)}
-          className="shrink-0 snap-start rounded-xl overflow-hidden ring-1 ring-[var(--border)] hover:ring-white/30 transition-all">
-          <img src={`${ORIGIN}${uri}`} alt={`photo ${i + 1}`} className="w-20 h-20 object-cover" />
-        </button>
-      ))}
+    <div className="space-y-2">
+      <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">
+        Photos · {images.length}
+      </p>
+      <div className="grid grid-cols-3 gap-2">
+        {images.map((uri, i) => (
+          <button key={i} type="button" onClick={() => onSelect(`${ORIGIN}${uri}`)}
+            className="aspect-square rounded-xl overflow-hidden ring-1 ring-[var(--border)] hover:ring-white/30 transition-all">
+            <img src={`${ORIGIN}${uri}`} alt={`photo ${i + 1}`} className="w-full h-full object-cover" />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
