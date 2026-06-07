@@ -32,6 +32,12 @@ export default function ChatMessageList({ messages, role, bottomRef }: Props) {
             </div>
             <div className={`max-w-[90%] px-3 py-2.5 text-sm ${mine ? 'chat-out' : 'chat-in'}`}>
               {msg.text && <p>{msg.text}</p>}
+              {msg.image_path && (
+                <a href={`${ORIGIN}${msg.image_path}`} target="_blank" rel="noopener noreferrer">
+                  <img src={`${ORIGIN}${msg.image_path}`} alt="attachment"
+                    className="mt-1 max-w-full max-h-60 rounded-lg" />
+                </a>
+              )}
               {msg.audio_path && (
                 <audio controls className="mt-1 max-w-full" style={{ height: 32 }}>
                   <source src={`${ORIGIN}${msg.audio_path}`} />

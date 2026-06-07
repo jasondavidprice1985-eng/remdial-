@@ -42,6 +42,12 @@ export default function ChatMessageList({ loading, loadError, messages, bottomRe
             </div>
             <div className={`max-w-[92%] px-3.5 py-3 text-sm leading-relaxed ${mine ? 'chat-out' : 'chat-in'}`}>
               {msg.text && <p className="whitespace-pre-wrap break-words">{msg.text}</p>}
+              {msg.image_path && (
+                <a href={`${ORIGIN}${msg.image_path}`} target="_blank" rel="noopener noreferrer">
+                  <img src={`${ORIGIN}${msg.image_path}`} alt="attachment"
+                    className="mt-1 max-w-full max-h-60 rounded-lg" />
+                </a>
+              )}
               {msg.audio_path && <AudioPlayer src={`${ORIGIN}${msg.audio_path}`} />}
               {msg.is_query && <p className="text-[11px] text-[var(--query)] mt-1.5 font-semibold">⚠ Needs Clarification</p>}
             </div>

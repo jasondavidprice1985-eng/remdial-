@@ -3,6 +3,7 @@ import { Ticket } from '@shared/types';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { useTicketChatMessages } from '../hooks/useTicketChatMessages';
 import { apiFetch } from '../auth/apiClient';
+import { resizeImageToBase64 } from '../utils/imageResize';
 import ChatMessageList from './ChatMessageList';
 import ChatInputBar from './ChatInputBar';
 
@@ -28,6 +29,27 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
       });
       if (res.ok) setText('');
       setIsQuery(false);
+    } finally { setSending(false); }
+  }
+
+  async function handlePhotoSelect(file: File) {
+    if (sending) return;
+    setSending(true);
+    try {
+      const image = await resizeImageToBase64(file);
+      const res = await apiFetch(`/tickets/${ticketId}/messages`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: 'office', text: null, image, is_query: isQuery }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(`Failed to send photo (HTTP ${res.status}): ${body.error || 'unknown error'}`);
+        return;
+      }
+      setIsQuery(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Network error';
+      alert(`Failed to send photo: ${msg}`);
     } finally { setSending(false); }
   }
 
@@ -69,7 +91,8 @@ export default function ChatPanel({ ticketId, onTicketViewed }: Props) {
         <ChatMessageList loading={loading} loadError={loadError} messages={messages} bottomRef={bottomRef} onRetry={loadMessages} />
       </div>
       <ChatInputBar text={text} isQuery={isQuery} sending={sending} recording={recording}
-        onTextChange={setText} onQueryChange={setIsQuery} onSend={sendText} onMicClick={handleMicClick} />
+        onTextChange={setText} onQueryChange={setIsQuery} onSend={sendText} onMicClick={handleMicClick}
+        onPhotoSelect={handlePhotoSelect} />
     </div>
   );
 }

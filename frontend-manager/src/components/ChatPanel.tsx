@@ -3,6 +3,7 @@ import { Message, MessageSender, Ticket } from '@shared/types';
 import { getSocket } from '../hooks/useSocket';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { apiFetch } from '../auth/apiClient';
+import { resizeImageToBase64 } from '../utils/imageResize';
 import ChatMessageList from './ChatMessageList';
 import ChatInputBar from './ChatInputBar';
 
@@ -62,6 +63,27 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
     } finally { setSending(false); }
   }
 
+  async function handlePhotoSelect(file: File) {
+    if (sending) return;
+    setSending(true);
+    try {
+      const image = await resizeImageToBase64(file);
+      const res = await apiFetch(`/tickets/${ticketId}/messages`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: role, text: null, image, is_query: false }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(`Failed to send photo (HTTP ${res.status}): ${body.error || 'unknown error'}`);
+        return;
+      }
+      if (role === 'manager') onManagerResponded?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Network error';
+      alert(`Failed to send photo: ${msg}`);
+    } finally { setSending(false); }
+  }
+
   async function handleMicClick() {
     if (recording) {
       const payloadPromise = getAudioPayload();
@@ -101,7 +123,8 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
         <ChatMessageList messages={messages} role={role} bottomRef={bottomRef} />
       </div>
       <ChatInputBar text={text} sending={sending} recording={recording}
-        onTextChange={setText} onSend={sendTextMessage} onMicClick={handleMicClick} />
+        onTextChange={setText} onSend={sendTextMessage} onMicClick={handleMicClick}
+        onPhotoSelect={handlePhotoSelect} />
     </div>
   );
 }
