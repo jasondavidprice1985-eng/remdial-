@@ -1,3 +1,5 @@
+import { brand } from '@shared/brand';
+
 type Tab = 'reports' | 'new' | 'archive';
 
 interface Props {
@@ -9,7 +11,7 @@ interface Props {
 export default function BottomTabBar({ active, onChange, attentionCount }: Props) {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'reports', label: 'Reports' },
-    { id: 'new', label: 'New Remedial' },
+    { id: 'new', label: brand.copy.newReport },
     { id: 'archive', label: 'Archive' },
   ];
 

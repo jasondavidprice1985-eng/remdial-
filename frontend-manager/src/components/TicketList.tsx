@@ -3,6 +3,7 @@ import { Ticket } from '@shared/types';
 import TicketListCard from './TicketListCard';
 import TicketModal from './TicketModal';
 import EmptyState from './EmptyState';
+import { brand } from '@shared/brand';
 import { sortTickets } from '../utils/sortTickets';
 import { countNeedingAttention } from '../utils/ticketAttention';
 
@@ -20,7 +21,7 @@ interface Props {
 export default function TicketList({
   tickets, loading, respondedQueries, onTicketUpdate, onManagerResponded,
   emptyTitle = 'No reports yet',
-  emptySubtitle = 'Tap New Remedial below to submit your first remedial ticket.',
+  emptySubtitle = `Tap ${brand.copy.newReport} below to submit your first report.`,
   emptyIcon = 'reports',
 }: Props) {
   const [selected, setSelected] = useState<Ticket | null>(null);

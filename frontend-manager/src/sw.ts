@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-// Custom service worker for FieldRem manager PWA.
+// Custom service worker for System22 Field PWA.
 // Handles: simple network-first caching + Web Push notifications.
 
 declare const self: ServiceWorkerGlobalScope & {
@@ -72,7 +72,7 @@ self.addEventListener('push', (event: PushEvent) => {
   try {
     payload = event.data.json() as PushPayload;
   } catch {
-    payload = { title: 'FieldRem', body: event.data.text() || 'New activity' };
+    payload = { title: 'System22 Field', body: event.data.text() || 'New activity' };
   }
   event.waitUntil(
     self.registration.showNotification(payload.title, {

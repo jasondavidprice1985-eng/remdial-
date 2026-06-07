@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useAuth } from './AuthContext';
+import { EnterpriseLoginLayout } from '@shared/EnterpriseLoginLayout';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -25,40 +26,32 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="app-office h-screen flex items-center justify-center office-bg p-4">
-      <form onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white border border-[var(--border)] rounded-2xl shadow-lg p-6 space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">Office Dashboard</h1>
-          <p className="text-sm text-[var(--muted)] mt-1">Sign in to continue</p>
-        </div>
-        <label className="block space-y-1">
-          <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Username</span>
-          <input className="w-full px-3 py-2 rounded-lg border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            autoComplete="username" autoFocus
+    <EnterpriseLoginLayout product="control">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <label className="block space-y-1.5">
+          <span className="text-xs font-semibold text-[var(--muted)] tracking-wider uppercase">Username</span>
+          <input className="input-field" autoComplete="username" autoFocus
             value={username} onChange={e => setUsername(e.target.value)} disabled={submitting} />
         </label>
-        <label className="block space-y-1">
-          <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Password</span>
-          <input type="password"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] focus:outline-none focus:ring-2 focus:ring-blue-200"
-            autoComplete="current-password"
+        <label className="block space-y-1.5">
+          <span className="text-xs font-semibold text-[var(--muted)] tracking-wider uppercase">Password</span>
+          <input type="password" className="input-field" autoComplete="current-password"
             value={password} onChange={e => setPassword(e.target.value)} disabled={submitting} />
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} disabled={submitting} />
-          <span>Remember me</span>
+        <label className="flex items-center gap-2.5 text-sm text-[var(--text)]">
+          <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} disabled={submitting}
+            className="rounded border-[var(--border)]" />
+          <span>Keep me signed in</span>
         </label>
         {error && (
-          <p className="text-sm rounded-lg px-3 py-2 border border-red-200 bg-red-50 text-red-800">{error}</p>
+          <p className="text-sm rounded-lg px-3 py-2.5 border border-red-200 bg-red-50 text-red-800">{error}</p>
         )}
         <button type="submit" disabled={!canSubmit}
-          className="w-full px-4 py-2.5 rounded-lg bg-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed
-                     flex items-center justify-center gap-2">
-          {submitting && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+          className="btn-enterprise w-full flex items-center justify-center gap-2">
+          {submitting && <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
-    </div>
+    </EnterpriseLoginLayout>
   );
 }

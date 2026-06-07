@@ -1,7 +1,8 @@
 import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { BrandLogo } from '@shared/BrandLogo';
 
-export default function FieldRemHeader() {
+export default function AppHeader() {
   const { user, logout } = useAuth();
   const { status, enable, disable } = useNotifications(!!user);
 
@@ -17,22 +18,17 @@ export default function FieldRemHeader() {
     : enable;
 
   return (
-    <header className="bg-[var(--action)] text-white px-4 py-4 shadow-sm"
-      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+    <header
+      className="enterprise-header px-4 py-3.5"
+      style={{ paddingTop: 'max(0.875rem, env(safe-area-inset-top))' }}
+    >
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-white/20">
-          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M4 6h16v2H4V6zm0 5h10v2H4v-2zm0 5h14v2H4v-2z" />
-          </svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold tracking-tight">FieldRem</h1>
-          <p className="text-sm text-blue-100">Kitchen Remedial Reports</p>
-        </div>
+        <BrandLogo product="field" size="md" variant="light" />
+        <div className="flex-1" />
         {user && (
-          <>
+          <div className="flex items-center gap-2">
             <button onClick={bellAction} disabled={!bellAction}
-              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/15 hover:bg-white/25 transition-colors disabled:opacity-50"
+              className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/18 transition-colors disabled:opacity-50"
               title={bellLabel} aria-label={bellLabel}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
                 strokeLinecap="round" strokeLinejoin="round">
@@ -44,11 +40,11 @@ export default function FieldRemHeader() {
               </svg>
             </button>
             <button onClick={logout}
-              className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/18 transition-colors"
               title={`Signed in as ${user.username}`}>
               Sign out
             </button>
-          </>
+          </div>
         )}
       </div>
     </header>

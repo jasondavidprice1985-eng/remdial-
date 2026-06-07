@@ -1,3 +1,4 @@
+import { brand } from '@shared/brand';
 import { Message, Ticket } from '@shared/types';
 import { REASON_LABEL } from '../constants/reasons';
 
@@ -93,7 +94,7 @@ export function printTicket(ticket: Ticket, origin: string, messages: Message[] 
   /* Header */
   .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 3px solid #1e293b; margin-bottom: 24px; }
   .brand { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #1e293b; text-transform: uppercase; }
-  .brand span { color: #d97706; }
+  .brand span { color: #c5a572; }
   .doc-title { font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
   .ref-block { text-align: right; }
   .ref-num { font-size: 20px; font-weight: 900; font-family: 'Courier New', monospace; color: #1e293b; letter-spacing: 1px; }
@@ -166,8 +167,8 @@ export function printTicket(ticket: Ticket, origin: string, messages: Message[] 
 
   <div class="header">
     <div>
-      <div class="brand">Field<span>Rem</span></div>
-      <div class="doc-title">Remedial Works Order</div>
+      <div class="brand">System<span>22</span></div>
+      <div class="doc-title">${escapeHtml(brand.copy.worksOrder)}</div>
     </div>
     <div class="ref-block">
       <div class="ref-label">Reference</div>
@@ -224,7 +225,7 @@ export function printTicket(ticket: Ticket, origin: string, messages: Message[] 
 
   <div class="footer">
     <div class="footer-col">
-      <strong>FieldRem</strong> · Remedial Works Management<br/>
+      <strong>${escapeHtml(brand.legalName)}</strong> · ${escapeHtml(brand.tagline)}<br/>
       This document is system-generated and does not require a signature.
     </div>
     <div class="footer-col" style="text-align:right">

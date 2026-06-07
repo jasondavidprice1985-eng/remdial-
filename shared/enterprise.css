@@ -1,0 +1,113 @@
+/**
+ * Shared enterprise design tokens — imported by both frontends.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+.app-enterprise,
+.app-fieldrem,
+.app-office {
+  --brand-navy: #0b1220;
+  --brand-navy-light: #151d2e;
+  --brand-accent: #1e40af;
+  --brand-accent-hover: #1e3a8a;
+  --brand-gold: #c5a572;
+  --brand-glow: rgba(30, 64, 175, 0.14);
+
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-solid: #ffffff;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --muted: #64748b;
+  --action: var(--brand-accent);
+  --action-hover: var(--brand-accent-hover);
+  --accent: var(--brand-accent);
+  --accent-deep: var(--brand-accent-hover);
+  --pending: var(--brand-accent);
+  --query: #dc2626;
+  --ordered: #15803d;
+  --ref: #1e3a8a;
+  --success: #15803d;
+  --danger: #dc2626;
+  --glow: var(--brand-glow);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 20px -6px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 4px 10px -2px rgba(15, 23, 42, 0.08), 0 20px 36px -14px rgba(15, 23, 42, 0.14);
+
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.app-enterprise .font-mono,
+.app-fieldrem .font-mono,
+.app-office .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: 'tnum', 'ss01';
+}
+
+.enterprise-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(30, 64, 175, 0.06), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(197, 165, 114, 0.05), transparent 50%),
+    var(--bg);
+}
+
+.mesh-bg,
+.office-bg {
+  background:
+    radial-gradient(ellipse 70% 45% at 0% 0%, rgba(30, 64, 175, 0.07), transparent 55%),
+    radial-gradient(ellipse 55% 35% at 100% 100%, rgba(197, 165, 114, 0.04), transparent 50%),
+    var(--bg);
+}
+
+.enterprise-card,
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.enterprise-header {
+  background: linear-gradient(180deg, var(--brand-navy-light) 0%, var(--brand-navy) 100%);
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(11, 18, 32, 0.2);
+}
+
+.enterprise-office-header {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-enterprise {
+  position: relative;
+  background: linear-gradient(180deg, #2563eb 0%, var(--action) 100%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+  border-radius: 0.75rem;
+  min-height: 48px;
+  box-shadow: 0 2px 6px rgba(30, 64, 175, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.btn-enterprise:hover:not(:disabled) {
+  background: linear-gradient(180deg, #1d4ed8 0%, var(--action-hover) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.btn-enterprise:disabled {
+  background: #cbd5e1;
+  color: #f8fafc;
+  box-shadow: none;
+}

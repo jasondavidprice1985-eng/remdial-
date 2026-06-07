@@ -11,4 +11,10 @@ export default defineConfig({
     },
   },
   server: viteDevServer(5174),
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['src/__tests__/setup.ts'],
+    css: true,
+  },
 });

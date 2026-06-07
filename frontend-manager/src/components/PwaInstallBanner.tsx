@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { brand } from '@shared/brand';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -43,7 +44,7 @@ export default function PwaInstallBanner() {
             <span className="text-lg">⬇</span>
           </div>
           <div>
-            <p className="font-bold">Install FieldRem</p>
+            <p className="font-bold">Install {brand.products.field.fullName}</p>
             <p className="text-sm text-[var(--muted)] mt-0.5">Add to your home screen for instant field access.</p>
           </div>
         </div>

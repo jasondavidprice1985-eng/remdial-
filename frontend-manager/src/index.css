@@ -1,40 +1,12 @@
+@import '../../shared/enterprise.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   html, body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
     font-feature-settings: 'cv11', 'ss01', 'ss02';
-  }
-
-  .app-fieldrem {
-    --bg: #f5f5f4;
-    --surface: #ffffff;
-    --surface-2: #fafaf9;
-    --border: #e7e5e4;
-    --border-strong: #d6d3d1;
-    --text: #1c1917;
-    --muted: #78716c;
-    --action: #4f6df3;
-    --action-hover: #3b56cf;
-    --ref: #1e3a8a;
-    --success: #15803d;
-    --danger: #dc2626;
-    --glow: rgba(79, 109, 243, 0.18);
-    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
-    --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.06), 0 6px 16px -4px rgba(15, 23, 42, 0.06);
-    --shadow-lg: 0 4px 8px -2px rgba(15, 23, 42, 0.08), 0 18px 32px -12px rgba(15, 23, 42, 0.12);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    color: var(--text);
-    background-color: var(--bg);
-  }
-  .app-fieldrem .font-mono {
-    font-family: 'JetBrains Mono', monospace;
-    font-feature-settings: 'tnum', 'ss01';
   }
   .app-fieldrem .tabular-nums { font-variant-numeric: tabular-nums; }
 }
@@ -62,7 +34,7 @@
   100% { background-position: 200% 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #e7e5e4 25%, #f5f5f4 50%, #e7e5e4 75%);
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 0.75rem;
@@ -74,13 +46,6 @@
 }
 .stagger-in { animation: fade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-.mesh-bg {
-  background:
-    radial-gradient(ellipse 60% 40% at 10% 0%, rgba(79, 109, 243, 0.07), transparent 60%),
-    radial-gradient(ellipse 50% 30% at 100% 100%, rgba(21, 128, 61, 0.05), transparent 60%),
-    var(--bg);
-}
-
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -91,10 +56,10 @@
 .card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-1px); }
 
 .glass {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
-  border-color: rgba(231, 229, 228, 0.7);
+  border-color: rgba(226, 232, 240, 0.8);
 }
 
 .input-field {
@@ -104,7 +69,7 @@
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   min-height: 48px;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: var(--text);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -114,7 +79,7 @@
   border-color: var(--action);
   box-shadow: 0 0 0 3px var(--glow);
 }
-.input-field::placeholder { color: #a8a29e; }
+.input-field::placeholder { color: #94a3b8; }
 
 button {
   transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1),
@@ -126,23 +91,22 @@ button:active:not(:disabled) { transform: translateY(1px) scale(0.995); }
 
 .btn-accent {
   position: relative;
-  background: linear-gradient(180deg, #5a78ff 0%, var(--action) 100%);
+  background: linear-gradient(180deg, #2563eb 0%, var(--action) 100%);
   color: #ffffff;
-  font-weight: 700;
-  font-size: 1rem;
-  border-radius: 0.875rem;
-  min-height: 52px;
-  box-shadow: 0 2px 6px rgba(79, 109, 243, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: 0.75rem;
+  min-height: 48px;
+  box-shadow: 0 2px 6px rgba(30, 64, 175, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .btn-accent:hover:not(:disabled) {
-  background: linear-gradient(180deg, #4f63ee 0%, var(--action-hover) 100%);
+  background: linear-gradient(180deg, #1d4ed8 0%, var(--action-hover) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 109, 243, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .btn-accent:disabled {
   background: #cbd5e1;
   color: #f8fafc;
-  opacity: 1;
   box-shadow: none;
 }
 
@@ -150,9 +114,9 @@ button:active:not(:disabled) { transform: translateY(1px) scale(0.995); }
   background: var(--surface);
   color: var(--text);
   font-weight: 600;
-  font-size: 1rem;
-  border-radius: 0.875rem;
-  min-height: 52px;
+  font-size: 0.9375rem;
+  border-radius: 0.75rem;
+  min-height: 48px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
