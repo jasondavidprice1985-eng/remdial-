@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import { pool } from '../db';
 import { getTicketById, rowToTicket } from '../services/ticketService';
 import { sanitise } from '../utils/sanitise';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, requireRole, validateIdParam } from '../middleware/auth';
 import { sendPushToRole } from '../services/pushService';
 
 export const router = Router();
@@ -15,7 +15,7 @@ router.get('/settings/next-delivery', requireAuth, async (_req: Request, res: Re
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
 
-router.patch('/tickets/:id/query', requireAuth, async (req: Request, res: Response) => {
+router.patch('/tickets/:id/query', requireAuth, validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   try {
     const cur = await pool.query('SELECT status FROM tickets WHERE id=$1', [req.params.id]);
@@ -37,7 +37,7 @@ router.patch('/tickets/:id/query', requireAuth, async (req: Request, res: Respon
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
 
-router.patch('/tickets/:id/accept', requireAuth, async (req: Request, res: Response) => {
+router.patch('/tickets/:id/accept', requireAuth, requireRole('office'), validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   try {
     const cur = await pool.query('SELECT status, accepted_at FROM tickets WHERE id=$1', [req.params.id]);
@@ -63,7 +63,7 @@ router.patch('/tickets/:id/accept', requireAuth, async (req: Request, res: Respo
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
 
-router.patch('/tickets/:id/order', requireAuth, async (req: Request, res: Response) => {
+router.patch('/tickets/:id/order', requireAuth, requireRole('office'), validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   let { po_number, delivery_date, ordered_items } = req.body;
   if (!po_number || String(po_number).length > 100) return res.status(400).json({ error: 'po_number required (max 100)' });
@@ -112,7 +112,7 @@ router.patch('/tickets/:id/order', requireAuth, async (req: Request, res: Respon
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
 
-router.patch('/tickets/:id/archive', requireAuth, async (req: Request, res: Response) => {
+router.patch('/tickets/:id/archive', requireAuth, requireRole('manager'), validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   try {
     const cur = await pool.query('SELECT status FROM tickets WHERE id=$1', [req.params.id]);
@@ -137,7 +137,7 @@ router.patch('/tickets/:id/archive', requireAuth, async (req: Request, res: Resp
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
 
-router.patch('/tickets/:id/clarified', requireAuth, async (req: Request, res: Response) => {
+router.patch('/tickets/:id/clarified', requireAuth, requireRole('office'), validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   try {
     const cur = await pool.query('SELECT status, accepted_at, ordered_items FROM tickets WHERE id=$1', [req.params.id]);
@@ -149,12 +149,12 @@ router.patch('/tickets/:id/clarified', requireAuth, async (req: Request, res: Re
     const wasOrdered = cur.rows[0].accepted_at && cur.rows[0].ordered_items;
     const nextStatus = wasOrdered ? 'ordered' : 'pending';
     const r = await pool.query(`
-      UPDATE tickets SET status='${nextStatus}',updated_at=NOW() WHERE id=$1
+      UPDATE tickets SET status=$2,updated_at=NOW() WHERE id=$1
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,
         to_char(delivery_date,'YYYY-MM-DD') AS delivery_date,po_number,
         accepted_at AT TIME ZONE 'UTC' AS accepted_at,ordered_items,images,
         created_at AT TIME ZONE 'UTC' AS created_at, updated_at AT TIME ZONE 'UTC' AS updated_at
-    `, [req.params.id]);
+    `, [req.params.id, nextStatus]);
     const ticket = rowToTicket(r.rows[0]);
     io.to('office').emit('ticket:updated', { ticket });
     io.to('manager').emit('ticket:updated', { ticket });

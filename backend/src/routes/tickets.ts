@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { Server } from 'socket.io';
 import { pool } from '../db';
 import { validateCreatePayload, createTicket, rowToTicket, getLineItems, getTicketById, getTicketMessages, getUnreadCount, markMessagesRead } from '../services/ticketService';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, validateIdParam } from '../middleware/auth';
 
 const router = Router();
 
@@ -55,7 +55,7 @@ router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
 });
 
 // GET /api/v1/tickets/:id
-router.get('/tickets/:id', requireAuth, async (req: Request, res: Response) => {
+router.get('/tickets/:id', requireAuth, validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   try {
     const viewer = parseViewer(req.query.viewer);

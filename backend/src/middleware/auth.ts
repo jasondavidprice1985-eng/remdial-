@@ -20,3 +20,25 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
+
+/** Only allow specific roles through — the "signs on the doors" */
+export function requireRole(...roles: string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      res.status(403).json({ error: 'Forbidden: insufficient role' });
+      return;
+    }
+    next();
+  };
+}
+
+/** Check that :id is a valid UUID before it reaches the database */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const validateIdParam = (req: Request, res: Response, next: NextFunction): void => {
+  if (req.params.id && !UUID_RE.test(req.params.id)) {
+    res.status(400).json({ error: 'Invalid ticket ID format' });
+    return;
+  }
+  next();
+};

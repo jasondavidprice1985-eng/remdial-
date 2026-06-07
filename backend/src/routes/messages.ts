@@ -4,12 +4,12 @@ import { pool } from '../db';
 import { getTicketById, getUnreadCount } from '../services/ticketService';
 import { saveAudio, saveImage } from '../utils/media';
 import { sanitise } from '../utils/sanitise';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, validateIdParam } from '../middleware/auth';
 import { sendPushToRole } from '../services/pushService';
 
 const router = Router();
 
-router.get('/tickets/:id/messages', requireAuth, async (req: Request, res: Response) => {
+router.get('/tickets/:id/messages', requireAuth, validateIdParam, async (req: Request, res: Response) => {
   try {
     const { viewer } = req.query;
     const role = viewer === 'manager' ? 'manager' : 'office';
@@ -35,7 +35,7 @@ router.get('/tickets/:id/messages', requireAuth, async (req: Request, res: Respo
   } catch (e) { console.error(e); return res.status(500).json({ error: 'Internal server error' }); }
 });
 
-router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Response) => {
+router.post('/tickets/:id/messages', requireAuth, validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   const { sender, text, audio, audio_mime, image, is_query } = req.body;
 
