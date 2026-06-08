@@ -20,22 +20,30 @@ export function setupSocket(io: Server): void {
     console.log(`[SOCKET] Connected  id=${socket.id} transport=${socket.conn.transport.name}`);
 
     socket.on('client:identify', ({ role }: { role: 'manager' | 'office' }) => {
-      const userRole = socket.data.user?.role;
-      if (userRole && userRole !== role) {
-        console.warn(`[SOCKET] Role mismatch: token says ${userRole}, client claims ${role}`);
+      // Always use the role from the verified JWT, never trust the client
+      const verifiedRole = socket.data.user?.role;
+      if (!verifiedRole) {
+        console.warn(`[SOCKET] identify with no verified role id=${socket.id}`);
+        return;
       }
-      socket.data.role = role;
-      console.log(`[SOCKET] Identified id=${socket.id} role=${role}`);
-      if (role === 'office') {
+      if (verifiedRole !== role) {
+        console.warn(`[SOCKET] Role mismatch: token says ${verifiedRole}, client claims ${role} — using token role`);
+      }
+      socket.data.role = verifiedRole;
+      console.log(`[SOCKET] Identified id=${socket.id} role=${verifiedRole}`);
+      if (verifiedRole === 'office') {
         socket.join('office');
         console.log(`[SOCKET] Joined "office" room  id=${socket.id}`);
-      } else if (role === 'manager') {
+      } else if (verifiedRole === 'manager') {
         socket.join('manager');
         console.log(`[SOCKET] Joined "manager" room  id=${socket.id}`);
       }
     });
 
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     socket.on('ticket:join', ({ ticketId }: { ticketId: string }) => {
+      if (!ticketId || !UUID_RE.test(ticketId)) return;
       const room = `job_${ticketId}`;
       socket.join(room);
       const size = io.sockets.adapter.rooms.get(room)?.size ?? 0;
@@ -50,6 +58,14 @@ export function setupSocket(io: Server): void {
     socket.on('ticket:submit', async (payload: Record<string, unknown>, ackCallback?: (r: unknown) => void) => {
       const t0 = Date.now();
       console.log(`[SOCKET] ticket:submit  id=${socket.id} role=${socket.data.role} developer="${payload.developer}"`);
+
+      // Only managers can submit remedial reports
+      if (socket.data.user?.role !== 'manager') {
+        const errMsg = { error: 'Forbidden: only managers can submit reports' };
+        socket.emit('report_error', errMsg);
+        ackCallback?.(errMsg);
+        return;
+      }
 
       const err = validateCreatePayload(payload);
       if (err) {

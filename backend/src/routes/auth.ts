@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { loginUser } from '../services/authService';
 import { sanitise } from '../utils/sanitise';
+import { loginLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
-router.post('/auth/login', async (req: Request, res: Response) => {
+router.post('/auth/login', loginLimiter, async (req: Request, res: Response) => {
   const { username, password, remember } = req.body;
 
   if (!username || !password) {

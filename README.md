@@ -128,6 +128,11 @@ Postgres is on the host, so use a host `pg_dump`:
 - **No audit trail** — status changes aren't logged with who/when; worth adding for dispute resolution.
 - **No CI pipeline pushed** — a GitHub Actions workflow exists locally but requires a token with `workflow` scope to push.
 - **No date change feature** — office team cannot change delivery dates from within the app yet; still done via email.
+- **Shared user accounts** — only two accounts (manager/office) exist. Individual user accounts needed for proper audit trails and access revocation.
+- **No token revocation** — JWTs cannot be invalidated before expiry. A stolen token stays valid for up to 30 days (remember me). Needs a token blacklist or server-side sessions.
+- **No Content-Security-Policy** — Helmet is enabled but CSP is not configured. Should be added to prevent XSS escalation.
+- **No password change mechanism** — credentials can only be changed via environment variables and server restart.
+- **Uploads not access-scoped** — any authenticated user can access any uploaded image if they guess the filename.
 
 ---
 
@@ -148,6 +153,11 @@ The following changes were applied to improve production security:
 | **Header border removed** | Removed the thin blue border line from the enterprise header for a cleaner look. |
 | **Offline submit fix** | Added a 15-second hard timeout so the submit spinner never gets stuck. Sync waits 3 seconds for socket reconnection before retrying. |
 | **Pending reports banner** | Reports tab now shows a visible banner when reports are saved offline waiting to sync — "1 report saved offline — will sync when signal returns". |
+| **Login rate limiting** | Login endpoint limited to 5 attempts per minute per IP to prevent brute-force attacks. |
+| **Socket role enforcement** | Socket `client:identify` now uses the verified JWT role instead of trusting the client. `ticket:submit` is restricted to manager role only. |
+| **JWT secret validation** | Production startup now requires JWT_SECRET to be at least 32 characters long. |
+| **Image file validation** | Uploaded images are validated by checking file magic bytes — only JPEG, PNG, and WebP are accepted. Prevents uploading malicious files disguised as images. |
+| **Socket UUID validation** | The `ticket:join` socket event now validates the ticketId is a proper UUID before joining a room. |
 
 ---
 

@@ -27,8 +27,8 @@ async function main(): Promise<void> {
       console.error('FATAL: Set MANAGER_PASSWORD and OFFICE_PASSWORD to non-default values in production.');
       process.exit(1);
     }
-    if (!process.env.JWT_SECRET) {
-      console.error('FATAL: JWT_SECRET must be set in production.');
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+      console.error('FATAL: JWT_SECRET must be set and at least 32 characters in production.');
       process.exit(1);
     }
   }
