@@ -4,7 +4,7 @@ const STEPS = [
   { key: 'logged',   label: 'Logged' },
   { key: 'accepted', label: 'Accepted' },
   { key: 'ordered',  label: 'Ordered' },
-  { key: 'fitted',   label: 'Fitted' },
+  { key: 'fitted',   label: 'Complete' },
 ] as const;
 
 function activeIndex(ticket: Ticket): number {

@@ -144,7 +144,7 @@ function AuthedApp({ token }: { token: string }) {
             <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
               onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
               emptyIcon="archive" emptyTitle="No archived reports"
-              emptySubtitle="Reports you mark as fitted will appear here." />
+              emptySubtitle="Completed reports will appear here." />
           )}
         </main>
         <BottomTabBar active={tab} onChange={setTab} attentionCount={attentionCount(tickets)} />
