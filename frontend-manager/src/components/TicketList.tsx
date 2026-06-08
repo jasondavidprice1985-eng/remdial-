@@ -11,6 +11,7 @@ interface Props {
   tickets: Ticket[];
   loading?: boolean;
   respondedQueries: Set<string>;
+  pendingCount?: number;
   onTicketUpdate: (ticket: Ticket) => void;
   onManagerResponded: (ticketId: string) => void;
   emptyTitle?: string;
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export default function TicketList({
-  tickets, loading, respondedQueries, onTicketUpdate, onManagerResponded,
+  tickets, loading, respondedQueries, pendingCount = 0, onTicketUpdate, onManagerResponded,
   emptyTitle = 'No reports yet',
   emptySubtitle = `Tap ${brand.copy.newReport} below to submit your first report.`,
   emptyIcon = 'reports',
@@ -43,6 +44,12 @@ export default function TicketList({
 
   return (
     <div className="px-4 space-y-3">
+      {pendingCount > 0 && (
+        <div className="rounded-xl px-4 py-3 text-sm font-medium border border-stone-300 bg-stone-800 text-white flex items-center gap-2.5">
+          <span className="text-base">☁</span>
+          <span>{pendingCount} report{pendingCount > 1 ? 's' : ''} saved offline — will sync when signal returns</span>
+        </div>
+      )}
       {needsAttention > 0 && (
         <div className="rounded-xl px-4 py-3 text-sm font-medium border border-red-200 bg-red-50 text-red-800">
           {needsAttention} report{needsAttention > 1 ? 's' : ''} need your reply

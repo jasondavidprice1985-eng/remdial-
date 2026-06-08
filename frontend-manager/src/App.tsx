@@ -6,7 +6,7 @@ import { apiFetch } from './auth/apiClient';
 import { useSocket } from './hooks/useSocket';
 import { useTicketSubmit } from './hooks/useTicketSubmit';
 import { useRespondedQueries } from './hooks/useRespondedQueries';
-import { savePendingReport } from './hooks/useIndexedDB';
+import { savePendingReport, getAllPendingReports } from './hooks/useIndexedDB';
 import TicketForm, { TicketFormPayload } from './components/TicketForm';
 import TicketList from './components/TicketList';
 import StatusBanner from './components/StatusBanner';
@@ -43,7 +43,19 @@ function AuthedApp({ token }: { token: string }) {
   const [banner, setBanner] = useState<BannerState>('none');
   const [submittedRef, setSubmittedRef] = useState('');
   const [errorText, setErrorText] = useState('');
+  const [pendingCount, setPendingCount] = useState(0);
   const { respondedQueries, handleTicketUpdate, handleManagerResponded, attentionCount } = useRespondedQueries();
+
+  // Check for unsent reports on load and when online status changes
+  useEffect(() => {
+    async function checkPending() {
+      const queue = await getAllPendingReports();
+      setPendingCount(queue.length);
+    }
+    checkPending();
+    window.addEventListener('online', () => setTimeout(checkPending, 5000));
+    return () => window.removeEventListener('online', checkPending);
+  }, []);
 
   const showError = useCallback((message: string) => {
     setErrorText(message);
@@ -73,7 +85,7 @@ function AuthedApp({ token }: { token: string }) {
     } finally { setLoadingArchive(false); }
   }, [showError]);
 
-  const onSynced = useCallback(() => setBanner('synced'), []);
+  const onSynced = useCallback(() => { setBanner('synced'); setPendingCount(0); }, []);
   const { submitViaSocket, formLocked } = useTicketSubmit(socket, { onSynced, refreshTickets });
 
   useEffect(() => {
@@ -127,6 +139,7 @@ function AuthedApp({ token }: { token: string }) {
         payload: { ...payload, quantity: payload.items.reduce((s, i) => s + i.quantity, 0), reason: payload.items[0]?.reason ?? '' },
       });
       setBanner('offline');
+      setPendingCount(c => c + 1);
     } finally { setSubmitting(false); }
   }
 
@@ -141,7 +154,7 @@ function AuthedApp({ token }: { token: string }) {
             <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />
           )}
           {tab === 'reports' && (
-            <TicketList tickets={tickets} loading={loading} respondedQueries={respondedQueries}
+            <TicketList tickets={tickets} loading={loading} respondedQueries={respondedQueries} pendingCount={pendingCount}
               onTicketUpdate={t => handleTicketUpdate(t, setTickets)} onManagerResponded={handleManagerResponded} />
           )}
           {tab === 'archive' && (

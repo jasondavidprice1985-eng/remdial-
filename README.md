@@ -126,7 +126,8 @@ Postgres is on the host, so use a host `pg_dump`:
 - **No pagination** on `GET /tickets` — fine for current volume but will need limit/offset if ticket count grows into the thousands.
 - **No structured logging** — still using `console.log`; a library like pino would make production debugging easier.
 - **No audit trail** — status changes aren't logged with who/when; worth adding for dispute resolution.
-- **CI pipeline** — a GitHub Actions workflow exists locally but requires a token with `workflow` scope to push.
+- **No CI pipeline pushed** — a GitHub Actions workflow exists locally but requires a token with `workflow` scope to push.
+- **No date change feature** — office team cannot change delivery dates from within the app yet; still done via email.
 
 ---
 
@@ -145,6 +146,8 @@ The following changes were applied to improve production security:
 | **Body size limit reduced** | JSON body limit lowered from 50MB to 10MB to reduce abuse risk. |
 | **CORS lockdown** | Wildcard `*` CORS origin is blocked in production. Set `CORS_ORIGIN` to your actual domains. |
 | **Header border removed** | Removed the thin blue border line from the enterprise header for a cleaner look. |
+| **Offline submit fix** | Added a 15-second hard timeout so the submit spinner never gets stuck. Sync waits 3 seconds for socket reconnection before retrying. |
+| **Pending reports banner** | Reports tab now shows a visible banner when reports are saved offline waiting to sync — "1 report saved offline — will sync when signal returns". |
 
 ---
 
