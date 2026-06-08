@@ -121,6 +121,47 @@ Postgres is on the host, so use a host `pg_dump`:
 
 ## Known limitations / deferred work
 
-- **Test infrastructure** (vitest + tests + CI workflows) exists locally but is not yet pushed — separate change from the feature work.
 - **PWA service worker caches API responses.** After a deploy that changes URLs, clients may need to clear site data (Chrome: Site Settings → Clear & reset) before they see new behaviour.
 - **Builds on the production VPS need swap.** 3.8 GB RAM is not enough for parallel vite builds; a 4 GB swap file is configured on the live box.
+- **No pagination** on `GET /tickets` — fine for current volume but will need limit/offset if ticket count grows into the thousands.
+- **No structured logging** — still using `console.log`; a library like pino would make production debugging easier.
+- **No audit trail** — status changes aren't logged with who/when; worth adding for dispute resolution.
+- **CI pipeline** — a GitHub Actions workflow exists locally but requires a token with `workflow` scope to push.
+
+---
+
+## Security Hardening (June 2026)
+
+The following changes were applied to improve production security:
+
+| Change | What it does |
+|--------|-------------|
+| **Role-based authorization** | Routes now check `req.user.role` — office users can only accept/order/clarify, managers can only archive. Previously any authenticated user could call any endpoint. |
+| **UUID validation middleware** | All `:id` route params are validated as proper UUIDs before reaching the database. Invalid IDs return 400 instead of crashing. |
+| **SQL injection fix** | The `/clarified` endpoint had a status value string-interpolated into SQL. Now uses a parameterized `$2` placeholder. |
+| **Health check endpoint** | `GET /api/health` — checks database connectivity and returns server uptime. Use for monitoring. |
+| **Global error handler** | A catch-all Express error handler prevents unhandled exceptions from crashing the process. |
+| **Default password guard** | In production (`NODE_ENV=production`), the app refuses to start if `MANAGER_PASSWORD` or `OFFICE_PASSWORD` are still set to defaults, or if `JWT_SECRET` is missing. |
+| **Body size limit reduced** | JSON body limit lowered from 50MB to 10MB to reduce abuse risk. |
+| **CORS lockdown** | Wildcard `*` CORS origin is blocked in production. Set `CORS_ORIGIN` to your actual domains. |
+| **Header border removed** | Removed the thin blue border line from the enterprise header for a cleaner look. |
+
+---
+
+## Test Suite
+
+49 unit tests using **vitest**, located in `backend/src/__tests__/`:
+
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `validatePayload.test.ts` | 20 | All field validations, all five reasons, line items vs legacy format, image limits, delivery request types |
+| `rowToTicket.test.ts` | 12 | Database row to Ticket object conversion, type coercion, null handling, JSON parsing, date formatting |
+| `sanitise.test.ts` | 8 | XSS stripping (script tags, event handlers), plain text passthrough, object sanitisation |
+| `auth.test.ts` | 9 | Role-based access (allow/deny), UUID validation (valid, invalid, edge cases) |
+
+Run with:
+
+```bash
+cd backend
+npm test
+```
