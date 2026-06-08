@@ -73,16 +73,24 @@ export function useTicketSubmit(
 
   useEffect(() => {
     async function handleOnline() {
+      // Give the socket a moment to reconnect before trying to sync
+      await new Promise(r => setTimeout(r, 3000));
+
       const queue = await getAllPendingReports();
       if (!queue.length) return;
       setFormLocked(true);
+      let synced = 0;
       for (const report of queue) {
         try {
           await submitViaSocket(report.payload as TicketFormPayload);
           await deletePendingReport(report.key);
-        } catch { /* retry */ }
+          synced++;
+        } catch {
+          // If one fails, stop trying — we're probably still offline
+          break;
+        }
       }
-      if (!(await getAllPendingReports()).length) {
+      if (synced > 0 && !(await getAllPendingReports()).length) {
         syncRef.current.onSynced();
         await syncRef.current.refreshTickets();
       }

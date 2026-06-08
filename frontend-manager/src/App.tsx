@@ -111,7 +111,11 @@ function AuthedApp({ token }: { token: string }) {
   async function handleSubmit(payload: TicketFormPayload) {
     setSubmitting(true); setBanner('sending');
     try {
-      const ack = await submitViaSocket(payload);
+      // Hard timeout — if nothing happens in 15 seconds, save offline
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('hard_timeout')), 15000)
+      );
+      const ack = await Promise.race([submitViaSocket(payload), timeout]);
       await refreshTickets();
       setSubmittedRef(ack.ref); setBanner('submitted');
       (window as Window & { __resetTicketForm?: () => void }).__resetTicketForm?.();
