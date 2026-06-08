@@ -77,7 +77,6 @@
 .enterprise-header {
   background: linear-gradient(180deg, var(--brand-navy-light) 0%, var(--brand-navy) 100%);
   color: #ffffff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 1px 3px rgba(11, 18, 32, 0.2);
 }
 
