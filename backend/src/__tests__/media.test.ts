@@ -37,11 +37,20 @@ describe('saveImage', () => {
   });
 });
 
+// Minimal valid container headers — what saveAudio checks for
+const WEBM_MAGIC = Buffer.from([0x1A, 0x45, 0xDF, 0xA3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+const OGG_MAGIC  = Buffer.concat([Buffer.from('OggS'),  Buffer.alloc(8)]);
+const MP3_MAGIC  = Buffer.concat([Buffer.from('ID3'),   Buffer.alloc(9)]);
+const MP4_MAGIC  = Buffer.concat([Buffer.alloc(4), Buffer.from('ftyp'), Buffer.alloc(4)]);
+
+function withMagic(magic: Buffer): string {
+  return Buffer.concat([magic, Buffer.from('rest')]).toString('base64');
+}
+
 describe('saveAudio', () => {
-  it('saves audio with correct extension from mime type', async () => {
+  it('saves a valid webm audio and returns a path', async () => {
     const { saveAudio } = await import('../utils/media');
-    const base64 = Buffer.from('fake-audio-bytes').toString('base64');
-    const result = saveAudio(base64, 'audio/webm');
+    const result = saveAudio(withMagic(WEBM_MAGIC), 'audio/webm');
 
     expect(result).toMatch(/^\/uploads\/audio_[\w-]+\.webm$/);
     const filePath = path.join(TEST_UPLOAD_DIR, path.basename(result));
@@ -50,27 +59,31 @@ describe('saveAudio', () => {
 
   it('maps mime types to correct extensions', async () => {
     const { saveAudio } = await import('../utils/media');
-    const base64 = Buffer.from('test').toString('base64');
 
-    const tests: [string, RegExp][] = [
-      ['audio/mpeg', /\.mp3$/],
-      ['audio/mp4', /\.mp4$/],
-      ['audio/ogg', /\.ogg$/],
-      ['audio/aac', /\.aac$/],
-      ['audio/webm', /\.webm$/],
-      ['audio/unknown', /\.webm$/],
+    const tests: [string, RegExp, Buffer][] = [
+      ['audio/mpeg',    /\.mp3$/,  MP3_MAGIC],
+      ['audio/mp4',     /\.mp4$/,  MP4_MAGIC],
+      ['audio/ogg',     /\.ogg$/,  OGG_MAGIC],
+      ['audio/aac',     /\.aac$/,  MP4_MAGIC],
+      ['audio/webm',    /\.webm$/, WEBM_MAGIC],
+      ['audio/unknown', /\.webm$/, WEBM_MAGIC],
     ];
 
-    for (const [mime, pattern] of tests) {
-      const result = saveAudio(base64, mime);
+    for (const [mime, pattern, magic] of tests) {
+      const result = saveAudio(withMagic(magic), mime);
       expect(result).toMatch(pattern);
     }
   });
 
   it('strips codec info from mime type', async () => {
     const { saveAudio } = await import('../utils/media');
-    const base64 = Buffer.from('test').toString('base64');
-    const result = saveAudio(base64, 'audio/webm;codecs=opus');
+    const result = saveAudio(withMagic(WEBM_MAGIC), 'audio/webm;codecs=opus');
     expect(result).toMatch(/\.webm$/);
+  });
+
+  it('rejects bytes that are not a known audio container', async () => {
+    const { saveAudio } = await import('../utils/media');
+    const garbage = Buffer.from('definitely-not-audio').toString('base64');
+    expect(() => saveAudio(garbage, 'audio/webm')).toThrow(/audio format/i);
   });
 });

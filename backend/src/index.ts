@@ -38,6 +38,10 @@ async function main(): Promise<void> {
 
   const app = express();
 
+  // Behind nginx: trust X-Forwarded-For so the rate limiter sees the real
+  // client IP, not always 127.0.0.1.
+  app.set('trust proxy', 1);
+
   app.use(helmet());
   app.use(cors({ origin: CORS_ORIGIN === '*' && process.env.NODE_ENV === 'production'
     ? false : CORS_ORIGIN }));
