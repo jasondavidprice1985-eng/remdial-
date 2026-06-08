@@ -18,7 +18,7 @@ interface Props {
 }
 
 const EMPTY: LineItemInput = { description: '', quantity: 1, reason: '' };
-const INITIAL_ROWS = 1;
+const INITIAL_ROWS = 5;
 const makeInitialItems = (): LineItemInput[] =>
   Array.from({ length: INITIAL_ROWS }, () => ({ ...EMPTY }));
 const isFilled = (r: LineItemInput): boolean =>
