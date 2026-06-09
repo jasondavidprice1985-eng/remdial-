@@ -33,6 +33,7 @@ function SectionLabel({ children, aux }: { children: React.ReactNode; aux?: Reac
 export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chatOpen, onToggleChat }: Props) {
   const [accepting, setAccepting] = useState(false);
   const [flagging, setFlagging] = useState(false);
+  const [clarifying, setClarifying] = useState(false);
   const lightbox = useLightbox();
   const needsAcceptance = ticket.status === 'pending' && !ticket.accepted_at;
   const showOrder = (ticket.status === 'pending' && !!ticket.accepted_at) || ticket.status === 'query';
@@ -56,6 +57,16 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
       });
       if (res.ok) onUpdate((await res.json()).ticket);
     } finally { setFlagging(false); }
+  }
+
+  async function handleClarified() {
+    setClarifying(true);
+    try {
+      const res = await apiFetch(`/tickets/${ticket.id}/clarified`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}',
+      });
+      if (res.ok) onUpdate((await res.json()).ticket);
+    } finally { setClarifying(false); }
   }
 
   async function handleOrdered() {
@@ -206,8 +217,16 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
           </div>
         )}
         {showOrder && (
-          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 bg-[var(--surface)]">
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 bg-[var(--surface)] space-y-3">
             <OrderForm ticket={ticket} onOrdered={handleOrdered} />
+            {ticket.status === 'query' && (
+              <div className="flex justify-end">
+                <button onClick={handleClarified} disabled={clarifying}
+                  className="text-[12.5px] font-medium text-[var(--subtle)] hover:text-[var(--text)] underline-offset-2 hover:underline disabled:opacity-50 transition-colors">
+                  {clarifying ? 'Saving…' : 'Mark clarified (no order yet)'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
