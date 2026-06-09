@@ -1,5 +1,4 @@
 import { useAuth } from '../auth/AuthContext';
-import { BrandLogo } from '@shared/BrandLogo';
 
 interface Props {
   archiveMode: boolean;
@@ -10,8 +9,19 @@ interface Props {
 export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive }: Props) {
   const { user, logout } = useAuth();
   return (
-    <header className="px-6 h-[60px] flex items-center justify-between shrink-0 border-b border-[var(--border)] bg-[var(--surface)]">
-      <BrandLogo product="control" size="md" variant="dark" />
+    <header className="px-6 h-[68px] flex items-center justify-between shrink-0 border-b border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-[var(--text)] text-white grid place-items-center text-[16px] font-bold shrink-0">
+          R
+        </div>
+        <div>
+          <h1 className="text-[17px] font-semibold tracking-[-0.015em] text-[var(--text)] m-0 leading-tight">Remedial</h1>
+          <p className="text-[12px] text-[var(--ordered)] m-0 mt-0.5 inline-flex items-center gap-1.5 font-medium">
+            <span className="w-[5px] h-[5px] rounded-full bg-[var(--ordered)]" />
+            Operations Control
+          </p>
+        </div>
+      </div>
       <div className="flex items-center gap-4">
         {unreadTotal > 0 && (
           <span className="text-[12px] font-medium text-[var(--query)] inline-flex items-center gap-1.5">

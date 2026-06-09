@@ -195,9 +195,9 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
 
         {/* Action bar */}
         {needsAcceptance && (
-          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 flex items-center justify-between bg-[var(--surface)]">
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 flex items-center justify-end gap-3 bg-[var(--surface)]">
             <button onClick={handleFlagQuery} disabled={accepting || flagging}
-              className="text-[13px] text-[var(--subtle)] hover:text-[var(--query)] disabled:opacity-50 transition-colors">
+              className="h-10 px-5 rounded-md border border-[var(--ordered)] text-[var(--ordered)] text-[13px] font-semibold hover:bg-[var(--ordered)]/5 disabled:opacity-50 transition-colors">
               {flagging ? 'Flagging…' : 'Needs clarification'}
             </button>
             <button onClick={handleAccept} disabled={accepting || flagging}
