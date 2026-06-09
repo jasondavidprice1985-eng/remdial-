@@ -1,15 +1,15 @@
 import { Ticket, TicketStatus } from '@shared/types';
 
-const STYLES: Record<TicketStatus | 'accepted', string> = {
-  pending:  'bg-blue-50 text-[var(--pending)] border border-blue-100',
-  accepted: 'bg-indigo-50 text-indigo-700 border border-indigo-100',
-  query:    'bg-red-50 text-[var(--query)] border border-red-100',
-  ordered:  'bg-green-50 text-[var(--ordered)] border border-green-100',
-  archived: 'bg-stone-100 text-[var(--muted)] border border-[var(--border)]',
+const DOT: Record<TicketStatus | 'accepted', string> = {
+  pending:  'var(--pending)',
+  accepted: 'var(--pending)',
+  query:    'var(--query)',
+  ordered:  'var(--ordered)',
+  archived: 'var(--border-strong)',
 };
 
 const LABELS: Record<TicketStatus | 'accepted', string> = {
-  pending: 'PENDING', accepted: 'ACCEPTED', query: 'QUERY', ordered: 'ORDERED', archived: 'ARCHIVED',
+  pending: 'Pending', accepted: 'Accepted', query: 'Query', ordered: 'Ordered', archived: 'Archived',
 };
 
 interface Props {
@@ -22,7 +22,8 @@ export default function StatusBadge({ status, ticket }: Props) {
     ? 'accepted'
     : status;
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide ${STYLES[effective]}`}>
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-[var(--text)] px-2.5 py-0.5 rounded-full border border-[var(--border)] tabular-nums">
+      <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: DOT[effective] }} />
       {LABELS[effective]}
     </span>
   );

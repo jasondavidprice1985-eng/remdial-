@@ -1,10 +1,10 @@
 export type Queue = 'inbox' | 'pending' | 'query' | 'ordered';
 
-const QUEUES: { id: Queue; label: string; accent: string }[] = [
-  { id: 'inbox',   label: 'Inbox',    accent: '#7c3aed' },
-  { id: 'pending', label: 'Accepted', accent: 'var(--pending)' },
-  { id: 'query',   label: 'Query',    accent: 'var(--query)' },
-  { id: 'ordered', label: 'Ordered',  accent: 'var(--ordered)' },
+const QUEUES: { id: Queue; label: string; dot: string }[] = [
+  { id: 'inbox',   label: 'Inbox',    dot: 'var(--inbox)' },
+  { id: 'pending', label: 'Accepted', dot: 'var(--pending)' },
+  { id: 'query',   label: 'Query',    dot: 'var(--query)' },
+  { id: 'ordered', label: 'Ordered',  dot: 'var(--ordered)' },
 ];
 
 interface Props {
@@ -16,24 +16,25 @@ interface Props {
 
 export default function QueueNav({ active, counts, unread, onChange }: Props) {
   return (
-    <nav className="inline-flex gap-1 p-1 rounded-lg shrink-0 bg-[var(--surface-2)] border border-[var(--border)]">
+    <nav className="inline-flex items-center gap-6 shrink-0">
       {QUEUES.map(q => {
         const isActive = active === q.id;
         const msgs = unread[q.id];
         return (
           <button key={q.id} type="button" onClick={() => onChange(q.id)}
-            className="relative px-4 py-2 rounded-md text-xs font-semibold transition-all min-w-[7rem]"
+            className="relative flex items-center gap-2 py-2 text-[13px] font-medium transition-colors"
             style={{
-              background: isActive ? 'var(--surface)' : 'transparent',
-              color: isActive ? q.accent : 'var(--muted)',
-              boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.08)' : undefined,
+              color: isActive ? 'var(--text)' : 'var(--subtle)',
+              borderBottom: isActive ? '1.5px solid var(--text)' : '1.5px solid transparent',
+              marginBottom: '-1px',
             }}>
-            {q.label}
-            <span className={`ml-1.5 tabular-nums font-bold ${counts[q.id] === 0 && !isActive ? 'text-stone-300' : ''}`}>
+            <span className="inline-block w-[7px] h-[7px] rounded-full" style={{ background: q.dot }} />
+            <span>{q.label}</span>
+            <span className="tabular-nums" style={{ color: 'var(--faint)' }}>
               {counts[q.id]}
             </span>
             {msgs > 0 && (
-              <span className="ml-1 text-[10px] font-bold" style={{ color: q.accent }}>· {msgs}</span>
+              <span className="tabular-nums text-[11px]" style={{ color: 'var(--query)' }}>· {msgs}</span>
             )}
           </button>
         );

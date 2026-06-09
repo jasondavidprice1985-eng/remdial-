@@ -21,7 +21,7 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="app-fieldrem min-h-screen mesh-bg flex items-center justify-center">
+      <div className="app-fieldrem min-h-screen bg-[var(--surface)] flex items-center justify-center">
         <span className="w-8 h-8 border-2 border-stone-300 border-t-[var(--action)] rounded-full animate-spin" />
       </div>
     );
@@ -144,7 +144,7 @@ function AuthedApp({ token }: { token: string }) {
   }
 
   return (
-    <div className="app-fieldrem min-h-screen mesh-bg flex flex-col">
+    <div className="app-fieldrem min-h-screen bg-[var(--surface)] flex flex-col">
       <StatusBanner banner={banner} submittedRef={submittedRef} errorText={errorText} />
       <PwaInstallBanner />
       <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">

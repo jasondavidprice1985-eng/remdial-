@@ -18,6 +18,17 @@ interface Props {
   onToggleChat?: () => void;
 }
 
+function SectionLabel({ children, aux }: { children: React.ReactNode; aux?: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between mb-4">
+      <span className="text-[11px] font-medium text-[var(--faint)] uppercase tracking-[0.06em]">
+        {children}
+      </span>
+      {aux && <span className="text-[12px] text-[var(--subtle)] tabular-nums">{aux}</span>}
+    </div>
+  );
+}
+
 export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chatOpen, onToggleChat }: Props) {
   const [clarifying, setClarifying] = useState(false);
   const [accepting, setAccepting] = useState(false);
@@ -68,105 +79,147 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
 
   return (
     <>
-      <div className="flex flex-col h-full min-h-0">
-        <div className="px-4 py-3 border-b border-[var(--border)] shrink-0 bg-[var(--surface-2)]">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono font-bold text-base text-[var(--ref)]">{ticket.ref}</span>
+      <div className="flex flex-col h-full min-h-0 bg-[var(--surface)]">
+        {/* Top bar */}
+        <div className="px-6 h-[52px] flex items-center justify-between border-b border-[var(--border)] shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="font-mono text-[12px] text-[var(--muted)] font-medium">{ticket.ref}</span>
+            <span className="text-[var(--ghost)]">·</span>
+            <span className="text-[13px] text-[var(--subtle)] truncate">{ticket.developer}</span>
+          </div>
+          {onToggleChat && (
+            <button type="button" onClick={onToggleChat}
+              className="shrink-0 inline-flex items-center gap-2 text-[12.5px] font-medium px-3 h-8 rounded-md border transition-colors"
+              style={{
+                background: chatOpen ? 'var(--text)' : 'var(--surface)',
+                color: chatOpen ? '#fff' : 'var(--text)',
+                borderColor: chatOpen ? 'var(--text)' : 'var(--border)',
+              }}
+              title={chatOpen ? 'Hide messages' : 'Show messages'}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              Messages
+              {(ticket.unread_count ?? 0) > 0 && !chatOpen && (
+                <span className="bg-[var(--query)] text-white text-[10px] font-semibold tabular-nums px-1.5 rounded-full leading-[14px]">
+                  {ticket.unread_count}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Scroll body */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="mx-auto max-w-[720px] px-8 lg:px-12 py-10">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="font-mono text-[12px] text-[var(--muted)] font-medium mb-3.5">
+                {ticket.ref}
+              </div>
+              <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.025em] text-[var(--text)] m-0">
+                {ticket.developer}
+              </h1>
+              <div className="mt-2 text-[14px] text-[var(--subtle)] flex flex-wrap gap-x-3 gap-y-1">
+                <span>{ticket.site}</span>
+                <span className="text-[var(--ghost)]">·</span>
+                <span>Plot {ticket.plot_number}</span>
+              </div>
+              <div className="mt-5">
                 <StatusBadge status={ticket.status} ticket={ticket} />
               </div>
-              <p className="text-xs text-[var(--muted)] mt-1">
-                {ticket.developer} · {ticket.site} · Plot {ticket.plot_number}
-              </p>
             </div>
-            {onToggleChat && (
-              <button type="button" onClick={onToggleChat}
-                className={`shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-colors ${
-                  chatOpen
-                    ? 'bg-[var(--pending)] text-white border-transparent'
-                    : 'bg-[var(--surface)] text-[var(--text)] border-[var(--border)] hover:bg-[var(--surface-2)]'
-                }`}
-                title={chatOpen ? 'Hide messages' : 'Show messages'}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                Messages
-                {(ticket.unread_count ?? 0) > 0 && !chatOpen && (
-                  <span className="ml-1 px-1.5 rounded-full bg-[var(--query)] text-white text-[10px]">
-                    {ticket.unread_count}
-                  </span>
+
+            <StatusStepper ticket={ticket} />
+
+            <section className="pt-8">
+              <SectionLabel aux={`${(ticket.line_items?.length || 1)} lines`}>Items requested</SectionLabel>
+              <LineItemsTable ticket={ticket} />
+            </section>
+
+            {ticket.images && ticket.images.length > 0 && (
+              <section className="pt-10 mt-10 border-t border-[var(--border)]">
+                <SectionLabel aux={`${ticket.images.length} attached`}>Photos</SectionLabel>
+                <PhotoGrid images={ticket.images} onSelect={lightbox.open} />
+              </section>
+            )}
+
+            {ticket.status === 'ordered' && ticket.po_number && (
+              <section className="pt-10 mt-10 border-t border-[var(--border)]">
+                <SectionLabel>Ordered</SectionLabel>
+                <div className="grid grid-cols-[140px_1fr] gap-x-5 gap-y-2.5 text-[13.5px]">
+                  <div className="text-[var(--subtle)]">Order number</div>
+                  <div className="font-mono text-[var(--text)]">{ticket.po_number}</div>
+                  <div className="text-[var(--subtle)]">Delivery</div>
+                  <div className="text-[var(--text)]">{ticket.delivery_date}</div>
+                </div>
+                {ticket.ordered_items && ticket.ordered_items.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-[var(--border)]">
+                    <SectionLabel>SAP items sent</SectionLabel>
+                    <ul className="space-y-2 text-[13px]">
+                      {ticket.ordered_items.map((it, i) => (
+                        <li key={i} className="flex justify-between gap-3 py-2 border-b border-[var(--border)] last:border-b-0">
+                          <span className="truncate">
+                            {it.description}
+                            {it.sap_code && <span className="ml-1.5 font-mono text-[var(--muted)] text-[12px]">[{it.sap_code}]</span>}
+                          </span>
+                          <span className="font-mono text-[var(--muted)] shrink-0 tabular-nums">×{it.quantity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
-              </button>
+              </section>
+            )}
+
+            {showPrint && (
+              <section className="pt-10 mt-10 border-t border-[var(--border)]">
+                <button onClick={async () => {
+                  let messages: import('@shared/types').Message[] = [];
+                  try {
+                    const res = await apiFetch(`/tickets/${ticket.id}/messages`);
+                    if (res.ok) messages = (await res.json()).messages || [];
+                  } catch { /* print without messages on fetch failure */ }
+                  printTicket(ticket, ORIGIN, messages);
+                }}
+                  className="inline-flex items-center gap-2 text-[13px] font-medium text-[var(--text)] border border-[var(--border)] rounded-md h-9 px-4 hover:bg-[var(--surface-2)] transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                  </svg>
+                  Print ticket
+                </button>
+              </section>
             )}
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
-          <StatusStepper ticket={ticket} />
-          <LineItemsTable ticket={ticket} />
-          <PhotoGrid images={ticket.images} onSelect={lightbox.open} />
-          {ticket.status === 'ordered' && ticket.po_number && (
-            <div className="card p-3 text-sm space-y-2">
-              <div className="text-[var(--ordered)]">
-                <p className="font-semibold">Ordered</p>
-                <p className="mt-1">Order Number: {ticket.po_number}</p>
-                <p className="text-[var(--muted)]">Delivery: {ticket.delivery_date}</p>
-              </div>
-              {ticket.ordered_items && ticket.ordered_items.length > 0 && (
-                <div className="pt-2 border-t border-[var(--border)]">
-                  <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-1.5">SAP items sent</p>
-                  <ul className="space-y-0.5 text-xs">
-                    {ticket.ordered_items.map((it, i) => (
-                      <li key={i} className="flex justify-between gap-2">
-                        <span className="truncate">
-                          {it.description}
-                          {it.sap_code && <span className="ml-1.5 font-mono text-[var(--muted)]">[{it.sap_code}]</span>}
-                        </span>
-                        <span className="font-mono text-[var(--muted)] shrink-0">×{it.quantity}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-          {showPrint && (
-            <button onClick={async () => {
-              let messages: import('@shared/types').Message[] = [];
-              try {
-                const res = await apiFetch(`/tickets/${ticket.id}/messages`);
-                if (res.ok) messages = (await res.json()).messages || [];
-              } catch { /* print without messages on fetch failure */ }
-              printTicket(ticket, ORIGIN, messages);
-            }}
-              className="w-full h-9 rounded-lg text-sm font-semibold border border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface)] text-[var(--muted)] flex items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
-              </svg>
-              Print Ticket
-            </button>
-          )}
-        </div>
+
+        {/* Action bar */}
         {needsAcceptance && (
-          <div className="shrink-0 border-t border-[var(--border)] p-4 bg-[var(--surface-2)] space-y-2">
-            <button onClick={handleAccept} disabled={accepting || flagging}
-              className="w-full h-12 rounded-xl text-sm font-bold text-white bg-[var(--pending)] hover:opacity-90 disabled:opacity-50">
-              {accepting ? 'Accepting…' : 'Accept Ticket'}
-            </button>
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 flex items-center justify-between bg-[var(--surface)]">
             <button onClick={handleFlagQuery} disabled={accepting || flagging}
-              className="w-full h-11 rounded-xl text-sm font-semibold text-[var(--query)] border-2 border-[var(--query)] bg-white hover:bg-red-50 disabled:opacity-50">
-              {flagging ? 'Flagging…' : 'Needs Clarification'}
+              className="text-[13px] text-[var(--subtle)] hover:text-[var(--query)] disabled:opacity-50 transition-colors">
+              {flagging ? 'Flagging…' : 'Needs clarification'}
+            </button>
+            <button onClick={handleAccept} disabled={accepting || flagging}
+              className="h-10 px-5 rounded-md bg-[var(--text)] text-white text-[13px] font-semibold hover:bg-black disabled:opacity-50 inline-flex items-center gap-2">
+              {accepting ? 'Accepting…' : (
+                <>
+                  Accept ticket
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                  </svg>
+                </>
+              )}
             </button>
           </div>
         )}
         {showOrder && (
-          <div className="shrink-0 border-t border-[var(--border)] p-4 bg-[var(--surface-2)] space-y-3">
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 space-y-3 bg-[var(--surface)]">
             <OrderForm ticket={ticket} onOrdered={handleOrdered} />
             {ticket.status === 'query' && (
               <button onClick={handleClarified} disabled={clarifying}
-                className="w-full h-9 rounded-lg text-sm font-semibold text-[var(--pending)] border border-[var(--pending)] bg-white hover:bg-blue-50 disabled:opacity-50">
-                {clarifying ? 'Saving…' : 'Mark Clarified'}
+                className="text-[13px] text-[var(--subtle)] hover:text-[var(--text)] disabled:opacity-50 transition-colors">
+                {clarifying ? 'Saving…' : 'Mark clarified'}
               </button>
             )}
           </div>

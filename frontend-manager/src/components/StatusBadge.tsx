@@ -1,16 +1,15 @@
-import React from 'react';
 import { Ticket, TicketStatus } from '@shared/types';
 
-const STYLES: Record<TicketStatus | 'accepted', React.CSSProperties> = {
-  pending:  { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' },
-  accepted: { background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe' },
-  query:    { background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' },
-  ordered:  { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' },
-  archived: { background: '#f5f5f4', color: '#78716c', border: '1px solid #e7e5e4' },
+const DOT: Record<TicketStatus | 'accepted', string> = {
+  pending:  'var(--pending)',
+  accepted: 'var(--pending)',
+  query:    'var(--query)',
+  ordered:  'var(--ordered)',
+  archived: 'var(--border-strong)',
 };
 
 const LABELS: Record<TicketStatus | 'accepted', string> = {
-  pending: 'PENDING', accepted: 'ACCEPTED', query: 'QUERY', ordered: 'ORDERED', archived: 'ARCHIVED',
+  pending: 'Pending', accepted: 'Accepted', query: 'Query', ordered: 'Ordered', archived: 'Archived',
 };
 
 interface Props {
@@ -23,7 +22,9 @@ export default function StatusBadge({ status, ticket }: Props) {
     ? 'accepted'
     : status;
   return (
-    <span className={`text-xs font-bold px-2.5 py-1 rounded-full tracking-wide shrink-0 ${status === 'query' ? 'animate-query-pulse' : ''}`}
-      style={STYLES[effective]}>{LABELS[effective]}</span>
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-[var(--text)] tabular-nums shrink-0">
+      <span className="w-[7px] h-[7px] rounded-full" style={{ background: DOT[effective] }} />
+      {LABELS[effective]}
+    </span>
   );
 }

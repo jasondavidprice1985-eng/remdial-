@@ -19,37 +19,35 @@ export default function StatusStepper({ ticket }: { ticket: Ticket }) {
   const isQuery = ticket.status === 'query';
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center">
+    <div className="space-y-3">
+      <div className="flex items-center py-4 border-y border-[var(--border)]">
         {STEPS.map((step, i) => {
+          const done = i < active;
+          const current = i === active;
           const reached = i <= active;
-          const isCurrent = i === active;
           return (
-            <div key={step.key} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center min-w-0">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
-                  reached
-                    ? 'bg-[var(--ordered)] text-white'
-                    : 'bg-[var(--surface-2)] text-[var(--muted)] border border-[var(--border)]'
-                } ${isCurrent ? 'ring-2 ring-[var(--ordered)] ring-offset-2 ring-offset-white' : ''}`}>
-                  {reached ? '✓' : i + 1}
-                </div>
-                <span className={`mt-1 text-[10px] uppercase tracking-wider ${
-                  reached ? 'text-[var(--text)] font-semibold' : 'text-[var(--muted)]'
-                }`}>{step.label}</span>
-              </div>
+            <div key={step.key} className="flex items-center flex-1 last:flex-none gap-2.5">
+              <span
+                className="w-[8px] h-[8px] rounded-full shrink-0"
+                style={{
+                  background: reached ? 'var(--text)' : 'var(--border-strong)',
+                  boxShadow: current ? '0 0 0 3px rgba(10,10,10,0.12)' : undefined,
+                }}
+              />
+              <span className={`text-[12.5px] tracking-tight ${
+                done ? 'text-[var(--text)]' : current ? 'text-[var(--text)] font-medium' : 'text-[var(--faint)]'
+              }`}>{step.label}</span>
               {i < STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-1 mb-4 ${
-                  i < active ? 'bg-[var(--ordered)]' : 'bg-[var(--border)]'
-                }`} />
+                <div className="flex-1 h-px bg-[var(--border)] mx-2" />
               )}
             </div>
           );
         })}
       </div>
       {isQuery && (
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--query)] flex items-center gap-1">
-          ⚠ Awaiting clarification from manager
+        <p className="text-[12px] text-[var(--query)] inline-flex items-center gap-1.5">
+          <span className="w-[5px] h-[5px] rounded-full bg-[var(--query)]" />
+          Awaiting clarification from manager
         </p>
       )}
     </div>

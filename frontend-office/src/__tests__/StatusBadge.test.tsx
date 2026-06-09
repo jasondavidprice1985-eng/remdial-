@@ -3,23 +3,23 @@ import { render, screen } from '@testing-library/react';
 import StatusBadge from '../components/StatusBadge';
 
 describe('StatusBadge', () => {
-  it('renders PENDING for pending status', () => {
+  it('renders Pending for pending status', () => {
     render(<StatusBadge status="pending" />);
-    expect(screen.getByText('PENDING')).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
   });
 
-  it('renders QUERY for query status', () => {
+  it('renders Query for query status', () => {
     render(<StatusBadge status="query" />);
-    expect(screen.getByText('QUERY')).toBeInTheDocument();
+    expect(screen.getByText('Query')).toBeInTheDocument();
   });
 
-  it('renders ORDERED for ordered status', () => {
+  it('renders Ordered for ordered status', () => {
     render(<StatusBadge status="ordered" />);
-    expect(screen.getByText('ORDERED')).toBeInTheDocument();
+    expect(screen.getByText('Ordered')).toBeInTheDocument();
   });
 
-  it('renders ARCHIVED for archived status', () => {
+  it('renders Archived for archived status', () => {
     render(<StatusBadge status="archived" />);
-    expect(screen.getByText('ARCHIVED')).toBeInTheDocument();
+    expect(screen.getByText('Archived')).toBeInTheDocument();
   });
 });

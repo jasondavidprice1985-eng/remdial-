@@ -68,7 +68,7 @@ function AuthedApp({ token }: { token: string }) {
   const unreadTotal = tickets.reduce((sum, t) => sum + (t.unread_count ?? 0), 0);
 
   return (
-    <div className="app-office h-screen flex flex-col office-bg" onClick={unlockAudio}>
+    <div className="app-office h-screen flex flex-col bg-[var(--surface)]" onClick={unlockAudio}>
       {!audioReady && (
         <div className="text-center py-1.5 text-xs text-[var(--muted)] border-b border-[var(--border)]">
           Click anywhere to enable notifications
@@ -76,7 +76,7 @@ function AuthedApp({ token }: { token: string }) {
       )}
       <OfficeHeader archiveMode={archiveMode} unreadTotal={unreadTotal}
         onToggleArchive={() => setArchiveMode(m => !m)} />
-      <div className="flex-1 overflow-hidden px-4 pb-4 pt-3 min-h-0">
+      <div className="flex-1 overflow-hidden px-6 pt-5 pb-5 min-h-0">
         {archiveMode ? (
           <ArchiveView tickets={archivedTickets} filterDev={filterDev} filterSite={filterSite}
             onFilterDev={setFilterDev} onFilterSite={setFilterSite} />
