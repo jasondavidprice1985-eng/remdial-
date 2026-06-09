@@ -22,10 +22,10 @@ interface Props {
 
 export default function TicketList({
   tickets, loading, respondedQueries, pendingCount = 0, onTicketUpdate, onManagerResponded,
-  emptyTitle = 'No reports yet',
+  emptyTitle = 'No tickets yet',
   emptySubtitle = `Tap ${brand.copy.newReport} below to submit your first report.`,
   emptyIcon = 'reports',
-  heading = 'Your reports',
+  heading = 'Your tickets',
 }: Props) {
   const [selected, setSelected] = useState<Ticket | null>(null);
   const sorted = useMemo(() => sortTickets(tickets, respondedQueries), [tickets, respondedQueries]);
@@ -66,7 +66,7 @@ export default function TicketList({
       {pendingCount > 0 && (
         <div className="mx-5 mb-3 px-3 py-2.5 text-[12.5px] border border-[var(--border)] rounded-md text-[var(--text)] bg-[var(--surface-2)] flex items-center gap-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--inbox)] shrink-0" />
-          <span>{pendingCount} report{pendingCount > 1 ? 's' : ''} saved offline — will sync when signal returns</span>
+          <span>{pendingCount} ticket{pendingCount > 1 ? 's' : ''} saved offline — will sync when signal returns</span>
         </div>
       )}
 

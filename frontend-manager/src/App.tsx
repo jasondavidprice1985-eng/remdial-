@@ -69,7 +69,7 @@ function AuthedApp({ token }: { token: string }) {
       setTickets(data.tickets || []);
     } catch (err) {
       console.error('[tickets] refresh failed', err);
-      showError('Could not refresh reports.');
+      showError('Could not refresh tickets.');
     }
   }, [showError]);
 
@@ -94,7 +94,7 @@ function AuthedApp({ token }: { token: string }) {
       .then(d => setTickets(d.tickets || []))
       .catch(err => {
         console.error('[tickets] initial load failed', err);
-        showError('Could not load reports.');
+        showError('Could not load tickets.');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -175,8 +175,8 @@ function AuthedApp({ token }: { token: string }) {
           {tab === 'archive' && (
             <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
               onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
-              heading="" emptyIcon="archive" emptyTitle="No archived reports"
-              emptySubtitle="Completed reports will appear here." />
+              heading="" emptyIcon="archive" emptyTitle="No archived tickets"
+              emptySubtitle="Completed tickets will appear here." />
           )}
         </main>
         <BottomTabBar active={tab} onChange={setTab} attentionCount={attentionCount(tickets)} />

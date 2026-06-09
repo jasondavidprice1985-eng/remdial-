@@ -33,7 +33,7 @@ function Icon({ name }: { name: Tab }) {
 
 export default function BottomTabBar({ active, onChange, attentionCount }: Props) {
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'reports', label: 'Reports' },
+    { id: 'reports', label: 'Tickets' },
     { id: 'new', label: brand.copy.newReport },
     { id: 'archive', label: 'Archive' },
   ];

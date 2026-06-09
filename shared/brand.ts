@@ -24,7 +24,7 @@ export const brand = {
       name: 'Field',
       fullName: 'System22 Field',
       subtitle: 'Mobile Operations',
-      description: 'Capture remedial reports from site with offline support.',
+      description: 'Capture remedial tickets from site with offline support.',
       pwaShortName: 'S22 Field',
     },
     control: {
@@ -37,7 +37,7 @@ export const brand = {
 
   copy: {
     newReport: 'New Remedial',
-    reports: 'Reports',
+    reports: 'Tickets',
     worksOrder: 'Remedial Works Order',
     secureSignIn: 'Secure sign-in',
     enterpriseGrade: 'Enterprise-grade workflow management',

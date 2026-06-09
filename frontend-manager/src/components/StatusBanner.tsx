@@ -13,10 +13,10 @@ function Spinner() {
 }
 
 const CONFIG: Record<Exclude<BannerState, 'none'>, { className: string; icon: React.ReactNode; text: (ref?: string, err?: string) => string }> = {
-  sending:   { className: 'bg-[var(--action)] text-white', icon: <Spinner />, text: () => 'Submitting report…' },
-  submitted: { className: 'bg-[var(--success)] text-white', icon: <span className="text-lg">✓</span>, text: ref => `Report submitted — Ref: ${ref || '—'}` },
+  sending:   { className: 'bg-[var(--action)] text-white', icon: <Spinner />, text: () => 'Submitting ticket…' },
+  submitted: { className: 'bg-[var(--success)] text-white', icon: <span className="text-lg">✓</span>, text: ref => `Ticket submitted — Ref: ${ref || '—'}` },
   offline:   { className: 'bg-stone-800 text-white', icon: <span>☁</span>, text: () => 'No signal. Saved locally — will sync automatically.' },
-  synced:    { className: 'bg-[var(--success)] text-white', icon: <span>↻</span>, text: () => 'All offline reports synced!' },
+  synced:    { className: 'bg-[var(--success)] text-white', icon: <span>↻</span>, text: () => 'All offline tickets synced!' },
   error:     { className: 'bg-[var(--danger)] text-white', icon: <span>⚠</span>, text: (_r, err) => err || 'Something went wrong. Please try again.' },
 };
 
