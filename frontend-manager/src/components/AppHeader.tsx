@@ -20,18 +20,19 @@ export default function AppHeader() {
 
   return (
     <header
-      className="px-5 pt-3 pb-2 bg-[var(--surface)]"
-      style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+      className="px-5 pt-5 pb-5 bg-[var(--surface)] border-b border-[var(--border)]"
+      style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}
     >
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-[8px] bg-[var(--text)] text-white grid place-items-center text-[14px] font-semibold shrink-0">
+      <div className="flex items-center gap-3.5">
+        <div className="w-11 h-11 rounded-lg bg-[var(--text)] text-white grid place-items-center text-[18px] font-bold shrink-0">
           R
         </div>
-        <div className="flex-1 min-w-0 leading-tight">
-          <div className="text-[15px] font-semibold tracking-tight text-[var(--text)]">Remedial</div>
-          <div className="text-[12px] text-[var(--subtle)] truncate">
-            {user ? `Site manager · ${user.username}` : 'Site manager'}
-          </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0 leading-[1.15]">Remedial</h1>
+          <p className="text-[13px] text-[var(--ordered)] m-0 mt-1 inline-flex items-center gap-1.5">
+            <span className="w-[6px] h-[6px] rounded-full bg-[var(--ordered)]" />
+            Ticket Dashboard
+          </p>
         </div>
         {user && (
           <div className="flex items-center gap-1.5">
