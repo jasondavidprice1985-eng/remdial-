@@ -16,10 +16,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
       },
       manifest: {
-        name: 'System22 Field',
-        short_name: 'S22 Field',
-        theme_color: '#0b1220',
-        background_color: '#f1f5f9',
+        name: 'Remedial',
+        short_name: 'Remedial',
+        theme_color: '#0a0a0a',
+        background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
         icons: [
