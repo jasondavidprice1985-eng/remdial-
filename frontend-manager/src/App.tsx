@@ -148,7 +148,13 @@ function AuthedApp({ token }: { token: string }) {
       <StatusBanner banner={banner} submittedRef={submittedRef} errorText={errorText} />
       <PwaInstallBanner />
       <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">
-        {tab !== 'new' && <AppHeader />}
+        {tab === 'reports' && <AppHeader />}
+        {tab === 'archive' && (
+          <div className="px-5 pt-5 pb-5 border-b border-[var(--border)]"
+            style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}>
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0">Archive</h1>
+          </div>
+        )}
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
           {tab === 'new' && (
             <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />
@@ -160,7 +166,7 @@ function AuthedApp({ token }: { token: string }) {
           {tab === 'archive' && (
             <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
               onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
-              emptyIcon="archive" emptyTitle="No archived reports"
+              heading="" emptyIcon="archive" emptyTitle="No archived reports"
               emptySubtitle="Completed reports will appear here." />
           )}
         </main>

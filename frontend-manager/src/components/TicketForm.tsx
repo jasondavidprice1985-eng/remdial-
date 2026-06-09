@@ -64,11 +64,9 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
     <form onSubmit={handleSubmit} className="pb-36">
       <div className="px-5 pt-5 pb-5 border-b border-[var(--border)] flex items-center gap-3.5"
         style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}>
-        <button type="button" className="w-11 h-11 rounded-lg border border-[var(--border-strong)] grid place-items-center text-[var(--text)] hover:bg-[var(--surface-2)] shrink-0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5" /><path d="m12 19-7-7 7-7" />
-          </svg>
-        </button>
+        <div className="w-11 h-11 rounded-lg bg-[var(--text)] text-white grid place-items-center text-[18px] font-bold shrink-0">
+          R
+        </div>
         <div className="flex-1">
           <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0 leading-[1.15]">New Remedial</h1>
           <p className="text-[13px] text-[var(--subtle)] m-0 mt-1 inline-flex items-center gap-1.5">
@@ -95,7 +93,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
         <FormSection
           step={2}
           eyebrow="What"
-          label="What's needed?"
+          label="What's needed and why?"
           aux={<CompleteTag done={itemsValid} label={itemsValid ? `${filledItems.length} item${filledItems.length === 1 ? '' : 's'}` : '0 items'} />}
         >
           <LineItemBuilder items={items} onChange={setItems} disabled={disabled} />
