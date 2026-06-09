@@ -58,7 +58,7 @@ export default function LoginPage() {
               disabled={submitting}
               autoComplete="username"
               autoFocus
-              className="w-full h-[50px] px-4 rounded-[7px] border border-[var(--border-strong)] bg-[var(--surface)] text-[16px] text-[var(--text)] outline-none focus:border-[var(--text)] transition-colors disabled:opacity-60"
+              className="w-full h-12 px-4 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[16px] text-[var(--text)] outline-none focus:border-[var(--text)] transition-colors disabled:opacity-60"
             />
           </label>
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               disabled={submitting}
               autoComplete="current-password"
-              className="w-full h-[50px] px-4 rounded-[7px] border border-[var(--border-strong)] bg-[var(--surface)] text-[16px] text-[var(--text)] outline-none focus:border-[var(--text)] transition-colors disabled:opacity-60"
+              className="w-full h-12 px-4 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[16px] text-[var(--text)] outline-none focus:border-[var(--text)] transition-colors disabled:opacity-60"
             />
           </label>
 
@@ -97,7 +97,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="w-full h-[52px] rounded-[8px] bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50"
+            className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50"
           >
             {submitting && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
             {submitting ? 'Signing in…' : 'Sign in'}

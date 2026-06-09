@@ -134,7 +134,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           <span className="text-[var(--faint)]">Sending to office</span>
         </div>
         <button type="submit" disabled={!canSubmit || submitting || disabled}
-          className="w-full h-12 rounded-lg bg-[var(--text)] text-white text-[14.5px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50">
+          className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50">
           {submitting && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
           {submitting
             ? 'Submitting…'

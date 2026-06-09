@@ -33,9 +33,23 @@ export default function TicketList({
 
   if (loading) {
     return (
-      <div className="px-5 pt-2 space-y-3">
-        <div className="skeleton h-7 w-48 mb-2" />
-        {[1, 2, 3].map(i => <div key={i} className="skeleton h-20 w-full rounded-md" />)}
+      <div className="px-5 pt-4">
+        {heading && (
+          <>
+            <div className="skeleton h-7 w-40 mb-2 rounded-md" />
+            <div className="skeleton h-4 w-32 mb-5 rounded" />
+          </>
+        )}
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="py-4 border-b border-[var(--border)]">
+            <div className="flex items-center justify-between mb-2">
+              <div className="skeleton h-3 w-16 rounded" />
+              <div className="skeleton h-3 w-12 rounded" />
+            </div>
+            <div className="skeleton h-4 w-3/5 mb-1.5 rounded" />
+            <div className="skeleton h-3 w-2/5 rounded" />
+          </div>
+        ))}
       </div>
     );
   }
