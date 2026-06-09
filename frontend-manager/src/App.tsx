@@ -11,6 +11,7 @@ import TicketForm, { TicketFormPayload } from './components/TicketForm';
 import TicketList from './components/TicketList';
 import StatusBanner from './components/StatusBanner';
 import PwaInstallBanner from './components/PwaInstallBanner';
+import AppHeader from './components/AppHeader';
 import BottomTabBar, { Tab } from './components/BottomTabBar';
 
 type BannerState = 'none' | 'sending' | 'submitted' | 'offline' | 'synced' | 'error';
@@ -146,8 +147,8 @@ function AuthedApp({ token }: { token: string }) {
     <div className="app-fieldrem min-h-screen bg-[var(--surface)] flex flex-col">
       <StatusBanner banner={banner} submittedRef={submittedRef} errorText={errorText} />
       <PwaInstallBanner />
-      <div className="max-w-lg mx-auto flex flex-col flex-1 w-full"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">
+        {tab !== 'new' && <AppHeader />}
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
           {tab === 'new' && (
             <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />

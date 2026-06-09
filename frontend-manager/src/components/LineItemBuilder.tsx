@@ -60,8 +60,8 @@ export default function LineItemBuilder({ items, onChange, disabled }: Props) {
         );
       })}
       <button type="button" onClick={addRow} disabled={disabled}
-        className="text-base font-semibold text-[var(--action)] min-h-[44px]">
-        + Add Item
+        className="w-full mt-3 h-[52px] text-[16px] font-semibold text-[var(--ordered)] flex items-center justify-center gap-1.5 disabled:opacity-50">
+        + Add Another Item
       </button>
 
       {editingIndex !== null && (

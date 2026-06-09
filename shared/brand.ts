@@ -36,7 +36,7 @@ export const brand = {
   },
 
   copy: {
-    newReport: 'New Report',
+    newReport: 'New Remedial',
     reports: 'Reports',
     worksOrder: 'Remedial Works Order',
     secureSignIn: 'Secure sign-in',

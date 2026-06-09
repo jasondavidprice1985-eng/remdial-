@@ -94,6 +94,6 @@ describe('LoginPage', () => {
   it('renders sign-in heading', () => {
     renderPage();
 
-    expect(screen.getByRole('heading', { name: /sign in.*site account/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /sign in to your account/i })).toBeInTheDocument();
   });
 });
