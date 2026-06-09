@@ -104,14 +104,30 @@ function AuthedApp({ token }: { token: string }) {
   }, [tab, loadArchive]);
 
   useEffect(() => {
-    const onUpdated = ({ ticket }: { ticket: Ticket }) => handleTicketUpdate(ticket, setTickets);
+    const onUpdated = ({ ticket }: { ticket: Ticket }) => {
+      console.log('[SOCKET] ticket:updated', ticket.ref, ticket.status, 'unread=', ticket.unread_count);
+      handleTicketUpdate(ticket, setTickets);
+    };
     const onArchived = ({ ticketId }: { ticketId: string }) => {
+      console.log('[SOCKET] ticket:archived', ticketId);
       setTickets(prev => prev.filter(t => t.id !== ticketId));
       if (tab === 'archive') loadArchive();
     };
+    const onConnect = () => console.log('[SOCKET] connected id=', socket.id);
+    const onDisconnect = (r: string) => console.log('[SOCKET] disconnected reason=', r);
+    const onError = (e: Error) => console.error('[SOCKET] connect_error', e.message);
     socket.on('ticket:updated', onUpdated);
     socket.on('ticket:archived', onArchived);
-    return () => { socket.off('ticket:updated', onUpdated); socket.off('ticket:archived', onArchived); };
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onError);
+    return () => {
+      socket.off('ticket:updated', onUpdated);
+      socket.off('ticket:archived', onArchived);
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onError);
+    };
   }, [socket, tab, loadArchive]);
 
   useEffect(() => {
