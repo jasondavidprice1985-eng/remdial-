@@ -6,6 +6,7 @@ import OrderForm from './OrderForm';
 import ImageLightbox, { useLightbox } from './ImageLightbox';
 import { LineItemsTable, PhotoGrid } from '../utils/ticketDisplay';
 import { printTicket } from '../utils/printTicket';
+import { fmtDateUK } from '../utils/formatDate';
 import { apiFetch } from '../auth/apiClient';
 
 const ORIGIN = (import.meta.env.VITE_SOCKET_URL as string) || '';
@@ -30,7 +31,6 @@ function SectionLabel({ children, aux }: { children: React.ReactNode; aux?: Reac
 }
 
 export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chatOpen, onToggleChat }: Props) {
-  const [clarifying, setClarifying] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [flagging, setFlagging] = useState(false);
   const lightbox = useLightbox();
@@ -56,16 +56,6 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
       });
       if (res.ok) onUpdate((await res.json()).ticket);
     } finally { setFlagging(false); }
-  }
-
-  async function handleClarified() {
-    setClarifying(true);
-    try {
-      const res = await apiFetch(`/tickets/${ticket.id}/clarified`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}',
-      });
-      if (res.ok) onUpdate((await res.json()).ticket);
-    } finally { setClarifying(false); }
   }
 
   async function handleOrdered() {
@@ -151,7 +141,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
                   <div className="text-[var(--subtle)]">Order number</div>
                   <div className="font-mono text-[var(--text)]">{ticket.po_number}</div>
                   <div className="text-[var(--subtle)]">Delivery</div>
-                  <div className="text-[var(--text)]">{ticket.delivery_date}</div>
+                  <div className="text-[var(--text)] tabular-nums">{fmtDateUK(ticket.delivery_date)}</div>
                 </div>
                 {ticket.ordered_items && ticket.ordered_items.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-[var(--border)]">
@@ -197,7 +187,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
         {needsAcceptance && (
           <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 flex items-center justify-end gap-3 bg-[var(--surface)]">
             <button onClick={handleFlagQuery} disabled={accepting || flagging}
-              className="h-10 px-5 rounded-md border border-[var(--ordered)] text-[var(--ordered)] text-[13px] font-semibold hover:bg-[var(--ordered)]/5 disabled:opacity-50 transition-colors">
+              className="h-10 px-5 rounded-md bg-[var(--inbox)] text-white text-[13px] font-semibold hover:brightness-110 disabled:opacity-50 transition">
               {flagging ? 'Flagging…' : 'Needs clarification'}
             </button>
             <button onClick={handleAccept} disabled={accepting || flagging}
@@ -214,14 +204,8 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
           </div>
         )}
         {showOrder && (
-          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 space-y-3 bg-[var(--surface)]">
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 bg-[var(--surface)]">
             <OrderForm ticket={ticket} onOrdered={handleOrdered} />
-            {ticket.status === 'query' && (
-              <button onClick={handleClarified} disabled={clarifying}
-                className="text-[13px] text-[var(--subtle)] hover:text-[var(--text)] disabled:opacity-50 transition-colors">
-                {clarifying ? 'Saving…' : 'Mark clarified'}
-              </button>
-            )}
           </div>
         )}
       </div>
