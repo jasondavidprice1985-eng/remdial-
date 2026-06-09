@@ -11,3 +11,8 @@ certs/
 
 # Stray TS->JS compile artifacts in shared/ (shared/ is TS-only)
 shared/*.js
+
+# Playwright artifacts
+e2e/playwright-report/
+e2e/test-results/
+e2e/*.deb

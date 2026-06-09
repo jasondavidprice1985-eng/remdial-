@@ -1,0 +1,17 @@
+# E2E test PostgreSQL — isolated instance on port 5433 to avoid conflicts
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB:       remedial_test
+      POSTGRES_USER:     remedial_test
+      POSTGRES_PASSWORD: remedial_test
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U remedial_test']
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    tmpfs: /var/lib/postgresql/data
