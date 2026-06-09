@@ -62,12 +62,19 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="pb-36">
-      <div className="px-5 pt-2 pb-1">
-        <h1 className="text-[24px] font-semibold tracking-[-0.025em] text-[var(--text)] m-0">New report</h1>
-        <p className="text-[12.5px] text-[var(--ordered)] mt-1 inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--ordered)]" />
-          Saved as draft
-        </p>
+      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-md border border-[var(--border-strong)] grid place-items-center text-[var(--text)]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" /><path d="m12 19-7-7 7-7" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <h1 className="text-[17px] font-semibold tracking-[-0.015em] text-[var(--text)] m-0 leading-tight">New report</h1>
+          <p className="text-[11.5px] text-[var(--subtle)] m-0 inline-flex items-center gap-1.5">
+            <span className="w-[5px] h-[5px] rounded-full bg-[var(--ordered)]" />
+            Saved as draft
+          </p>
+        </div>
       </div>
 
       <div className="px-5">
