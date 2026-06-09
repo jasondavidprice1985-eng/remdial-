@@ -14,9 +14,10 @@ interface Props {
   onManagerResponded?: () => void;
   draft?: string;
   draftToken?: number;
+  readOnly?: boolean;
 }
 
-export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerResponded, draft, draftToken }: Props) {
+export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerResponded, draft, draftToken, readOnly }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
 
@@ -149,9 +150,11 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
           <button onClick={() => setError(null)} className="text-white/80 text-base leading-none px-1" aria-label="Dismiss">×</button>
         </div>
       )}
-      <ChatInputBar text={text} sending={sending} recording={recording}
-        onTextChange={setText} onSend={sendTextMessage} onMicClick={handleMicClick}
-        onPhotoSelect={handlePhotoSelect} />
+      {!readOnly && (
+        <ChatInputBar text={text} sending={sending} recording={recording}
+          onTextChange={setText} onSend={sendTextMessage} onMicClick={handleMicClick}
+          onPhotoSelect={handlePhotoSelect} />
+      )}
     </div>
   );
 }

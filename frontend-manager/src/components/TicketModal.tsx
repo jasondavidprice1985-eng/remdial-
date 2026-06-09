@@ -22,6 +22,14 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
   const [chatDraft, setChatDraft] = useState<string | undefined>(undefined);
   const [draftToken, setDraftToken] = useState(0);
   const chatAnchorRef = useRef<HTMLDivElement>(null);
+  const isArchived = ticket.status === 'archived';
+  const [locked, setLocked] = useState(isArchived);
+
+  function tryUnlock() {
+    if (window.confirm('This ticket is archived. Unlock for editing?')) {
+      setLocked(false);
+    }
+  }
 
   async function confirmOrder() {
     if (archiving) return;
@@ -75,6 +83,18 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
           </button>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0">
+          {isArchived && locked && (
+            <div className="mx-4 mt-4 px-3 py-2.5 rounded-md border border-[var(--border)] bg-[var(--surface-2)] flex items-center gap-2.5 text-[12.5px]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--subtle)] shrink-0">
+                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span className="flex-1 text-[var(--text)]">Archived — view only</span>
+              <button type="button" onClick={tryUnlock}
+                className="text-[12px] font-semibold text-[var(--ordered)] border-b border-[var(--ordered)]/40 hover:border-[var(--ordered)]">
+                Unlock
+              </button>
+            </div>
+          )}
           <div className="p-4 space-y-4">
             <StatusStepper ticket={ticket} />
             <div className="card p-4 space-y-2 text-sm">
@@ -120,10 +140,12 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
                       <span className="font-mono font-semibold px-2.5 py-1 rounded-lg shrink-0 text-sm bg-white text-[var(--success)] border border-emerald-200">
                         ×{it.quantity}
                       </span>
-                      <button type="button" onClick={() => queryItem(it)}
-                        className="text-[var(--danger)] text-xs font-semibold underline-offset-2 hover:underline shrink-0">
-                        Query
-                      </button>
+                      {!locked && (
+                        <button type="button" onClick={() => queryItem(it)}
+                          className="text-[var(--danger)] text-xs font-semibold underline-offset-2 hover:underline shrink-0">
+                          Query
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -144,7 +166,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
           <div ref={chatAnchorRef} className="border-t border-[var(--border)]" style={{ height: '300px' }}>
             <ChatPanel ticketId={ticket.id} role="manager"
               onTicketViewed={onTicketUpdate} onManagerResponded={onManagerResponded}
-              draft={chatDraft} draftToken={draftToken} />
+              draft={chatDraft} draftToken={draftToken} readOnly={locked} />
           </div>
         </div>
       </div>
