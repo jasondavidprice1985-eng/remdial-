@@ -10,12 +10,12 @@ describe('StatusBanner', () => {
 
   it('shows submitting state with spinner', () => {
     render(<StatusBanner banner="sending" />);
-    expect(screen.getByText('Submitting report…')).toBeInTheDocument();
+    expect(screen.getByText('Submitting ticket…')).toBeInTheDocument();
   });
 
   it('shows submitted state with ref', () => {
     render(<StatusBanner banner="submitted" submittedRef="RM-ABC123" />);
-    expect(screen.getByText(/Report submitted/)).toBeInTheDocument();
+    expect(screen.getByText(/Ticket submitted/)).toBeInTheDocument();
     expect(screen.getByText(/RM-ABC123/)).toBeInTheDocument();
   });
 
@@ -26,7 +26,7 @@ describe('StatusBanner', () => {
 
   it('shows synced state', () => {
     render(<StatusBanner banner="synced" />);
-    expect(screen.getByText(/All offline reports synced/)).toBeInTheDocument();
+    expect(screen.getByText(/All offline tickets synced/)).toBeInTheDocument();
   });
 
   it('shows submitted state without ref', () => {
