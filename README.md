@@ -10,7 +10,7 @@ Two-sided real-time kitchen remedial tracking app.
 
 ## Production Deployment (current)
 
-This project does **not** run on Docker in production despite a `docker-compose.yml` being present in the repo. The actual live stack on the VPS is:
+The live stack on the VPS:
 
 | Piece         | How it runs           | Notes                                          |
 |---------------|-----------------------|------------------------------------------------|
@@ -20,10 +20,7 @@ This project does **not** run on Docker in production despite a `docker-compose.
 | TLS           | nginx + certbot       | Wildcard cert on `system22.xyz`                |
 
 ### Why no Docker?
-We started Docker-first and switched. PostgreSQL was already on the host (other apps use it), and rebuilding all three images on a 4 GB VPS was too slow. PM2 + nginx is simpler and lighter for this stack.
-
-The `docker-compose.yml` and `Caddyfile` in the repo are **historical** — they describe an alternative deployment that has never been used in this environment. Either delete them or keep them clearly marked as reference only.
-
+We started Docker-first but PostgreSQL was already on the host and rebuilding three images on a 4 GB VPS was too slow. PM2 + nginx is simpler and lighter.
 ### nginx config — required location blocks
 
 Both sites (`/etc/nginx/sites-available/remedial-manager` and `…/remedial-office`) need three proxy locations to the backend, plus the static root:
