@@ -150,9 +150,18 @@ function AuthedApp({ token }: { token: string }) {
       <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">
         {tab === 'reports' && <AppHeader />}
         {tab === 'archive' && (
-          <div className="px-5 pt-5 pb-5 border-b border-[var(--border)]"
+          <div className="px-5 pt-5 pb-5 border-b border-[var(--border)] flex items-center gap-3.5"
             style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}>
-            <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0">Archive</h1>
+            <div className="w-11 h-11 rounded-lg bg-[var(--text)] text-white grid place-items-center text-[18px] font-bold shrink-0">
+              R
+            </div>
+            <div className="flex-1">
+              <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0 leading-[1.15]">Archive</h1>
+              <p className="text-[13px] text-[var(--ordered)] m-0 mt-1 inline-flex items-center gap-1.5">
+                <span className="w-[6px] h-[6px] rounded-full bg-[var(--ordered)]" />
+                {archivedTickets.length} job{archivedTickets.length === 1 ? '' : 's'} complete
+              </p>
+            </div>
           </div>
         )}
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
