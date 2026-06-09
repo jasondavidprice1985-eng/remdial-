@@ -1,40 +1,49 @@
 /**
  * Shared enterprise design tokens — imported by both frontends.
+ * Premium minimal palette: Inter + JetBrains Mono, hairline borders, cool greys.
  */
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 .app-enterprise,
 .app-fieldrem,
 .app-office {
-  --brand-navy: #0b1220;
-  --brand-navy-light: #151d2e;
-  --brand-accent: #1e40af;
-  --brand-accent-hover: #1e3a8a;
-  --brand-gold: #c5a572;
-  --brand-glow: rgba(30, 64, 175, 0.14);
+  --brand-navy: #080d18;
+  --brand-navy-light: #0f1628;
+  --brand-accent: #1d4ed8;
+  --brand-accent-hover: #1e40af;
+  --brand-gold: #d4b896;
+  --brand-glow: rgba(29, 78, 216, 0.14);
 
-  --bg: #f1f5f9;
+  --bg: #f6f7f9;
   --surface: #ffffff;
-  --surface-2: #f8fafc;
+  --surface-2: #fafbfc;
   --surface-solid: #ffffff;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --text: #0f172a;
-  --muted: #64748b;
+  --border: #ededed;
+  --border-strong: #d4d4d4;
+  --text: #0c1222;
+  --muted: #525252;
+  --subtle: #737373;
+  --faint: #a3a3a3;
   --action: var(--brand-accent);
   --action-hover: var(--brand-accent-hover);
   --accent: var(--brand-accent);
   --accent-deep: var(--brand-accent-hover);
+  /* Status colours — kept semantically stable; the handoff's "premium" restyle
+     refines the surrounding tokens (border, text, muted) without changing the
+     status signal palette, which is referenced in 30+ components. */
   --pending: var(--brand-accent);
-  --query: #dc2626;
-  --ordered: #15803d;
-  --ref: #1e3a8a;
-  --success: #15803d;
-  --danger: #dc2626;
+  --query: #c81e1e;
+  --ordered: #0f7a3a;
+  --inbox: #a16207;
+  --ref: var(--brand-accent);
+  --success: #0f7a3a;
+  --danger: #c81e1e;
+  --warning: #b45309;
   --glow: var(--brand-glow);
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 1px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 20px -6px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 4px 10px -2px rgba(15, 23, 42, 0.08), 0 20px 36px -14px rgba(15, 23, 42, 0.14);
+  --shadow-xs: 0 1px 2px rgba(12, 18, 34, 0.04);
+  --shadow-sm: 0 1px 3px rgba(12, 18, 34, 0.05), 0 1px 2px rgba(12, 18, 34, 0.03);
+  --shadow-md: 0 4px 16px -4px rgba(12, 18, 34, 0.08), 0 2px 6px -2px rgba(12, 18, 34, 0.04);
+  --shadow-lg: 0 12px 40px -12px rgba(12, 18, 34, 0.14), 0 4px 12px -4px rgba(12, 18, 34, 0.06);
 
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--text);
@@ -42,6 +51,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv11', 'ss01', 'ss03', 'ss07';
+  letter-spacing: -0.011em;
 }
 
 .app-enterprise .font-mono,

@@ -5,9 +5,6 @@
 @tailwind utilities;
 
 @layer base {
-  html, body {
-    font-feature-settings: 'cv11', 'ss01', 'ss02';
-  }
   .app-fieldrem .tabular-nums { font-variant-numeric: tabular-nums; }
 }
 
