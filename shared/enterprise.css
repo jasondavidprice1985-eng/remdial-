@@ -9,8 +9,8 @@
 .app-office {
   --brand-navy: #080d18;
   --brand-navy-light: #0f1628;
-  --brand-accent: #1d4ed8;
-  --brand-accent-hover: #1e40af;
+  --brand-accent: #0f7a3a;
+  --brand-accent-hover: #0c6330;
   --brand-gold: #d4b896;
   --brand-glow: rgba(29, 78, 216, 0.14);
 
@@ -100,7 +100,7 @@
 
 .btn-enterprise {
   position: relative;
-  background: linear-gradient(180deg, #2563eb 0%, var(--action) 100%);
+  background: linear-gradient(180deg, #15803d 0%, var(--action) 100%);
   color: #ffffff;
   font-weight: 600;
   font-size: 0.9375rem;
@@ -111,7 +111,7 @@
 }
 
 .btn-enterprise:hover:not(:disabled) {
-  background: linear-gradient(180deg, #1d4ed8 0%, var(--action-hover) 100%);
+  background: linear-gradient(180deg, #0f7a3a 0%, var(--action-hover) 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(30, 64, 175, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }

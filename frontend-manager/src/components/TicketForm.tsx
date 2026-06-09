@@ -81,7 +81,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
         <FormSection
           step={1}
           eyebrow="Where"
-          label="Where is the job?"
+          label="Where?"
           aux={<CompleteTag done={locationDone} />}
         >
           <DeveloperCombobox value={developer} onChange={setDeveloper} disabled={disabled} />
@@ -94,7 +94,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
         <FormSection
           step={2}
           eyebrow="What"
-          label="What needs remedial?"
+          label="What's needed?"
           aux={<CompleteTag done={itemsValid} label={itemsValid ? `${filledItems.length} item${filledItems.length === 1 ? '' : 's'}` : '0 items'} />}
         >
           <LineItemBuilder items={items} onChange={setItems} disabled={disabled} />
@@ -113,7 +113,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
         <FormSection
           step={4}
           eyebrow="Photos"
-          label="Photos & voice note"
+          label="Photos"
           aux={<CompleteTag label={photosCount > 0 ? `${photosCount} photo${photosCount === 1 ? '' : 's'}` : 'Optional'} done={photosCount > 0} />}
         >
           <PhotoUpload images={images} onChange={setImages} disabled={disabled} />
