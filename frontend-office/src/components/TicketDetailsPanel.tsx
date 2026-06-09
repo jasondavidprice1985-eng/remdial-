@@ -101,41 +101,43 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
 
         {/* Scroll body */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="mx-auto max-w-[720px] px-8 lg:px-12 py-10">
+          <div className="mx-auto max-w-[880px] px-8 lg:px-12 py-7">
             {/* Header */}
-            <div className="mb-8">
-              <div className="font-mono text-[12px] text-[var(--muted)] font-medium mb-3.5">
-                {ticket.ref}
+            <div className="mb-6 flex items-start justify-between gap-6">
+              <div className="min-w-0">
+                <div className="font-mono text-[12px] text-[var(--muted)] font-medium mb-1.5">
+                  {ticket.ref}
+                </div>
+                <h1 className="text-[26px] leading-[1.15] font-semibold tracking-[-0.025em] text-[var(--text)] m-0">
+                  {ticket.developer}
+                </h1>
+                <div className="mt-1.5 text-[13.5px] text-[var(--subtle)] flex flex-wrap gap-x-3 gap-y-1">
+                  <span>{ticket.site}</span>
+                  <span className="text-[var(--ghost)]">·</span>
+                  <span>Plot {ticket.plot_number}</span>
+                </div>
               </div>
-              <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.025em] text-[var(--text)] m-0">
-                {ticket.developer}
-              </h1>
-              <div className="mt-2 text-[14px] text-[var(--subtle)] flex flex-wrap gap-x-3 gap-y-1">
-                <span>{ticket.site}</span>
-                <span className="text-[var(--ghost)]">·</span>
-                <span>Plot {ticket.plot_number}</span>
-              </div>
-              <div className="mt-5">
+              <div className="shrink-0 pt-1">
                 <StatusBadge status={ticket.status} ticket={ticket} />
               </div>
             </div>
 
             <StatusStepper ticket={ticket} />
 
-            <section className="pt-8">
+            <section className="pt-7">
               <SectionLabel aux={`${(ticket.line_items?.length || 1)} lines`}>Items requested</SectionLabel>
               <LineItemsTable ticket={ticket} />
             </section>
 
             {ticket.images && ticket.images.length > 0 && (
-              <section className="pt-10 mt-10 border-t border-[var(--border)]">
+              <section className="pt-7 mt-7 border-t border-[var(--border)]">
                 <SectionLabel aux={`${ticket.images.length} attached`}>Photos</SectionLabel>
                 <PhotoGrid images={ticket.images} onSelect={lightbox.open} />
               </section>
             )}
 
             {ticket.status === 'ordered' && ticket.po_number && (
-              <section className="pt-10 mt-10 border-t border-[var(--border)]">
+              <section className="pt-7 mt-7 border-t border-[var(--border)]">
                 <SectionLabel>Ordered</SectionLabel>
                 <div className="grid grid-cols-[140px_1fr] gap-x-5 gap-y-2.5 text-[13.5px]">
                   <div className="text-[var(--subtle)]">Order number</div>
@@ -163,7 +165,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
             )}
 
             {showPrint && (
-              <section className="pt-10 mt-10 border-t border-[var(--border)]">
+              <section className="pt-7 mt-7 border-t border-[var(--border)]">
                 <button onClick={async () => {
                   let messages: import('@shared/types').Message[] = [];
                   try {

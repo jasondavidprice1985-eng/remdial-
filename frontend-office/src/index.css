@@ -89,10 +89,10 @@ button:active:not(:disabled) { transform: translateY(1px) scale(0.995); }
 @media (min-width: 1024px) {
   .office-workspace {
     display: grid;
-    grid-template-columns: minmax(220px, 0.85fr) minmax(420px, 1fr);
+    grid-template-columns: 340px 1fr;
   }
   .office-workspace.with-chat {
-    grid-template-columns: minmax(220px, 0.7fr) minmax(360px, 1fr) minmax(300px, 0.95fr);
+    grid-template-columns: 320px 1fr 440px;
   }
 }
 
