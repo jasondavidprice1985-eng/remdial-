@@ -16,3 +16,5 @@ shared/*.js
 e2e/playwright-report/
 e2e/test-results/
 e2e/*.deb
+mockup/
+screenshot-*.png
