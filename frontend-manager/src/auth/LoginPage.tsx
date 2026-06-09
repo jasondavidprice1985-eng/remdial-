@@ -42,10 +42,10 @@ export default function LoginPage() {
         </div>
 
         <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.026em] mb-2">
-          Sign in to the<br />site account.
+          Sign in to your account.
         </h1>
-        <p className="text-[14.5px] text-[var(--subtle)] mb-11">
-          Manager account, used by everyone on site.
+        <p className="text-[14.5px] text-[var(--ordered)] font-medium mb-11">
+          Contract Manager Account
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -105,7 +105,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-auto pt-6 pb-8 text-center text-[13px] text-[var(--subtle)]">
-          Office team? <button type="button" className="text-[var(--text)] font-medium border-b border-[var(--border-strong)]">Open desktop console</button>
+          Office Team? <span className="text-[var(--text)] font-medium">Please head to desktop</span>
         </div>
       </main>
     </div>
