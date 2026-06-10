@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { OrderedLineItem, Ticket } from '@shared/types';
 import { apiFetch } from '../auth/apiClient';
+import ProductTypeahead from './ProductTypeahead';
 
 interface Props {
   ticket: Ticket;
@@ -67,7 +68,19 @@ export default function OrderForm({ ticket, onOrdered }: Props) {
         }),
       });
       if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error || 'Failed to mark as ordered'); }
-      else { onOrdered(); setPoNumber(''); }
+      else {
+        // Auto-learn: save any new products for future typeahead
+        const learnItems = validItems
+          .filter(it => it.sap_code)
+          .map(it => ({ sap_code: it.sap_code, description: it.description }));
+        if (learnItems.length > 0) {
+          apiFetch('/products/learn', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: learnItems }),
+          }).catch(() => {}); // Fire and forget
+        }
+        onOrdered(); setPoNumber('');
+      }
     } finally { setLoading(false); }
   }
 
@@ -78,16 +91,16 @@ export default function OrderForm({ ticket, onOrdered }: Props) {
       <div className="space-y-2">
         <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">SAP items ordered</p>
         <p className="text-[11px] text-[var(--muted)]">
-          Pre-filled from the request. Edit the description and add the SAP code for each item before sending.
+          Start typing a description or SAP code to search. Pick from the dropdown or type manually.
         </p>
         {orderedItems.map((row, i) => (
           <div key={i} className="grid grid-cols-12 gap-1.5 items-center">
-            <input className="input-field col-span-7 text-xs" placeholder="Description"
-              value={row.description} onChange={e => updateRow(i, { description: e.target.value })}
-              disabled={loading} />
-            <input className="input-field col-span-3 text-xs font-mono uppercase" placeholder="SAP code"
-              value={row.sap_code || ''} onChange={e => updateRow(i, { sap_code: e.target.value })}
-              disabled={loading} />
+            <ProductTypeahead
+              sapCode={row.sap_code || ''}
+              description={row.description}
+              onSelect={(sap, desc) => updateRow(i, { sap_code: sap, description: desc })}
+              disabled={loading}
+            />
             <input type="number" min={1} className="input-field col-span-1 text-xs text-center font-mono"
               value={row.quantity} onChange={e => updateRow(i, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
               disabled={loading} />
