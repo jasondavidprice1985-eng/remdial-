@@ -72,4 +72,33 @@ export async function createSchema(pool: Pool): Promise<void> {
       key   VARCHAR(100) PRIMARY KEY,
       value TEXT NOT NULL
     )`);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      ticket_id   UUID         NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+      action      VARCHAR(50)  NOT NULL,
+      changed_by  VARCHAR(100) NOT NULL,
+      old_value   JSONB,
+      new_value   JSONB,
+      created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    )`);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_audit_log_ticket ON audit_log(ticket_id)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS products (
+      sap_code    VARCHAR(50)  PRIMARY KEY,
+      description TEXT         NOT NULL,
+      created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    )`);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_products_description ON products USING gin(to_tsvector('english', description))
+  `);
 }

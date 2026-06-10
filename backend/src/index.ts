@@ -12,6 +12,7 @@ import authRouter from './routes/auth';
 import locationsRouter from './routes/locations';
 import developersRouter from './routes/developers';
 import pushRouter from './routes/push';
+import productsRouter from './routes/products';
 import { apiLimiter } from './middleware/rateLimiter';
 import { setupSocket } from './socket';
 
@@ -70,6 +71,7 @@ async function main(): Promise<void> {
   app.use('/api/v1', locationsRouter);
   app.use('/api/v1', developersRouter);
   app.use('/api/v1', pushRouter);
+  app.use('/api/v1', productsRouter);
 
   // Global error handler — the safety net that catches anything unexpected
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

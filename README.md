@@ -155,6 +155,7 @@ The following changes were applied to improve production security:
 | **JWT secret validation** | Production startup now requires JWT_SECRET to be at least 32 characters long. |
 | **Image file validation** | Uploaded images are validated by checking file magic bytes — only JPEG, PNG, and WebP are accepted. Prevents uploading malicious files disguised as images. |
 | **Socket UUID validation** | The `ticket:join` socket event now validates the ticketId is a proper UUID before joining a room. |
+| **Product typeahead search** | New `products` table with 5,122 SAP material codes and descriptions. Search endpoint (`GET /api/v1/products/search?q=`) for typeahead. Self-learning endpoint (`POST /api/v1/products/learn`) auto-saves new products from real orders. Import script for seeding from RAFT export. |
 
 ---
 
@@ -168,6 +169,7 @@ The following changes were applied to improve production security:
 | `rowToTicket.test.ts` | 12 | Database row to Ticket object conversion, type coercion, null handling, JSON parsing, date formatting |
 | `sanitise.test.ts` | 8 | XSS stripping (script tags, event handlers), plain text passthrough, object sanitisation |
 | `auth.test.ts` | 9 | Role-based access (allow/deny), UUID validation (valid, invalid, edge cases) |
+| `products.test.ts` | 8 | Product search (short query, valid query, DB error), learn endpoint (new products, empty/missing items, skip invalid) |
 
 Run with:
 
