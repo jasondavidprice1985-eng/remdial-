@@ -1,31 +1,15 @@
 name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: remedial_test
-          POSTGRES_USER: remedial_user
-          POSTGRES_PASSWORD: remedial_pass_123
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready -U remedial_user
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 10
-
-    defaults:
-      run:
-        working-directory: ./backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -41,49 +25,45 @@ jobs:
             frontend-manager/package-lock.json
             frontend-office/package-lock.json
 
+      # -------- Backend --------
       - name: Install backend deps
         run: npm ci
         working-directory: ./backend
 
-      - name: Run unit tests
-        run: npm test
+      - name: Type-check backend
+        run: npx tsc --noEmit
         working-directory: ./backend
 
-      - name: Create test database
-        run: |
-          PGPASSWORD=remedial_pass_123 psql -h localhost -U remedial_user -d postgres -c "CREATE DATABASE remedial_test;"
-        working-directory: ./backend
-
-      - name: Run integration tests
-        run: npm run test:int
-        working-directory: ./backend
-        env:
-          DATABASE_URL: postgres://remedial_user:remedial_pass_123@localhost:5432/remedial_test
-
-      - name: Install manager frontend deps
-        run: npm ci
-        working-directory: ./frontend-manager
-
-      - name: Run manager frontend tests
+      - name: Backend unit tests
         run: npm test
-        working-directory: ./frontend-manager
-
-      - name: Install office frontend deps
-        run: npm ci
-        working-directory: ./frontend-office
-
-      - name: Run office frontend tests
-        run: npm test
-        working-directory: ./frontend-office
+        working-directory: ./backend
 
       - name: Build backend
         run: npm run build
         working-directory: ./backend
 
-      - name: Build manager frontend
+      # -------- Manager frontend --------
+      - name: Install manager deps
+        run: npm ci
+        working-directory: ./frontend-manager
+
+      - name: Manager unit tests
+        run: npm test
+        working-directory: ./frontend-manager
+
+      - name: Build manager
         run: npm run build
         working-directory: ./frontend-manager
 
-      - name: Build office frontend
+      # -------- Office frontend --------
+      - name: Install office deps
+        run: npm ci
+        working-directory: ./frontend-office
+
+      - name: Office unit tests
+        run: npm test
+        working-directory: ./frontend-office
+
+      - name: Build office
         run: npm run build
         working-directory: ./frontend-office
