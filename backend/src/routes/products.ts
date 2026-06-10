@@ -18,16 +18,21 @@ router.get('/products/search', requireAuth, async (req: Request, res: Response) 
   }
 
   try {
+    const words = q.split(/\s+/).filter(Boolean);
+    const conditions = words.map((_, i) => `sap_code ILIKE $${i + 1}`).join(' AND ');
+    const descConditions = words.map((_, i) => `description ILIKE $${i + 1}`).join(' AND ');
+    const params = words.map(w => `%${w}%`);
+
     const result = await pool.query(
       `SELECT sap_code, description, usage_count FROM products
-       WHERE sap_code ILIKE $1 OR description ILIKE $1
+       WHERE (${conditions}) OR (${descConditions})
        ORDER BY
          usage_count DESC,
          CASE WHEN sap_code ILIKE $1 THEN 0 ELSE 1 END,
          LENGTH(sap_code) ASC,
          sap_code ASC
        LIMIT 20`,
-      [`%${q}%`]
+      params
     );
 
     return res.json(result.rows);

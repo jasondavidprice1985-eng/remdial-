@@ -51,8 +51,24 @@ describe('GET /api/v1/products/search', () => {
     expect(res.body[0].sap_code).toBe('B40L');
     expect(mockQuery).toHaveBeenCalledWith(
       expect.stringContaining('ILIKE'),
-      ['%400 base%']
+      ['%400%', '%base%']
     );
+  });
+
+  it('handles single-word queries with backward compatibility', async () => {
+    mockQuery.mockReset();
+    mockQuery.mockResolvedValue({ rows: [{ sap_code: 'A111', description: 'Test 600' }] });
+    const res = await request(app).get('/api/v1/products/search?q=600');
+    expect(res.status).toBe(200);
+    expect(mockQuery.mock.calls[0][1]).toEqual(['%600%']);
+  });
+
+  it('collapses multiple spaces', async () => {
+    mockQuery.mockReset();
+    mockQuery.mockResolvedValue({ rows: [] });
+    const res = await request(app).get('/api/v1/products/search?q=400++base');
+    expect(res.status).toBe(200);
+    expect(mockQuery.mock.calls[0][1]).toEqual(['%400%', '%base%']);
   });
 
   it('returns 500 on database error', async () => {
