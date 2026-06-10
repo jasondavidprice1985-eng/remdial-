@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LineItemInput } from '@shared/types';
 import { REASONS } from '../constants/reasons';
+import DescriptionTypeahead from './DescriptionTypeahead';
 
 interface Props {
   index: number;
@@ -41,8 +42,9 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
 
         <label className="block">
           <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Description</span>
-          <input className="input-field mt-1" placeholder="e.g. Soft close hinge" maxLength={200}
-            value={description} onChange={e => setDescription(e.target.value)} autoFocus />
+          <div className="mt-1">
+            <DescriptionTypeahead value={description} onChange={setDescription} autoFocus />
+          </div>
         </label>
 
         <label className="block">
