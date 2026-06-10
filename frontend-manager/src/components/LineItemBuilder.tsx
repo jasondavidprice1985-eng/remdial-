@@ -52,7 +52,12 @@ export default function LineItemBuilder({ items, onChange, disabled }: Props) {
             </div>
             {filled && (
               <div className="mt-1.5 space-y-0.5">
-                <p className="text-sm font-medium">{row.description} <span className="text-[var(--muted)]">× {row.quantity}</span></p>
+                <p className="text-sm font-medium">
+                  {row.sap_code && (
+                    <span className="font-mono text-[11px] text-[var(--ordered)] mr-1.5">{row.sap_code}</span>
+                  )}
+                  {row.description} <span className="text-[var(--muted)]">× {row.quantity}</span>
+                </p>
                 <p className="text-xs text-[var(--muted)]">{REASON_LABEL[row.reason] || row.reason}</p>
               </div>
             )}

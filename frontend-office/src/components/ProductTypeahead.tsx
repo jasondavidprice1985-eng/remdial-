@@ -63,6 +63,7 @@ export default function ProductTypeahead({ sapCode, description, onSelect, disab
     setOpen(false);
     setResults([]);
     setQuery('');
+    apiFetch(`/products/${encodeURIComponent(product.sap_code)}/pick`, { method: 'POST' }).catch(() => {});
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {

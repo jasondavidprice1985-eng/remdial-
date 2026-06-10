@@ -14,6 +14,7 @@ interface Props {
 
 export default function LineItemSheet({ index, initial, canDelete, onSave, onDelete, onClose }: Props) {
   const [description, setDescription] = useState(initial.description);
+  const [sapCode, setSapCode] = useState<string | undefined>(initial.sap_code);
   const [quantity, setQuantity] = useState(initial.quantity || 1);
   const [reason, setReason] = useState<string>(initial.reason);
 
@@ -27,7 +28,7 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
 
   function handleSave() {
     if (!canSave) return;
-    onSave({ description: description.trim(), quantity, reason });
+    onSave({ description: description.trim(), quantity, reason, sap_code: sapCode });
   }
 
   return (
@@ -43,8 +44,18 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
         <label className="block">
           <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Description</span>
           <div className="mt-1">
-            <DescriptionTypeahead value={description} onChange={setDescription} autoFocus />
+            <DescriptionTypeahead
+              value={description}
+              onChange={(desc, sap) => { setDescription(desc); setSapCode(sap); }}
+              autoFocus
+            />
           </div>
+          {sapCode && (
+            <span className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--ordered)]">
+              <span className="w-[5px] h-[5px] rounded-full bg-[var(--ordered)]" />
+              SAP {sapCode}
+            </span>
+          )}
         </label>
 
         <label className="block">

@@ -19,9 +19,10 @@ router.get('/products/search', requireAuth, async (req: Request, res: Response) 
 
   try {
     const result = await pool.query(
-      `SELECT sap_code, description FROM products
+      `SELECT sap_code, description, usage_count FROM products
        WHERE sap_code ILIKE $1 OR description ILIKE $1
        ORDER BY
+         usage_count DESC,
          CASE WHEN sap_code ILIKE $1 THEN 0 ELSE 1 END,
          description ASC
        LIMIT 20`,
@@ -67,6 +68,25 @@ router.post('/products/learn', requireAuth, async (req: Request, res: Response) 
   } catch (err) {
     console.error('[PRODUCTS] Learn failed:', err);
     return res.status(500).json({ error: 'Learn failed' });
+  }
+});
+
+/**
+ * POST /api/v1/products/:sapCode/pick
+ * Bumps usage_count by 1 so frequently-picked items rise to the top of search.
+ */
+router.post('/products/:sapCode/pick', requireAuth, async (req: Request, res: Response) => {
+  const sapCode = String(req.params.sapCode || '').trim();
+  if (!sapCode) return res.status(400).json({ error: 'sap code required' });
+  try {
+    await pool.query(
+      `UPDATE products SET usage_count = usage_count + 1 WHERE sap_code = $1`,
+      [sapCode]
+    );
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[PRODUCTS] Pick failed:', err);
+    return res.status(500).json({ error: 'Pick failed' });
   }
 });
 

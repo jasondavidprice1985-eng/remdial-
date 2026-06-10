@@ -101,4 +101,7 @@ export async function createSchema(pool: Pool): Promise<void> {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_products_description ON products USING gin(to_tsvector('english', description))
   `);
+
+  await pool.query(`ALTER TABLE products ADD COLUMN IF NOT EXISTS usage_count INTEGER NOT NULL DEFAULT 0`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_products_usage ON products(usage_count DESC)`);
 }

@@ -8,7 +8,7 @@ interface Product {
 
 interface Props {
   value: string;
-  onChange: (description: string) => void;
+  onChange: (description: string, sapCode?: string) => void;
   placeholder?: string;
   maxLength?: number;
   autoFocus?: boolean;
@@ -41,15 +41,17 @@ export default function DescriptionTypeahead({
   }, []);
 
   function handleChange(next: string) {
-    onChange(next);
+    // Freeform typing clears any previous SAP code
+    onChange(next, undefined);
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => search(next), 300);
   }
 
   function pickProduct(p: Product) {
-    onChange(p.description);
+    onChange(p.description, p.sap_code);
     setOpen(false);
     setResults([]);
+    apiFetch(`/products/${encodeURIComponent(p.sap_code)}/pick`, { method: 'POST' }).catch(() => {});
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
