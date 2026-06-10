@@ -10,6 +10,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      VITE_API_URL: /api/v1
+      VITE_SOCKET_URL: ''
 
     steps:
       - name: Checkout
