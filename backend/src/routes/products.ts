@@ -24,7 +24,8 @@ router.get('/products/search', requireAuth, async (req: Request, res: Response) 
        ORDER BY
          usage_count DESC,
          CASE WHEN sap_code ILIKE $1 THEN 0 ELSE 1 END,
-         description ASC
+         LENGTH(sap_code) ASC,
+         sap_code ASC
        LIMIT 20`,
       [`%${q}%`]
     );

@@ -100,16 +100,16 @@ export default function DescriptionTypeahead({
               key={p.sap_code}
               type="button"
               onClick={() => pickProduct(p)}
-              className={`w-full text-left px-3 py-2.5 flex items-center gap-2.5 text-[13px] border-b border-[var(--border)] last:border-b-0 transition-colors ${
+              className={`w-full text-left px-3 py-2 border-b border-[var(--border)] last:border-b-0 transition-colors ${
                 idx === activeIndex ? 'bg-[var(--surface-2)]' : 'hover:bg-[var(--surface-2)]'
               }`}
             >
-              <span className="font-mono text-[11px] text-[var(--faint)] shrink-0 w-14 truncate">
+              <div className="font-mono text-[13px] font-semibold text-[var(--text)] leading-tight">
                 {p.sap_code}
-              </span>
-              <span className="text-[var(--text)] truncate flex-1">
+              </div>
+              <div className="text-[12px] text-[var(--subtle)] truncate mt-0.5">
                 {p.description}
-              </span>
+              </div>
             </button>
           ))}
         </div>

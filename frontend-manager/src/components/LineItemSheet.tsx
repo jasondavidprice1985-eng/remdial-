@@ -41,22 +41,24 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
           <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--muted)] bg-stone-100">×</button>
         </div>
 
-        <label className="block">
-          <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Description</span>
-          <div className="mt-1">
-            <DescriptionTypeahead
-              value={description}
-              onChange={(desc, sap) => { setDescription(desc); setSapCode(sap); }}
-              autoFocus
-            />
-          </div>
+        <div>
           {sapCode && (
-            <span className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--ordered)]">
-              <span className="w-[5px] h-[5px] rounded-full bg-[var(--ordered)]" />
-              SAP {sapCode}
-            </span>
+            <div className="mb-2.5">
+              <span className="text-[10px] font-bold text-[var(--ordered)] tracking-wider uppercase block">SAP code</span>
+              <p className="font-mono text-[18px] font-semibold text-[var(--text)] leading-tight mt-0.5">{sapCode}</p>
+            </div>
           )}
-        </label>
+          <label className="block">
+            <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Description</span>
+            <div className="mt-1">
+              <DescriptionTypeahead
+                value={description}
+                onChange={(desc, sap) => { setDescription(desc); setSapCode(sap); }}
+                autoFocus
+              />
+            </div>
+          </label>
+        </div>
 
         <label className="block">
           <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Quantity</span>
