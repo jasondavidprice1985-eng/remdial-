@@ -69,5 +69,30 @@ export async function initDB(): Promise<void> {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_messages_ticket ON messages(ticket_id)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_items_ticket    ON ticket_items(ticket_id)`);
 
+  // Partial index for unread counts — only covers unread rows
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(ticket_id, sender) WHERE read_at IS NULL`);
+
+  // Composite index for audit_log ordering
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_log_ticket_created ON audit_log(ticket_id, created_at)`);
+
+  // Auto-update updated_at via trigger
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION set_updated_at()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = NOW();
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql
+  `);
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'tickets_updated_at') THEN
+        CREATE TRIGGER tickets_updated_at BEFORE UPDATE ON tickets
+          FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+      END IF;
+    END $$;
+  `);
+
   console.log('Database initialised');
 }

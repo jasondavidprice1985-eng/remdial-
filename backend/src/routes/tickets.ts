@@ -13,6 +13,8 @@ router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
     const statusParam = req.query.status as string | undefined;
     const statuses = statusParam ? statusParam.split(',').map(s => s.trim()) : ['pending','query','ordered'];
     const otherSender = viewer === 'manager' ? 'office' : 'manager';
+    const limit = Math.min(Math.max(parseInt(String(req.query.limit || '50'), 10) || 50, 1), 100);
+    const offset = Math.max(parseInt(String(req.query.offset || '0'), 10) || 0, 0);
 
     const r = await pool.query(`
       SELECT t.id,t.ref,t.status,t.developer,t.site,t.plot_number,t.items,t.quantity,t.reason,
@@ -26,7 +28,8 @@ router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
       WHERE t.status = ANY($1::text[])
       GROUP BY t.id
       ORDER BY t.created_at DESC
-    `, [statuses, otherSender]);
+      LIMIT $3 OFFSET $4
+    `, [statuses, otherSender, limit, offset]);
 
     const ticketIds = r.rows.map(row => row.id);
     const lineItemMap: Record<string, unknown[]> = {};
