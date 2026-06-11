@@ -15,6 +15,7 @@ import pushRouter from './routes/push';
 import productsRouter from './routes/products';
 import { apiLimiter } from './middleware/rateLimiter';
 import { setupSocket } from './socket';
+import { verifyUpload, signJsonResponse } from './utils/signedUrls';
 
 const PORT        = parseInt(process.env.PORT || '3001', 10);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
@@ -59,8 +60,21 @@ async function main(): Promise<void> {
     }
   });
 
-  // Allow cross-origin loading of uploaded images (Helmet sets same-origin by default)
-  app.use('/uploads', (_req, res, next) => {
+  // Sign all upload paths returned in JSON responses
+  app.use((_req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = function (body: unknown) {
+      return originalJson(signJsonResponse(body));
+    };
+    next();
+  });
+
+  // Verify signed upload URLs — requires ?exp=&token= on every /uploads/ request
+  app.use('/uploads', (req, res, next) => {
+    const { exp, token } = req.query as { exp?: string; token?: string };
+    if (!exp || !token || !verifyUpload(req.path, exp, token)) {
+      return res.status(403).end();
+    }
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   }, express.static(UPLOAD_DIR));
