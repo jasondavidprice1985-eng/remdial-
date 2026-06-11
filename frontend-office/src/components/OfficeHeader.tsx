@@ -41,7 +41,7 @@ export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive
         {user && (
           <div className="flex items-center gap-3 pl-4 border-l border-[var(--border)]">
             <span className="text-[12px] text-[var(--subtle)] tabular-nums font-medium">
-              {user.username}
+              {user.displayName}
             </span>
             <button onClick={e => { e.stopPropagation(); logout(); }}
               className="text-[12px] font-medium text-[var(--subtle)] hover:text-[var(--text)] transition-colors"

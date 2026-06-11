@@ -22,6 +22,9 @@ describe('loginUser', () => {
         username: 'office',
         password_hash: hash,
         role: 'office',
+        display_name: 'Office User',
+        active: true,
+        must_change_password: false,
       }],
       rowCount: 1,
     });
@@ -32,6 +35,8 @@ describe('loginUser', () => {
     expect(result).not.toBeNull();
     expect(result!.role).toBe('office');
     expect(result!.token).toBeTruthy();
+    expect(result!.display_name).toBe('Office User');
+    expect(result!.must_change_password).toBe(false);
 
     const decoded = jwt.verify(result!.token, process.env.JWT_SECRET!) as any;
     expect(decoded.username).toBe('office');
@@ -55,12 +60,36 @@ describe('loginUser', () => {
         username: 'office',
         password_hash: hash,
         role: 'office',
+        display_name: '',
+        active: true,
+        must_change_password: false,
       }],
       rowCount: 1,
     });
 
     const { loginUser } = await import('../services/authService');
     const result = await loginUser('office', 'wrong_password', false);
+    expect(result).toBeNull();
+  });
+
+  it('returns null for inactive users', async () => {
+    const { pool } = await import('../db');
+    const hash = await bcrypt.hash('password', 12);
+    (pool.query as ReturnType<typeof vi.fn>).mockResolvedValue({
+      rows: [{
+        id: 'user-1',
+        username: 'office',
+        password_hash: hash,
+        role: 'office',
+        display_name: '',
+        active: false,
+        must_change_password: false,
+      }],
+      rowCount: 1,
+    });
+
+    const { loginUser } = await import('../services/authService');
+    const result = await loginUser('office', 'password', false);
     expect(result).toBeNull();
   });
 
@@ -73,6 +102,9 @@ describe('loginUser', () => {
         username: 'manager',
         password_hash: hash,
         role: 'manager',
+        display_name: '',
+        active: true,
+        must_change_password: false,
       }],
       rowCount: 1,
     });
@@ -84,36 +116,54 @@ describe('loginUser', () => {
     const maxAge = decoded.exp - decoded.iat;
     expect(maxAge).toBeGreaterThan(24 * 60 * 60); // more than 1 day
   });
+
+  it('returns must_change_password flag from DB', async () => {
+    const { pool } = await import('../db');
+    const hash = await bcrypt.hash('password', 12);
+    (pool.query as ReturnType<typeof vi.fn>).mockResolvedValue({
+      rows: [{
+        id: 'user-1',
+        username: 'new_user',
+        password_hash: hash,
+        role: 'manager',
+        display_name: 'New User',
+        active: true,
+        must_change_password: true,
+      }],
+      rowCount: 1,
+    });
+
+    const { loginUser } = await import('../services/authService');
+    const result = await loginUser('new_user', 'password', false);
+
+    expect(result!.must_change_password).toBe(true);
+  });
 });
 
 describe('seedUsers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.MANAGER_USERNAME = 'test_manager';
-    process.env.MANAGER_PASSWORD = 'test_man_pass';
-    process.env.OFFICE_USERNAME = 'test_office';
-    process.env.OFFICE_PASSWORD = 'test_off_pass';
   });
 
-  it('inserts users that do not exist', async () => {
+  it('creates admin when no users exist', async () => {
     const { pool } = await import('../db');
     (pool.query as ReturnType<typeof vi.fn>).mockResolvedValue({ rows: [], rowCount: 0 });
 
     const { seedUsers } = await import('../services/authService');
     await seedUsers();
 
-    // Should have checked existence for 2 users and inserted 2 users
-    expect(pool.query).toHaveBeenCalledTimes(4);
+    // One SELECT to check existence, one INSERT for admin
+    expect(pool.query).toHaveBeenCalledTimes(2);
   });
 
-  it('skips users that already exist', async () => {
+  it('skips when users already exist', async () => {
     const { pool } = await import('../db');
     (pool.query as ReturnType<typeof vi.fn>).mockResolvedValue({ rows: [{ 1: 1 }], rowCount: 1 });
 
     const { seedUsers } = await import('../services/authService');
     await seedUsers();
 
-    // Should only check existence, no inserts
-    expect(pool.query).toHaveBeenCalledTimes(2);
+    // Only the SELECT, no INSERT
+    expect(pool.query).toHaveBeenCalledTimes(1);
   });
 });

@@ -34,6 +34,14 @@ export async function initDB(): Promise<void> {
   // SAP-ordered items: what office actually ordered, may differ from what manager requested
   await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ordered_items JSONB`).catch(swallowIfAlreadyExists);
 
+  // Individual user accounts: display name, active flag, password change tracking
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(100) NOT NULL DEFAULT ''`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT true`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false`).catch(swallowIfAlreadyExists);
+  // Widen role check to include admin
+  await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('manager','office','admin'))`).catch(swallowIfAlreadyExists);
+
   // Audit trail: add ticket_ref, change FK to SET NULL so audit survives ticket deletion
   await pool.query(`ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS ticket_ref VARCHAR(10)`).catch(swallowIfAlreadyExists);
   await pool.query(`ALTER TABLE audit_log ALTER COLUMN ticket_id DROP NOT NULL`).catch(swallowIfAlreadyExists);

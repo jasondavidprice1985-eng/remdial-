@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
-  user?: { username: string; role: string };
+  user?: { userId: string; username: string; role: string };
 }
 
 export const requireAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
@@ -13,7 +13,7 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
   }
   const token = header.replace('Bearer ', '');
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { username: string; role: string };
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; username: string; role: string };
     req.user = payload;
     next();
   } catch {

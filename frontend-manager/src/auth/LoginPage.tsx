@@ -2,14 +2,18 @@ import { useState, FormEvent } from 'react';
 import { useAuth } from './AuthContext';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, changePassword, mustChangePassword } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   const canSubmit = username.trim().length > 0 && password.length > 0 && !submitting;
+  const canChangePw = newPassword.length >= 8 && newPassword === confirmPassword && !submitting;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -22,6 +26,62 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : 'Login failed');
       setSubmitting(false);
     }
+  }
+
+  async function handlePasswordChange(e: FormEvent) {
+    e.preventDefault();
+    if (!canChangePw) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await changePassword(password, newPassword);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Password change failed');
+      setSubmitting(false);
+    }
+  }
+
+  if (mustChangePassword) {
+    return (
+      <div className="app-fieldrem min-h-screen bg-[var(--surface)] text-[var(--text)] flex flex-col"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="px-6 pt-[18px] pb-0 flex items-center justify-between">
+          <span className="inline-flex items-center gap-1.5 text-[11.5px] text-[var(--ordered)] font-medium">
+            Change your password
+          </span>
+          <span className="font-mono text-[11.5px] text-[var(--subtle)]">v 2.4.1</span>
+        </div>
+        <main className="flex-1 px-8 pt-12 flex flex-col">
+          <div className="w-10 h-10 rounded-[8px] bg-[var(--text)] text-white grid place-items-center text-[18px] font-bold mb-9">R</div>
+          <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.026em] mb-2">Change your password.</h1>
+          <p className="text-[14.5px] text-[var(--ordered)] font-medium mb-11">Your administrator requires a new password.</p>
+          <form onSubmit={handlePasswordChange}>
+            <label className="block mb-[14px]">
+              <span className="block text-[12.5px] font-medium text-[var(--text)] mb-[7px]">New password</span>
+              <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} disabled={submitting} autoComplete="new-password" autoFocus
+                className="w-full h-12 px-4 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[16px] text-[var(--text)] outline-none focus:border-[var(--text)] transition-colors disabled:opacity-60" />
+            </label>
+            <label className="block mb-1.5">
+              <span className="block text-[12.5px] font-medium text-[var(--text)] mb-[7px]">Confirm new password</span>
+              <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} disabled={submitting} autoComplete="new-password"
+                className="w-full h-12 px-4 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[16px] text-[var(--text)] outline-none focus:border-[var(--text)] transition-colors disabled:opacity-60" />
+            </label>
+            {newPassword && newPassword.length < 8 && (
+              <p className="mb-3 text-[12px] text-[var(--subtle)]">Password must be at least 8 characters</p>
+            )}
+            {confirmPassword && newPassword !== confirmPassword && (
+              <p className="mb-3 text-[12px] text-[var(--query)]">Passwords do not match</p>
+            )}
+            {error && <p className="mb-4 text-[13px] text-[var(--query)]">{error}</p>}
+            <button type="submit" disabled={!canChangePw}
+              className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50 mt-4">
+              {submitting && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+              {submitting ? 'Saving…' : 'Set new password'}
+            </button>
+          </form>
+        </main>
+      </div>
+    );
   }
 
   return (

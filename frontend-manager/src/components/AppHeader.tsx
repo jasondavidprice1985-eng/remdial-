@@ -65,9 +65,9 @@ export default function AppHeader() {
             <button
               onClick={logout}
               className="ml-1 text-[12px] font-medium text-[var(--subtle)] hover:text-[var(--text)] px-1"
-              title={`Sign out ${user.username}`}
+              title={`Sign out ${user.displayName}`}
             >
-              Sign out
+              {user.displayName}
             </button>
           </div>
         )}

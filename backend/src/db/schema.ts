@@ -60,11 +60,14 @@ export async function createSchema(pool: Pool): Promise<void> {
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      username      VARCHAR(100) NOT NULL UNIQUE,
-      password_hash TEXT         NOT NULL,
-      role          VARCHAR(10)  NOT NULL CHECK (role IN ('manager','office')),
-      created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      username            VARCHAR(100) NOT NULL UNIQUE,
+      password_hash       TEXT         NOT NULL,
+      display_name        VARCHAR(100) NOT NULL DEFAULT '',
+      role                VARCHAR(10)  NOT NULL CHECK (role IN ('manager','office','admin')),
+      active              BOOLEAN      NOT NULL DEFAULT true,
+      must_change_password BOOLEAN     NOT NULL DEFAULT false,
+      created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     )`);
 
   await pool.query(`

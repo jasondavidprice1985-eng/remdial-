@@ -19,7 +19,12 @@ router.post('/auth/login', loginLimiter, async (req: Request, res: Response) => 
       Boolean(remember)
     );
     if (!result) return res.status(401).json({ error: 'Invalid credentials' });
-    return res.json({ token: result.token, role: result.role });
+    return res.json({
+      token: result.token,
+      role: result.role,
+      display_name: result.display_name,
+      must_change_password: result.must_change_password,
+    });
   } catch (e) {
     console.error('Login error:', e);
     return res.status(500).json({ error: 'Internal server error' });

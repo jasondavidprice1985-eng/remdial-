@@ -13,6 +13,7 @@ import locationsRouter from './routes/locations';
 import developersRouter from './routes/developers';
 import pushRouter from './routes/push';
 import productsRouter from './routes/products';
+import usersRouter from './routes/users';
 import { apiLimiter } from './middleware/rateLimiter';
 import { setupSocket } from './socket';
 import { verifyUpload, signJsonResponse } from './utils/signedUrls';
@@ -21,12 +22,11 @@ const PORT        = parseInt(process.env.PORT || '3001', 10);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
 async function main(): Promise<void> {
-  // Refuse to start with default passwords in production
+  // Refuse to start with default admin password in production
   if (process.env.NODE_ENV === 'production') {
-    const mgr = process.env.MANAGER_PASSWORD;
-    const ofc = process.env.OFFICE_PASSWORD;
-    if (!mgr || mgr === 'manager' || !ofc || ofc === 'office') {
-      console.error('FATAL: Set MANAGER_PASSWORD and OFFICE_PASSWORD to non-default values in production.');
+    const adminPw = process.env.ADMIN_PASSWORD;
+    if (!adminPw || adminPw === 'admin') {
+      console.error('FATAL: Set ADMIN_PASSWORD to a non-default value in production.');
       process.exit(1);
     }
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -86,6 +86,7 @@ async function main(): Promise<void> {
   app.use('/api/v1', developersRouter);
   app.use('/api/v1', pushRouter);
   app.use('/api/v1', productsRouter);
+  app.use('/api/v1', usersRouter);
 
   // Global error handler — the safety net that catches anything unexpected
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

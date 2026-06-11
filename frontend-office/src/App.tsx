@@ -10,7 +10,7 @@ import ArchiveView from './components/ArchiveView';
 import OfficeHeader from './components/OfficeHeader';
 
 export default function App() {
-  const { token, loading: authLoading, user } = useAuth();
+  const { token, loading: authLoading, user, mustChangePassword } = useAuth();
 
   if (authLoading) {
     return (
@@ -20,7 +20,7 @@ export default function App() {
     );
   }
 
-  if (!user || !token) return <LoginPage />;
+  if (!user || !token || mustChangePassword) return <LoginPage />;
 
   return <AuthedApp token={token} />;
 }

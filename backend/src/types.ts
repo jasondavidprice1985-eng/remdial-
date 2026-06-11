@@ -74,7 +74,7 @@ export interface Location {
 export interface JWTPayload {
   userId:   string;
   username: string;
-  role:     'manager' | 'office';
+  role:     'manager' | 'office' | 'admin';
 }
 
 export interface CreateTicketPayload {
