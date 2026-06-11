@@ -5,7 +5,7 @@ import fs from 'fs';
 import { createSchema } from './db/schema';
 
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/jason-price/remedial/backend/uploads';
+export const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 
 function swallowIfAlreadyExists(e: unknown): void {
   const code = (e as { code?: string }).code;

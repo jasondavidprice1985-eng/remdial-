@@ -7,8 +7,8 @@ The live VPS runs PM2 + nginx + host PostgreSQL. There is no Docker.
 SSH to the VPS:
 
 ```bash
-ssh -p 1305 pricej@<vps-ip>
-cd /home/pricej/remedial
+ssh -p <ssh-port> <user>@<vps-ip>
+cd <deploy-path>/remedial
 git pull
 ```
 
@@ -24,14 +24,14 @@ npm run build
 Manager frontend (only if `frontend-manager/` or `shared/` changed):
 
 ```bash
-cd /home/pricej/remedial/frontend-manager
+cd <deploy-path>/remedial/frontend-manager
 npm run build      # output goes to dist/ — nginx serves it immediately
 ```
 
 Office frontend (only if `frontend-office/` or `shared/` changed):
 
 ```bash
-cd /home/pricej/remedial/frontend-office
+cd <deploy-path>/remedial/frontend-office
 npm run build
 ```
 
@@ -48,7 +48,7 @@ No `npm install` is needed unless `package.json` / `package-lock.json` changed.
 
 ## After a deploy that changes UI
 
-The PWA service worker is sticky. Tell users — or do it yourself when testing — to **Site Settings → Clear & reset** for `manager.system22.xyz`. Otherwise they may continue seeing the previous build.
+The PWA service worker is sticky. Tell users — or do it yourself when testing — to **Site Settings → Clear & reset** for `<domain>`. Otherwise they may continue seeing the previous build.
 
 ## First-time / post-reboot
 

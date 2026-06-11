@@ -18,3 +18,7 @@ e2e/test-results/
 e2e/*.deb
 mockup/
 screenshot-*.png
+
+# never commit real uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
