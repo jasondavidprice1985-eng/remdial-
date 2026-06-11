@@ -2,20 +2,17 @@ import { Router, Request, Response } from 'express';
 import { Server } from 'socket.io';
 import { pool } from '../db';
 import { validateCreatePayload, createTicket, rowToTicket, getLineItems, getTicketById, getTicketMessages, getUnreadCount, markMessagesRead } from '../services/ticketService';
-import { requireAuth, validateIdParam } from '../middleware/auth';
+import { requireAuth, requireRole, validateIdParam, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
-
-function parseViewer(raw: unknown): 'manager' | 'office' {
-  return raw === 'office' ? 'office' : 'manager';
-}
 
 // GET /api/v1/tickets
 router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
   try {
+    const viewer = (req as AuthenticatedRequest).user!.role as 'manager' | 'office';
     const statusParam = req.query.status as string | undefined;
     const statuses = statusParam ? statusParam.split(',').map(s => s.trim()) : ['pending','query','ordered'];
-    const otherSender = parseViewer(req.query.viewer) === 'manager' ? 'office' : 'manager';
+    const otherSender = viewer === 'manager' ? 'office' : 'manager';
 
     const r = await pool.query(`
       SELECT t.id,t.ref,t.status,t.developer,t.site,t.plot_number,t.items,t.quantity,t.reason,
@@ -58,7 +55,7 @@ router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
 router.get('/tickets/:id', requireAuth, validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   try {
-    const viewer = parseViewer(req.query.viewer);
+    const viewer = (req as AuthenticatedRequest).user!.role as 'manager' | 'office';
     const ticket = await getTicketById(req.params.id);
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
     const marked = await markMessagesRead(req.params.id, viewer);
@@ -74,7 +71,7 @@ router.get('/tickets/:id', requireAuth, validateIdParam, async (req: Request, re
 });
 
 // POST /api/v1/tickets
-router.post('/tickets', requireAuth, async (req: Request, res: Response) => {
+router.post('/tickets', requireAuth, requireRole('manager'), async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
   const err = validateCreatePayload(req.body);
   if (err) return res.status(400).json({ error: err });

@@ -4,15 +4,14 @@ import { pool } from '../db';
 import { getTicketById, getUnreadCount } from '../services/ticketService';
 import { saveAudio, saveImage } from '../utils/media';
 import { sanitise } from '../utils/sanitise';
-import { requireAuth, validateIdParam } from '../middleware/auth';
+import { requireAuth, validateIdParam, AuthenticatedRequest } from '../middleware/auth';
 import { sendPushToRole } from '../services/pushService';
 
 const router = Router();
 
 router.get('/tickets/:id/messages', requireAuth, validateIdParam, async (req: Request, res: Response) => {
   try {
-    const { viewer } = req.query;
-    const role = viewer === 'manager' ? 'manager' : 'office';
+    const role = (req as AuthenticatedRequest).user!.role as 'manager' | 'office';
     const r = await pool.query(`
       SELECT id, ticket_id, sender, text, audio_path, image_path, is_query, read_at,
         created_at AT TIME ZONE 'UTC' AS created_at
@@ -37,25 +36,30 @@ router.get('/tickets/:id/messages', requireAuth, validateIdParam, async (req: Re
 
 router.post('/tickets/:id/messages', requireAuth, validateIdParam, async (req: Request, res: Response) => {
   const io: Server = req.app.get('io');
-  const { sender, text, audio, audio_mime, image, is_query } = req.body;
+  const sender = (req as AuthenticatedRequest).user!.role as 'manager' | 'office';
+  const { text, audio, audio_mime, image, is_query: rawIsQuery } = req.body;
+  const is_query = rawIsQuery === true;
 
   console.log(`[MSG] POST /tickets/${req.params.id}/messages sender=${sender} is_query=${is_query} hasText=${!!text} hasAudio=${!!audio} hasImage=${!!image}`);
 
-  if (sender !== 'manager' && sender !== 'office') return res.status(400).json({ error: 'invalid sender' });
   if (!text && !audio && !image) return res.status(400).json({ error: 'text, audio, or image required' });
-  if (typeof is_query !== 'boolean') return res.status(400).json({ error: 'is_query must be boolean' });
   if (audio && !audio_mime) return res.status(400).json({ error: 'audio_mime required with audio' });
 
   try {
-    const ticketCheck = await pool.query('SELECT id FROM tickets WHERE id=$1', [req.params.id]);
+    const ticketCheck = await pool.query('SELECT id, status FROM tickets WHERE id=$1', [req.params.id]);
     if (ticketCheck.rows.length === 0) return res.status(404).json({ error: 'Ticket not found' });
+
+    const allowQuery = is_query
+      && sender === 'manager'
+      && ['pending', 'ordered'].includes(ticketCheck.rows[0].status);
+    const storedIsQuery = allowQuery;
 
     let audioPath: string | null = null;
     let imagePath: string | null = null;
     if (audio) audioPath = saveAudio(audio, audio_mime);
     if (image) imagePath = saveImage(image);
 
-    if (is_query) {
+    if (allowQuery) {
       await pool.query("UPDATE tickets SET status='query',updated_at=NOW() WHERE id=$1", [req.params.id]);
     }
 
@@ -64,7 +68,7 @@ router.post('/tickets/:id/messages', requireAuth, validateIdParam, async (req: R
       VALUES ($1,$2,$3,$4,$5,$6)
       RETURNING id,ticket_id,sender,text,audio_path,image_path,is_query,read_at,
         created_at AT TIME ZONE 'UTC' AS created_at
-    `, [req.params.id, sender, text ? sanitise(text) : null, audioPath, imagePath, is_query]);
+    `, [req.params.id, sender, text ? sanitise(text) : null, audioPath, imagePath, storedIsQuery]);
 
     const message = {
       id: msgR.rows[0].id, ticket_id: msgR.rows[0].ticket_id, sender: msgR.rows[0].sender,
@@ -84,7 +88,7 @@ router.post('/tickets/:id/messages', requireAuth, validateIdParam, async (req: R
     if (updated) {
       const forManager = { ...updated, unread_count: await getUnreadCount(req.params.id, 'manager') };
       const forOffice = { ...updated, unread_count: await getUnreadCount(req.params.id, 'office') };
-      if (is_query) {
+      if (allowQuery) {
         io.to('office').emit('ticket:updated', { ticket: forOffice });
         io.to(room).emit('ticket:updated', { ticket: forManager });
       }
