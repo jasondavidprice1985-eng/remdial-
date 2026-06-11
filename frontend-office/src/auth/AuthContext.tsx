@@ -3,7 +3,7 @@ import { apiFetch, clearAuthToken, getAuthToken, setAuthToken, setUnauthorizedHa
 
 interface User {
   username: string;
-  role: 'manager' | 'office';
+  role: 'manager' | 'office' | 'admin';
   displayName: string;
 }
 

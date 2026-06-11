@@ -1,13 +1,20 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../db';
+import { logger } from '../utils/logger';
 import type { JWTPayload } from '../types';
 
 const BCRYPT_ROUNDS = 12;
 
 export async function seedUsers(): Promise<void> {
   const existing = await pool.query('SELECT 1 FROM users LIMIT 1');
-  if (existing.rowCount && existing.rowCount > 0) return;
+  if (existing.rowCount && existing.rowCount > 0) {
+    const adminCheck = await pool.query("SELECT 1 FROM users WHERE role='admin' LIMIT 1");
+    if (!adminCheck.rowCount) {
+      logger.warn('No admin user found — run `npx tsx src/scripts/migrateToIndividualAccounts.ts` to create one');
+    }
+    return;
+  }
 
   // First startup: create an admin account so someone can log in and create others
   const username = process.env.ADMIN_USERNAME || 'admin';
@@ -67,7 +74,7 @@ export async function changePassword(userId: string, currentPassword: string, ne
   if (!valid) return false;
   const hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await pool.query(
-    'UPDATE users SET password_hash=$1, must_change_password=false WHERE id=$2',
+    'UPDATE users SET password_hash=$1, must_change_password=false, token_version = token_version + 1 WHERE id=$2',
     [hash, userId]
   );
   return true;

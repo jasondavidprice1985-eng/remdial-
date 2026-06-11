@@ -7,10 +7,10 @@ export const logger = pino({
   transport: process.env.NODE_ENV !== 'production'
     ? { target: 'pino/file', options: { destination: 1 } }
     : undefined,
-  // Strip message text from logs in production for privacy
+  // Redact sensitive request-body fields from logs
   ...(process.env.NODE_ENV === 'production' ? {
     redact: {
-      paths: ['text', 'msg', 'body'],
+      paths: ['password', 'current_password', 'new_password'],
       censor: '[REDACTED]',
     },
   } : {}),

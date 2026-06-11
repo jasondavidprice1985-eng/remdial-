@@ -163,7 +163,7 @@ describe('seedUsers', () => {
     const { seedUsers } = await import('../services/authService');
     await seedUsers();
 
-    // Only the SELECT, no INSERT
-    expect(pool.query).toHaveBeenCalledTimes(1);
+    // One SELECT for existence check, one SELECT for admin check — no INSERT
+    expect(pool.query).toHaveBeenCalledTimes(2);
   });
 });
