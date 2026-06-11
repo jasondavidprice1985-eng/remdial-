@@ -6,6 +6,7 @@ import { pool } from '../db';
  */
 export async function logAudit(
   ticketId: string,
+  ticketRef: string,
   action: string,
   changedBy: string,
   oldValue?: Record<string, unknown> | null,
@@ -13,9 +14,9 @@ export async function logAudit(
 ): Promise<void> {
   try {
     await pool.query(
-      `INSERT INTO audit_log (ticket_id, action, changed_by, old_value, new_value)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [ticketId, action, changedBy, oldValue ? JSON.stringify(oldValue) : null, newValue ? JSON.stringify(newValue) : null]
+      `INSERT INTO audit_log (ticket_id, ticket_ref, action, changed_by, old_value, new_value)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [ticketId, ticketRef, action, changedBy, oldValue ? JSON.stringify(oldValue) : null, newValue ? JSON.stringify(newValue) : null]
     );
   } catch (err) {
     // Audit logging should never break the main flow

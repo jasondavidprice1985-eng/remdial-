@@ -91,6 +91,10 @@ router.patch('/tickets/:id/order', requireAuth, requireRole('office'), validateI
       delivery_date = setting.rows[0]?.value ?? null;
     }
     if (!delivery_date || !/^\d{4}-\d{2}-\d{2}$/.test(delivery_date)) return res.status(400).json({ error: 'delivery_date must be YYYY-MM-DD' });
+    const parsedDate = new Date(delivery_date + 'T00:00:00Z');
+    if (Number.isNaN(parsedDate.getTime()) || delivery_date !== parsedDate.toISOString().slice(0, 10)) {
+      return res.status(400).json({ error: 'delivery_date is not a valid calendar date' });
+    }
     const r = await pool.query(`
       UPDATE tickets SET status='ordered',po_number=$1,delivery_date=$2,ordered_items=$3::jsonb,updated_at=NOW() WHERE id=$4
       RETURNING id,ref,status,developer,site,plot_number,items,quantity,reason,delivery_request,

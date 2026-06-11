@@ -34,6 +34,12 @@ export async function initDB(): Promise<void> {
   // SAP-ordered items: what office actually ordered, may differ from what manager requested
   await pool.query(`ALTER TABLE tickets ADD COLUMN IF NOT EXISTS ordered_items JSONB`).catch(swallowIfAlreadyExists);
 
+  // Audit trail: add ticket_ref, change FK to SET NULL so audit survives ticket deletion
+  await pool.query(`ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS ticket_ref VARCHAR(10)`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE audit_log ALTER COLUMN ticket_id DROP NOT NULL`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE audit_log DROP CONSTRAINT IF EXISTS audit_log_ticket_id_fkey`).catch(swallowIfAlreadyExists);
+  await pool.query(`ALTER TABLE audit_log ADD CONSTRAINT audit_log_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL`).catch(swallowIfAlreadyExists);
+
   // Web Push subscriptions — one row per device/browser per user
   await pool.query(`
     CREATE TABLE IF NOT EXISTS push_subscriptions (

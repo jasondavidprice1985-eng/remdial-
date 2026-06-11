@@ -76,7 +76,8 @@ export async function createSchema(pool: Pool): Promise<void> {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS audit_log (
       id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      ticket_id   UUID         NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+      ticket_id   UUID         REFERENCES tickets(id) ON DELETE SET NULL,
+      ticket_ref  VARCHAR(10),
       action      VARCHAR(50)  NOT NULL,
       changed_by  VARCHAR(100) NOT NULL,
       old_value   JSONB,

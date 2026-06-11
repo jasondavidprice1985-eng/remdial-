@@ -57,8 +57,8 @@ router.post('/products/learn', requireAuth, async (req: Request, res: Response) 
   try {
     let learned = 0;
     for (const item of items) {
-      const code = String(item.sap_code || '').trim();
-      const desc = String(item.description || '').trim();
+      const code = String(item.sap_code || '').trim().slice(0, 50);
+      const desc = String(item.description || '').trim().slice(0, 500);
       if (code && desc) {
         const result = await pool.query(
           `INSERT INTO products (sap_code, description)
