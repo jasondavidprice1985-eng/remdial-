@@ -17,20 +17,24 @@ import usersRouter from './routes/users';
 import { apiLimiter } from './middleware/rateLimiter';
 import { setupSocket } from './socket';
 import { verifyUpload, signJsonResponse } from './utils/signedUrls';
+import { logger } from './utils/logger';
 
 const PORT        = parseInt(process.env.PORT || '3001', 10);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+const RESOLVED_ORIGIN = CORS_ORIGIN === '*' && process.env.NODE_ENV === 'production'
+  ? false
+  : CORS_ORIGIN;
 
 async function main(): Promise<void> {
   // Refuse to start with default admin password in production
   if (process.env.NODE_ENV === 'production') {
     const adminPw = process.env.ADMIN_PASSWORD;
     if (!adminPw || adminPw === 'admin') {
-      console.error('FATAL: Set ADMIN_PASSWORD to a non-default value in production.');
+      logger.fatal('Set ADMIN_PASSWORD to a non-default value in production.');
       process.exit(1);
     }
     if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-      console.error('FATAL: JWT_SECRET must be set and at least 32 characters in production.');
+      logger.fatal('JWT_SECRET must be set and at least 32 characters in production.');
       process.exit(1);
     }
   }
@@ -44,9 +48,18 @@ async function main(): Promise<void> {
   // client IP, not always 127.0.0.1.
   app.set('trust proxy', 1);
 
-  app.use(helmet());
-  app.use(cors({ origin: CORS_ORIGIN === '*' && process.env.NODE_ENV === 'production'
-    ? false : CORS_ORIGIN }));
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+      },
+    },
+  }));
+  app.use(cors({ origin: RESOLVED_ORIGIN }));
   app.use(express.json({ limit: '10mb' }));
   app.use('/api/', apiLimiter);
 
@@ -90,17 +103,17 @@ async function main(): Promise<void> {
 
   // Global error handler — the safety net that catches anything unexpected
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    console.error('[UNHANDLED]', err);
+    logger.error({ err }, 'Unhandled error');
     res.status(500).json({ error: 'Internal server error' });
   });
 
   const httpServer = http.createServer(app);
-  const io = new Server(httpServer, { cors: { origin: CORS_ORIGIN } });
+  const io = new Server(httpServer, { cors: { origin: RESOLVED_ORIGIN || false } });
 
   app.set('io', io);
   setupSocket(io);
 
-  httpServer.listen(PORT, () => console.log(`Backend listening on port ${PORT}`));
+  httpServer.listen(PORT, () => logger.info({ port: PORT }, 'Backend listening'));
 }
 
 main().catch(err => { console.error('Fatal startup error:', err); process.exit(1); });

@@ -67,6 +67,7 @@ export async function createSchema(pool: Pool): Promise<void> {
       role                VARCHAR(10)  NOT NULL CHECK (role IN ('manager','office','admin')),
       active              BOOLEAN      NOT NULL DEFAULT true,
       must_change_password BOOLEAN     NOT NULL DEFAULT false,
+      token_version       INTEGER      NOT NULL DEFAULT 0,
       created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     )`);
 

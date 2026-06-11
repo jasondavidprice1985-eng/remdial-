@@ -48,6 +48,9 @@ export async function initDB(): Promise<void> {
   await pool.query(`ALTER TABLE audit_log DROP CONSTRAINT IF EXISTS audit_log_ticket_id_fkey`).catch(swallowIfAlreadyExists);
   await pool.query(`ALTER TABLE audit_log ADD CONSTRAINT audit_log_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL`).catch(swallowIfAlreadyExists);
 
+  // Token versioning: bump to invalidate all existing tokens for a user
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0`).catch(swallowIfAlreadyExists);
+
   // Web Push subscriptions — one row per device/browser per user
   await pool.query(`
     CREATE TABLE IF NOT EXISTS push_subscriptions (

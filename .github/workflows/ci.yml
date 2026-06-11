@@ -41,6 +41,11 @@ jobs:
         run: npm test
         working-directory: ./backend
 
+      - name: Security audit (backend)
+        run: npm audit --audit-level=high
+        working-directory: ./backend
+        continue-on-error: true
+
       - name: Build backend
         run: npm run build
         working-directory: ./backend
@@ -70,3 +75,56 @@ jobs:
       - name: Build office
         run: npm run build
         working-directory: ./frontend-office
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: remedial_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install all deps
+        run: |
+          cd backend && npm ci
+          cd ../frontend-manager && npm ci
+          cd ../frontend-office && npm ci
+
+      - name: Build backend
+        run: npm run build
+        working-directory: ./backend
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+        working-directory: ./e2e
+
+      - name: Run E2E tests
+        run: npx playwright test
+        working-directory: ./e2e
+        env:
+          DATABASE_URL: postgresql://postgres@localhost:5433/remedial_test
+          JWT_SECRET: e2e-test-secret-key-at-least-32-characters-long
+          MANAGER_USERNAME: manager
+          MANAGER_PASSWORD: manager
+          OFFICE_USERNAME: office
+          OFFICE_PASSWORD: office
+          MANAGER_URL: http://localhost:5174
+          OFFICE_URL: http://localhost:5175

@@ -34,7 +34,7 @@ export async function loginUser(
   remember: boolean
 ): Promise<LoginResult | null> {
   const result = await pool.query(
-    'SELECT id, username, password_hash, role, display_name, active, must_change_password FROM users WHERE username = $1',
+    'SELECT id, username, password_hash, role, display_name, active, must_change_password, token_version FROM users WHERE username = $1',
     [username]
   );
   if (result.rows.length === 0) return null;
@@ -44,8 +44,13 @@ export async function loginUser(
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return null;
 
-  const payload: JWTPayload = { userId: user.id, username: user.username, role: user.role };
-  const expiresIn = remember ? '30d' : '8h';
+  const payload: JWTPayload = {
+    userId: user.id,
+    username: user.username,
+    role: user.role,
+    tokenVersion: user.token_version,
+  };
+  const expiresIn = remember ? '7d' : '8h';
   const token = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn });
   return {
     token,
