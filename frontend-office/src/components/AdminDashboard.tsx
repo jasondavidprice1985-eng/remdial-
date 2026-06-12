@@ -47,7 +47,8 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[20px] font-semibold text-[var(--text)]">User Management</h2>
           <button onClick={() => setModal('add')}
-            className="text-[13px] font-semibold px-4 h-9 rounded-lg bg-[var(--text)] text-white hover:opacity-90 transition-opacity">
+            className="text-[13px] font-semibold px-4 h-9 rounded-lg text-white hover:opacity-90 transition-opacity"
+            style={{ background: '#0f7a3a' }}>
             + Add User
           </button>
         </div>
@@ -232,7 +233,7 @@ function AddUserModal({ onClose, onDone }: { onClose: () => void; onDone: () => 
             {(['manager', 'office', 'admin'] as const).map(r => (
               <button key={r} type="button" onClick={() => setRole(r)}
                 className={`flex-1 py-2.5 text-[13px] font-semibold rounded-lg border transition-colors ${
-                  role === r ? 'bg-[var(--text)] text-white border-[var(--text)]' : 'bg-[var(--surface)] text-[var(--subtle)] border-[var(--border)]'
+                  role === r ? 'bg-[#0f7a3a] text-white border-[#0f7a3a]' : 'bg-[var(--surface)] text-[var(--subtle)] border-[var(--border)]'
                 }`}>
                 {r.charAt(0).toUpperCase() + r.slice(1)}
               </button>
@@ -242,7 +243,8 @@ function AddUserModal({ onClose, onDone }: { onClose: () => void; onDone: () => 
         <p className="text-[11px] text-[var(--subtle)]">User will be asked to change their password on first login.</p>
         {error && <p className="text-[12px] text-red-600">{error}</p>}
         <button onClick={handleSubmit} disabled={saving}
-          className="w-full py-3 text-[14px] font-semibold rounded-lg bg-[var(--text)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity">
+          className="w-full py-3 text-[14px] font-semibold rounded-lg text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+          style={{ background: '#0f7a3a' }}>
           {saving ? 'Creating...' : 'Create User'}
         </button>
       </div>
@@ -285,7 +287,7 @@ function EditUserModal({ user, onClose, onDone }: { user: User; onClose: () => v
             {(['manager', 'office', 'admin'] as const).map(r => (
               <button key={r} type="button" onClick={() => setRole(r)}
                 className={`flex-1 py-2.5 text-[13px] font-semibold rounded-lg border transition-colors ${
-                  role === r ? 'bg-[var(--text)] text-white border-[var(--text)]' : 'bg-[var(--surface)] text-[var(--subtle)] border-[var(--border)]'
+                  role === r ? 'bg-[#0f7a3a] text-white border-[#0f7a3a]' : 'bg-[var(--surface)] text-[var(--subtle)] border-[var(--border)]'
                 }`}>
                 {r.charAt(0).toUpperCase() + r.slice(1)}
               </button>
@@ -294,7 +296,8 @@ function EditUserModal({ user, onClose, onDone }: { user: User; onClose: () => v
         </div>
         {error && <p className="text-[12px] text-red-600">{error}</p>}
         <button onClick={handleSubmit} disabled={saving}
-          className="w-full py-3 text-[14px] font-semibold rounded-lg bg-[var(--text)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity">
+          className="w-full py-3 text-[14px] font-semibold rounded-lg text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+          style={{ background: '#0f7a3a' }}>
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
@@ -334,7 +337,8 @@ function ResetPasswordModal({ user, onClose, onDone }: { user: User; onClose: ()
         <Field label="New Temporary Password" value={password} onChange={setPassword} placeholder="Min 8 characters" type="password" />
         {error && <p className="text-[12px] text-red-600">{error}</p>}
         <button onClick={handleSubmit} disabled={saving}
-          className="w-full py-3 text-[14px] font-semibold rounded-lg bg-[var(--text)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity">
+          className="w-full py-3 text-[14px] font-semibold rounded-lg text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+          style={{ background: '#0f7a3a' }}>
           {saving ? 'Resetting...' : 'Reset Password'}
         </button>
       </div>
@@ -358,8 +362,9 @@ function ConfirmModal({ title, message, confirmLabel, confirmDanger, onClose, on
           </button>
           <button onClick={async () => { setLoading(true); await onConfirm(); }} disabled={loading}
             className={`flex-1 py-2.5 text-[13px] font-semibold rounded-lg text-white transition-opacity disabled:opacity-50 ${
-              confirmDanger ? 'bg-red-600 hover:bg-red-700' : 'bg-[var(--text)] hover:opacity-90'
-            }`}>
+              confirmDanger ? 'bg-red-600 hover:bg-red-700' : 'hover:opacity-90'
+            }`}
+            style={confirmDanger ? undefined : { background: '#0f7a3a' }}>
             {loading ? '...' : confirmLabel}
           </button>
         </div>

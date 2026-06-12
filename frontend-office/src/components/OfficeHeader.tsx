@@ -46,8 +46,8 @@ export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive
             className="text-[12.5px] font-medium px-3 h-8 rounded-md transition-colors border"
             style={{
               color: adminMode ? '#fff' : 'var(--text)',
-              background: adminMode ? '#7c3aed' : 'var(--surface)',
-              borderColor: adminMode ? '#7c3aed' : 'var(--border)',
+              background: adminMode ? '#0f7a3a' : 'var(--surface)',
+              borderColor: adminMode ? '#0f7a3a' : 'var(--border)',
             }}>
             {adminMode ? 'Back' : 'Admin'}
           </button>
