@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { LineItemInput } from '@shared/types';
 import { REASONS } from '../constants/reasons';
 import DescriptionTypeahead from './DescriptionTypeahead';
@@ -31,7 +32,7 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
     onSave({ description: description.trim(), quantity, reason, sap_code: sapCode });
   }
 
-  return (
+  return createPortal((
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40 animate-slide-up" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-[var(--surface)] rounded-t-2xl sm:rounded-2xl border border-[var(--border)]
@@ -103,5 +104,5 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }
