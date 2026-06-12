@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { apiFetch } from '../auth/apiClient';
 
 export interface KitchenItem {
@@ -97,7 +98,7 @@ export default function KitchenPicker({ developer, site, plot, open, onClose, on
     .map(name => [name, groups.get(name)] as [string, KitchenItem[] | undefined])
     .filter(([, list]) => list && list.length > 0) as [string, KitchenItem[]][];
 
-  return (
+  return createPortal((
     <div
       className="fixed inset-0 z-40 bg-black/40 flex items-end sm:items-center justify-center animate-modal-backdrop"
       onClick={onClose}
@@ -168,5 +169,5 @@ export default function KitchenPicker({ developer, site, plot, open, onClose, on
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }
