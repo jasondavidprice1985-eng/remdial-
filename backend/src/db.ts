@@ -72,6 +72,31 @@ export async function initDB(): Promise<void> {
     )
   `).catch(swallowIfAlreadyExists);
 
+  // Delivery Report line items. Daily import, dedupe per row.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sap_orders (
+      id                SERIAL PRIMARY KEY,
+      sales_doc         VARCHAR(20)  NOT NULL,
+      sales_type        VARCHAR(4),
+      sap_code          VARCHAR(40)  NOT NULL,
+      description       VARCHAR(255),
+      order_quantity    NUMERIC(10,2),
+      po_number         VARCHAR(255),
+      plot_extracted    VARCHAR(50),
+      sold_to_name      VARCHAR(200),
+      sold_to_account   VARCHAR(50),
+      developer         VARCHAR(200),
+      site              VARCHAR(200),
+      created_on        DATE,
+      required_delivery DATE,
+      sap_user          VARCHAR(50),
+      ingested_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (sales_doc, sap_code, po_number)
+    )
+  `).catch(swallowIfAlreadyExists);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_sap_orders_lookup ON sap_orders(developer, site, plot_extracted)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_sap_orders_salesdoc ON sap_orders(sales_doc)`);
+
   // Web Push subscriptions — one row per device/browser per user
   await pool.query(`
     CREATE TABLE IF NOT EXISTS push_subscriptions (
