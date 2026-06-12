@@ -41,7 +41,13 @@ export default function BottomTabBar({ active, onChange, attentionCount }: Props
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[var(--surface)] border-t border-[var(--border)]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="max-w-lg mx-auto flex">
+      <div className="max-w-lg mx-auto flex relative">
+        {/* Animated indicator */}
+        <div className="absolute top-0 h-[2px] bg-[var(--text)] transition-all duration-300 ease-out"
+          style={{
+            width: `${100 / tabs.length}%`,
+            left: `${(tabs.findIndex(t => t.id === active) / tabs.length) * 100}%`,
+          }} />
         {tabs.map(tab => {
           const isActive = active === tab.id;
           const showAttention = tab.id === 'reports' && attentionCount > 0;

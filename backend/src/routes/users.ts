@@ -110,6 +110,27 @@ router.delete('/users/:id', requireAuth, requireRole('admin'), validateIdParam, 
   }
 });
 
+// PATCH /api/v1/users/:id/reset-password — admin resets another user's password
+router.patch('/users/:id/reset-password', requireAuth, requireRole('admin'), validateIdParam, async (req: Request, res: Response) => {
+  const { new_password } = req.body;
+  if (!new_password || String(new_password).length < 8) {
+    return res.status(400).json({ error: 'new_password must be at least 8 characters' });
+  }
+  try {
+    const hash = await bcrypt.hash(String(new_password), BCRYPT_ROUNDS);
+    const r = await pool.query(
+      `UPDATE users SET password_hash=$1, must_change_password=true, token_version=token_version+1 WHERE id=$2
+       RETURNING id, username, display_name`,
+      [hash, req.params.id]
+    );
+    if (r.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    return res.json({ ok: true, user: r.rows[0] });
+  } catch (e) {
+    console.error('[USERS] reset password error:', e);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // PATCH /api/v1/users/me/password — change own password
 router.patch('/users/me/password', requireAuth, async (req: Request, res: Response) => {
   const userId = (req as AuthenticatedRequest).user!.userId;

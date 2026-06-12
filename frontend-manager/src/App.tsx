@@ -13,6 +13,7 @@ import StatusBanner from './components/StatusBanner';
 import PwaInstallBanner from './components/PwaInstallBanner';
 import AppHeader from './components/AppHeader';
 import BottomTabBar, { Tab } from './components/BottomTabBar';
+import SwipeableViews from './components/SwipeableViews';
 
 type BannerState = 'none' | 'sending' | 'submitted' | 'offline' | 'synced' | 'error';
 
@@ -35,6 +36,9 @@ export default function App() {
 function AuthedApp({ token }: { token: string }) {
   const socket = useSocket(token);
   const [tab, setTab] = useState<Tab>('reports');
+  const TABS: Tab[] = ['reports', 'new', 'archive'];
+  const tabIndex = TABS.indexOf(tab);
+  function handleSwipe(index: number) { setTab(TABS[index]); }
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [archivedTickets, setArchivedTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,19 +185,15 @@ function AuthedApp({ token }: { token: string }) {
           </div>
         )}
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
-          {tab === 'new' && (
-            <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />
-          )}
-          {tab === 'reports' && (
+          <SwipeableViews activeIndex={tabIndex} onChangeIndex={handleSwipe} disabled={submitting}>
             <TicketList tickets={tickets} loading={loading} respondedQueries={respondedQueries} pendingCount={pendingCount}
               onTicketUpdate={t => handleTicketUpdate(t, setTickets)} onManagerResponded={handleManagerResponded} />
-          )}
-          {tab === 'archive' && (
+            <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />
             <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
               onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
               heading="" emptyIcon="archive" emptyTitle="No archived tickets"
               emptySubtitle="Completed tickets will appear here." />
-          )}
+          </SwipeableViews>
         </main>
         <BottomTabBar active={tab} onChange={setTab} attentionCount={attentionCount(tickets)} />
       </div>
