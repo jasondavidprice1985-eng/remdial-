@@ -5,6 +5,9 @@ import DeveloperCombobox from './DeveloperCombobox';
 import LineItemBuilder from './LineItemBuilder';
 import DeliverySection from './DeliverySection';
 import PhotoUpload from './PhotoUpload';
+import KitchenPicker, { KitchenItem } from './KitchenPicker';
+
+const SAP_DECODER_ENABLED = import.meta.env.VITE_SAP_DECODER_ENABLED === 'true';
 
 export interface TicketFormPayload {
   developer: string; site: string; plot_number: string;
@@ -32,6 +35,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   const [deliveryType, setDeliveryType] = useState<'next_delivery' | 'specific_date' | ''>('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [kitchenOpen, setKitchenOpen] = useState(false);
 
   const locationDone = !!(developer.trim() && site.trim() && plotNumber.trim());
   const filledItems = items.filter(isFilled);
@@ -42,6 +46,23 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   function resetForm() {
     setDeveloper(''); setSite(''); setPlotNumber('');
     setItems(makeInitialItems()); setDeliveryType(''); setDeliveryDate(''); setImages([]);
+    setKitchenOpen(false);
+  }
+
+  function handleKitchenPick(item: KitchenItem) {
+    const description = item.description || item.sapCode;
+    setItems(prev => {
+      const idx = prev.findIndex(r => r.description.trim() === '');
+      const patch: LineItemInput = {
+        description,
+        quantity: item.quantity ?? 1,
+        reason: '',
+        sap_code: item.sapCode,
+      };
+      if (idx === -1) return [...prev, patch];
+      return prev.map((r, i) => i === idx ? patch : r);
+    });
+    setKitchenOpen(false);
   }
   React.useEffect(() => {
     (window as Window & { __resetTicketForm?: () => void }).__resetTicketForm = resetForm;
@@ -75,6 +96,22 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           <input className="input-field" placeholder="Plot Number *" maxLength={50} value={plotNumber}
             onChange={e => setPlotNumber(e.target.value)} disabled={disabled} required />
         </FormSection>
+
+        {SAP_DECODER_ENABLED && locationDone && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => setKitchenOpen(true)}
+              disabled={disabled}
+              className="w-full h-12 rounded-xl border border-[var(--border)] bg-white text-[var(--text)] text-[14px] font-semibold flex items-center justify-center gap-2 hover:border-[var(--text)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9.5 12 4l9 5.5" /><path d="M5 9v11h14V9" /><path d="M9 20v-6h6v6" />
+              </svg>
+              Find this kitchen
+            </button>
+          </div>
+        )}
 
         <FormSection
           step={2}
@@ -126,6 +163,17 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           }
         </button>
       </div>
+
+      {SAP_DECODER_ENABLED && (
+        <KitchenPicker
+          developer={developer.trim()}
+          site={site.trim()}
+          plot={plotNumber.trim()}
+          open={kitchenOpen}
+          onClose={() => setKitchenOpen(false)}
+          onPick={handleKitchenPick}
+        />
+      )}
     </form>
   );
 }
