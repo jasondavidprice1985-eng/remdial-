@@ -377,8 +377,8 @@ function ConfirmModal({ title, message, confirmLabel, confirmDanger, onClose, on
 
 function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-modal-backdrop" onClick={onClose}>
+      <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden animate-modal-panel" onClick={e => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
           <h2 className="text-[16px] font-semibold text-[var(--text)]">{title}</h2>
           <button onClick={onClose} className="text-[var(--subtle)] hover:text-[var(--text)] text-xl leading-none">×</button>

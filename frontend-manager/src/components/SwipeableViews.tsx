@@ -7,8 +7,9 @@ interface Props {
   disabled?: boolean;
 }
 
-const SWIPE_THRESHOLD = 50;
-const VELOCITY_THRESHOLD = 0.3;
+const SWIPE_THRESHOLD = 40;
+const VELOCITY_THRESHOLD = 0.25;
+const TRANSITION = 'transform 0.36s cubic-bezier(0.22, 1, 0.36, 1)';
 
 export default function SwipeableViews({ activeIndex, onChangeIndex, children, disabled }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -90,7 +91,7 @@ export default function SwipeableViews({ activeIndex, onChangeIndex, children, d
     touchRef.current = null;
 
     // Remove transition flag after animation completes
-    setTimeout(() => setIsTransitioning(false), 320);
+    setTimeout(() => setIsTransitioning(false), 360);
   }
 
   const translateX = -(activeIndex * 100) + (dragOffset / (containerRef.current?.offsetWidth || 400)) * 100;
@@ -104,7 +105,7 @@ export default function SwipeableViews({ activeIndex, onChangeIndex, children, d
         className="flex h-full"
         style={{
           transform: `translateX(${translateX}%)`,
-          transition: isTransitioning || dragOffset === 0 ? 'transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+          transition: isTransitioning || dragOffset === 0 ? TRANSITION : 'none',
           willChange: 'transform',
         }}>
         {children.map((child, i) => (

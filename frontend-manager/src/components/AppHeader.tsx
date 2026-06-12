@@ -1,7 +1,25 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
+import { Tab } from './BottomTabBar';
 
-export default function AppHeader() {
+interface Props {
+  tab: Tab;
+  archivedCount: number;
+}
+
+interface HeaderContent {
+  title: string;
+  subtitle: string;
+}
+
+function contentFor(tab: Tab, archivedCount: number): HeaderContent {
+  if (tab === 'new')     return { title: 'New Remedial',     subtitle: 'Fill in details' };
+  if (tab === 'archive') return { title: 'Archive',          subtitle: `${archivedCount} job${archivedCount === 1 ? '' : 's'} complete` };
+  return                        { title: 'Remedial',         subtitle: 'Ticket Dashboard' };
+}
+
+export default function AppHeader({ tab, archivedCount }: Props) {
   const { user, logout } = useAuth();
   const { status, enable, disable } = useNotifications(!!user);
 
@@ -18,6 +36,29 @@ export default function AppHeader() {
 
   const bellAttention = status !== 'subscribed' && status !== 'denied' && status !== 'unsupported';
 
+  const showReportsActions = tab === 'reports';
+
+  // Crossfade the text on tab change
+  const [content, setContent] = useState<HeaderContent>(() => contentFor(tab, archivedCount));
+  const [phase, setPhase] = useState<'in' | 'out'>('in');
+
+  useEffect(() => {
+    const next = contentFor(tab, archivedCount);
+    if (next.title === content.title && next.subtitle === content.subtitle) return;
+    setPhase('out');
+    const swap = setTimeout(() => {
+      setContent(next);
+      setPhase('in');
+    }, 140);
+    return () => clearTimeout(swap);
+  }, [tab, archivedCount, content.title, content.subtitle]);
+
+  const fadeStyle = {
+    opacity: phase === 'in' ? 1 : 0,
+    transform: phase === 'in' ? 'translateY(0)' : 'translateY(-4px)',
+    transition: 'opacity 0.18s ease-out, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1)',
+  };
+
   return (
     <header
       className="px-5 pt-5 pb-5 bg-[var(--surface)] border-b border-[var(--border)]"
@@ -27,15 +68,23 @@ export default function AppHeader() {
         <div className="w-11 h-11 rounded-lg bg-[var(--text)] text-white grid place-items-center text-[18px] font-bold shrink-0">
           R
         </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0 leading-[1.15]">Remedial</h1>
-          <p className="text-[13px] text-[var(--ordered)] m-0 mt-1 inline-flex items-center gap-1.5">
-            <span className="w-[6px] h-[6px] rounded-full bg-[var(--ordered)]" />
-            Ticket Dashboard
+        <div className="flex-1 min-w-0" style={fadeStyle}>
+          <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0 leading-[1.15] truncate">{content.title}</h1>
+          <p className="text-[13px] text-[var(--ordered)] m-0 mt-1 inline-flex items-center gap-1.5 truncate">
+            <span className="w-[6px] h-[6px] rounded-full bg-[var(--ordered)] shrink-0" />
+            {content.subtitle}
           </p>
         </div>
         {user && (
-          <div className="flex items-center gap-1.5">
+          <div
+            className="flex items-center gap-1.5"
+            style={{
+              opacity: showReportsActions ? 1 : 0,
+              pointerEvents: showReportsActions ? 'auto' : 'none',
+              transition: 'opacity 0.22s ease-out',
+            }}
+            aria-hidden={!showReportsActions}
+          >
             <button
               type="button"
               className="w-9 h-9 rounded-[8px] border border-[var(--border)] grid place-items-center text-[var(--text)] hover:bg-[var(--surface-2)]"

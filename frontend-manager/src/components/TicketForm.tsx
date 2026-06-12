@@ -62,26 +62,6 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="pb-36">
-      <div className="px-5 pt-5 pb-5 border-b border-[var(--border)] flex items-center gap-3.5"
-        style={{ paddingTop: 'max(1.25rem, env(safe-area-inset-top))' }}>
-        <div className="w-11 h-11 rounded-lg bg-[var(--text)] text-white grid place-items-center text-[18px] font-bold shrink-0">
-          R
-        </div>
-        <div className="flex-1">
-          <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--text)] m-0 leading-[1.15]">New Remedial</h1>
-          {(() => {
-            const sectionsDone = (locationDone ? 1 : 0) + (itemsValid ? 1 : 0) + (deliveryDone ? 1 : 0) + (images.length > 0 ? 1 : 0);
-            const ready = canSubmit;
-            return (
-              <p className="text-[13px] text-[var(--ordered)] m-0 mt-1 inline-flex items-center gap-1.5">
-                <span className="w-[6px] h-[6px] rounded-full bg-[var(--ordered)]" />
-                {ready ? 'Ready to send' : `${sectionsDone} of 4 complete`}
-              </p>
-            );
-          })()}
-        </div>
-      </div>
-
       <div className="px-5">
         <FormSection
           step={1}

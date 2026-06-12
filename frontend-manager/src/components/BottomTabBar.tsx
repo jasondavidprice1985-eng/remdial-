@@ -43,18 +43,22 @@ export default function BottomTabBar({ active, onChange, attentionCount }: Props
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="max-w-lg mx-auto flex relative">
         {/* Animated indicator */}
-        <div className="absolute top-0 h-[2px] bg-[var(--text)] transition-all duration-300 ease-out"
+        <div className="absolute top-0 h-[2px] bg-[var(--text)]"
           style={{
             width: `${100 / tabs.length}%`,
             left: `${(tabs.findIndex(t => t.id === active) / tabs.length) * 100}%`,
+            transition: 'left 0.36s cubic-bezier(0.22, 1, 0.36, 1)',
           }} />
         {tabs.map(tab => {
           const isActive = active === tab.id;
           const showAttention = tab.id === 'reports' && attentionCount > 0;
           return (
             <button key={tab.id} type="button" onClick={() => onChange(tab.id)}
-              className="relative flex-1 flex flex-col items-center justify-center gap-1 min-h-[58px] transition-colors"
-              style={{ color: isActive ? 'var(--text)' : 'var(--subtle)' }}>
+              className="relative flex-1 flex flex-col items-center justify-center gap-1 min-h-[58px]"
+              style={{
+                color: isActive ? 'var(--text)' : 'var(--subtle)',
+                transition: 'color 0.24s cubic-bezier(0.22, 1, 0.36, 1)',
+              }}>
               <Icon name={tab.id} />
               <span className="text-[11.5px] font-medium tracking-tight">{tab.label}</span>
               {showAttention && (
