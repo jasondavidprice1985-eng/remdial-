@@ -7,6 +7,10 @@ interface Props {
   items: LineItemInput[];
   onChange: (items: LineItemInput[]) => void;
   disabled: boolean;
+  // Optional controlled open-index — when set by the parent, opens the editor
+  // at that row. Used by the kitchen picker to drop straight into reason entry.
+  openIndex?: number | null;
+  onOpenIndexChange?: (idx: number | null) => void;
 }
 
 const EMPTY: LineItemInput = { description: '', quantity: 1, reason: '' };
@@ -15,8 +19,14 @@ function isFilled(row: LineItemInput): boolean {
   return row.description.trim().length > 0 && row.quantity >= 1 && row.reason !== '';
 }
 
-export default function LineItemBuilder({ items, onChange, disabled }: Props) {
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+export default function LineItemBuilder({ items, onChange, disabled, openIndex, onOpenIndexChange }: Props) {
+  const [internalIndex, setInternalIndex] = useState<number | null>(null);
+  const isControlled = openIndex !== undefined;
+  const editingIndex = isControlled ? openIndex : internalIndex;
+  const setEditingIndex = (idx: number | null) => {
+    if (isControlled) onOpenIndexChange?.(idx);
+    else setInternalIndex(idx);
+  };
 
   function save(i: number, patch: LineItemInput) {
     onChange(items.map((row, idx) => idx === i ? patch : row));

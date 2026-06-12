@@ -36,6 +36,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   const [deliveryDate, setDeliveryDate] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [kitchenOpen, setKitchenOpen] = useState(false);
+  const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
 
   const locationDone = !!(developer.trim() && site.trim() && plotNumber.trim());
   const filledItems = items.filter(isFilled);
@@ -46,23 +47,30 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   function resetForm() {
     setDeveloper(''); setSite(''); setPlotNumber('');
     setItems(makeInitialItems()); setDeliveryType(''); setDeliveryDate(''); setImages([]);
-    setKitchenOpen(false);
+    setKitchenOpen(false); setEditingItemIndex(null);
   }
 
   function handleKitchenPick(item: KitchenItem) {
     const description = item.description || item.sapCode;
+    let targetIndex = -1;
     setItems(prev => {
-      const idx = prev.findIndex(r => r.description.trim() === '');
+      const empty = prev.findIndex(r => r.description.trim() === '');
       const patch: LineItemInput = {
         description,
         quantity: item.quantity ?? 1,
         reason: '',
         sap_code: item.sapCode,
       };
-      if (idx === -1) return [...prev, patch];
-      return prev.map((r, i) => i === idx ? patch : r);
+      if (empty === -1) {
+        targetIndex = prev.length;
+        return [...prev, patch];
+      }
+      targetIndex = empty;
+      return prev.map((r, i) => i === empty ? patch : r);
     });
     setKitchenOpen(false);
+    // Open the line-item editor so the manager just has to pick the reason
+    setTimeout(() => setEditingItemIndex(targetIndex), 100);
   }
   React.useEffect(() => {
     (window as Window & { __resetTicketForm?: () => void }).__resetTicketForm = resetForm;
@@ -119,7 +127,8 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           label="What's needed and why?"
           aux={<CompleteTag done={itemsValid} label={itemsValid ? `${filledItems.length} item${filledItems.length === 1 ? '' : 's'}` : '0 items'} />}
         >
-          <LineItemBuilder items={items} onChange={setItems} disabled={disabled} />
+          <LineItemBuilder items={items} onChange={setItems} disabled={disabled}
+            openIndex={editingItemIndex} onOpenIndexChange={setEditingItemIndex} />
         </FormSection>
 
         <FormSection
