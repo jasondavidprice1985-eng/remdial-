@@ -47,21 +47,34 @@ const FAMILIES: Array<{ prefix: string; name: string }> = [
 ];
 
 let rangesCache: Array<{ code: string; range_name: string; generic_name: string; price_group: string }> | null = null;
-let rangesCacheAt = 0;
+let carcaseCache: Array<{ suffix: string; colour_name: string; short_code: string | null }> | null = null;
+let cacheAt = 0;
 const CACHE_TTL = 5 * 60 * 1000;
 
+async function loadCaches() {
+  if (rangesCache && carcaseCache && Date.now() - cacheAt < CACHE_TTL) return;
+  const [r1, r2] = await Promise.all([
+    pool.query('SELECT code, range_name, generic_name, price_group FROM sap_ranges'),
+    pool.query('SELECT suffix, colour_name, short_code FROM sap_carcase_colours'),
+  ]);
+  rangesCache = r1.rows.sort((a, b) => b.code.length - a.code.length);
+  carcaseCache = r2.rows.sort((a, b) => b.suffix.length - a.suffix.length);
+  cacheAt = Date.now();
+}
+
 async function getRanges() {
-  if (rangesCache && Date.now() - rangesCacheAt < CACHE_TTL) return rangesCache;
-  const r = await pool.query('SELECT code, range_name, generic_name, price_group FROM sap_ranges');
-  rangesCache = r.rows;
-  rangesCacheAt = Date.now();
-  // Sort longest first so multi-char codes match before shorter ones
-  rangesCache.sort((a, b) => b.code.length - a.code.length);
-  return rangesCache;
+  await loadCaches();
+  return rangesCache!;
+}
+
+async function getCarcaseColours() {
+  await loadCaches();
+  return carcaseCache!;
 }
 
 export function clearRangesCache(): void {
   rangesCache = null;
+  carcaseCache = null;
 }
 
 function matchFamily(prefix: string): { prefix: string; name: string } | null {
@@ -118,47 +131,63 @@ function parseDimensions(code: string): { width: number | null; hand: 'L' | 'R' 
 export async function decodeSapCode(rawCode: string): Promise<DecodedSapCode> {
   const code = rawCode.trim().toUpperCase();
   const ranges = await getRanges();
+  const carcaseColours = await getCarcaseColours();
 
-  // Find the longest range suffix that matches.
-  // Allow it to be followed by a trailing height number (e.g. "...MCS802").
-  let matchedRange: typeof ranges[number] | null = null;
-  let withoutRange = code;
+  // The colour suffix may be followed by a trailing height number (e.g. "MCS802").
+  // Try matching with-height and without.
+  const codeNoHeight = code.replace(/\d+$/, '');
+
+  // First try door range codes (sap_ranges, typically 2 chars)
+  let matchedRange: { code: string; name: string; genericName: string; priceGroup: string } | null = null;
+  let withoutColour = code;
   for (const r of ranges) {
     const rc = r.code.toUpperCase();
     if (code.endsWith(rc)) {
-      matchedRange = r;
-      withoutRange = code.slice(0, -rc.length);
+      matchedRange = { code: r.code, name: r.range_name, genericName: r.generic_name, priceGroup: r.price_group };
+      withoutColour = code.slice(0, -rc.length);
       break;
     }
-    // Strip trailing height digits and try again
-    const stripped = code.replace(/\d+$/, '');
-    if (stripped.length < code.length && stripped.endsWith(rc)) {
-      matchedRange = r;
-      withoutRange = stripped.slice(0, -rc.length);
+    if (codeNoHeight.length < code.length && codeNoHeight.endsWith(rc)) {
+      matchedRange = { code: r.code, name: r.range_name, genericName: r.generic_name, priceGroup: r.price_group };
+      withoutColour = codeNoHeight.slice(0, -rc.length);
       break;
     }
   }
 
-  const family = matchFamily(withoutRange);
+  // If no door range match, try carcase colour suffixes (3-char like MCS)
+  if (!matchedRange) {
+    for (const c of carcaseColours) {
+      const cs = c.suffix.toUpperCase();
+      if (code.endsWith(cs)) {
+        matchedRange = { code: c.suffix, name: c.colour_name, genericName: c.colour_name, priceGroup: 'carcase' };
+        withoutColour = code.slice(0, -cs.length);
+        break;
+      }
+      if (codeNoHeight.length < code.length && codeNoHeight.endsWith(cs)) {
+        matchedRange = { code: c.suffix, name: c.colour_name, genericName: c.colour_name, priceGroup: 'carcase' };
+        withoutColour = codeNoHeight.slice(0, -cs.length);
+        break;
+      }
+    }
+  }
+
+  const family = matchFamily(withoutColour);
   const { width, hand, height } = parseDimensions(code);
 
   // Figure out what we couldn't classify (residue)
-  let residue = withoutRange;
+  let residue = withoutColour;
   if (family) residue = residue.slice(family.prefix.length);
-  // Strip any number/L/R we already consumed
-  if (width !== null) residue = residue.replace(String(width), '');
+  if (width !== null) {
+    const shorthand = width >= 100 && width < 1000 && width % 10 === 0 ? String(width / 10) : String(width);
+    residue = residue.replace(shorthand, '');
+  }
   if (hand) residue = residue.replace(hand, '');
   residue = residue.replace(/\d+$/, '');
 
   return {
     code,
     family,
-    range: matchedRange ? {
-      code: matchedRange.code,
-      name: matchedRange.range_name,
-      genericName: matchedRange.generic_name,
-      priceGroup: matchedRange.price_group,
-    } : null,
+    range: matchedRange,
     width,
     hand,
     height,

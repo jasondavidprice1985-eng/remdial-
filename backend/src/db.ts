@@ -62,6 +62,16 @@ export async function initDB(): Promise<void> {
   `).catch(swallowIfAlreadyExists);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_sap_ranges_pg ON sap_ranges(price_group)`);
 
+  // Carcase colour suffixes (e.g. "MCS" = Cashmere). Used across ESP/MPP/TF
+  // and also embedded in base/wall codes like BW60LMGO808.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sap_carcase_colours (
+      suffix       VARCHAR(8)   PRIMARY KEY,
+      colour_name  VARCHAR(100) NOT NULL,
+      short_code   VARCHAR(8)
+    )
+  `).catch(swallowIfAlreadyExists);
+
   // Web Push subscriptions — one row per device/browser per user
   await pool.query(`
     CREATE TABLE IF NOT EXISTS push_subscriptions (
