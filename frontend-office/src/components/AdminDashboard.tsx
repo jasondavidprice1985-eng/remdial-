@@ -13,7 +13,7 @@ interface User {
 
 type Modal = null | 'add' | { type: 'edit'; user: User } | { type: 'reset'; user: User } | { type: 'deactivate'; user: User } | { type: 'reactivate'; user: User };
 
-export default function AdminDashboard({ onBack }: { onBack: () => void }) {
+export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,24 +41,16 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   const inactiveUsers = users.filter(u => !u.active);
 
   return (
-    <div className="h-full flex flex-col bg-[var(--bg)]">
-      {/* Header */}
-      <div className="px-6 h-[68px] flex items-center justify-between shrink-0 border-b border-[var(--border)] bg-[var(--surface)]">
-        <div className="flex items-center gap-3">
-          <button onClick={onBack}
-            className="text-[13px] font-medium text-[var(--subtle)] hover:text-[var(--text)] transition-colors">
-            ← Back
-          </button>
-          <h1 className="text-[17px] font-semibold tracking-[-0.015em] text-[var(--text)] m-0">User Management</h1>
-        </div>
-        <button onClick={() => setModal('add')}
-          className="text-[13px] font-semibold px-4 h-9 rounded-lg bg-[var(--text)] text-white hover:opacity-90 transition-opacity">
-          + Add User
-        </button>
-      </div>
-
+    <div className="h-full flex flex-col">
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[20px] font-semibold text-[var(--text)]">User Management</h2>
+          <button onClick={() => setModal('add')}
+            className="text-[13px] font-semibold px-4 h-9 rounded-lg bg-[var(--text)] text-white hover:opacity-90 transition-opacity">
+            + Add User
+          </button>
+        </div>
         {error && (
           <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 text-red-700 text-[13px] border border-red-200">
             {error}

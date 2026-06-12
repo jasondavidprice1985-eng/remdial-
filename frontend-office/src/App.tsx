@@ -8,6 +8,7 @@ import { initAudioContext, playChime } from './utils/chime';
 import QueueBoard from './components/QueueBoard';
 import ArchiveView from './components/ArchiveView';
 import OfficeHeader from './components/OfficeHeader';
+import AdminDashboard from './components/AdminDashboard';
 
 export default function App() {
   const { token, loading: authLoading, user, mustChangePassword } = useAuth();
@@ -26,9 +27,11 @@ export default function App() {
 }
 
 function AuthedApp({ token }: { token: string }) {
+  const { user } = useAuth();
   const socket = useSocket(token);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [archiveMode, setArchiveMode] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
   const [archivedTickets, setArchivedTickets] = useState<Ticket[]>([]);
   const [filterDev, setFilterDev] = useState('');
   const [filterSite, setFilterSite] = useState('');
@@ -75,9 +78,13 @@ function AuthedApp({ token }: { token: string }) {
         </div>
       )}
       <OfficeHeader archiveMode={archiveMode} unreadTotal={unreadTotal}
-        onToggleArchive={() => setArchiveMode(m => !m)} />
+        onToggleArchive={() => { setArchiveMode(m => !m); setAdminMode(false); }}
+        isAdmin={user?.role === 'admin'} adminMode={adminMode}
+        onToggleAdmin={() => { setAdminMode(m => !m); setArchiveMode(false); }} />
       <div className="flex-1 overflow-hidden px-6 pt-5 pb-5 min-h-0">
-        {archiveMode ? (
+        {adminMode ? (
+          <AdminDashboard />
+        ) : archiveMode ? (
           <ArchiveView tickets={archivedTickets} filterDev={filterDev} filterSite={filterSite}
             onFilterDev={setFilterDev} onFilterSite={setFilterSite} />
         ) : (

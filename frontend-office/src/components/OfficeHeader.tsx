@@ -4,9 +4,12 @@ interface Props {
   archiveMode: boolean;
   unreadTotal: number;
   onToggleArchive: () => void;
+  isAdmin?: boolean;
+  adminMode?: boolean;
+  onToggleAdmin?: () => void;
 }
 
-export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive }: Props) {
+export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive, isAdmin, adminMode, onToggleAdmin }: Props) {
   const { user, logout } = useAuth();
   return (
     <header className="px-6 h-[68px] flex items-center justify-between shrink-0 border-b border-[var(--border)] bg-[var(--surface)]">
@@ -38,6 +41,17 @@ export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive
           }}>
           {archiveMode ? 'Active' : 'Archive'}
         </button>
+        {isAdmin && onToggleAdmin && (
+          <button onClick={e => { e.stopPropagation(); onToggleAdmin(); }}
+            className="text-[12.5px] font-medium px-3 h-8 rounded-md transition-colors border"
+            style={{
+              color: adminMode ? '#fff' : 'var(--text)',
+              background: adminMode ? '#7c3aed' : 'var(--surface)',
+              borderColor: adminMode ? '#7c3aed' : 'var(--border)',
+            }}>
+            {adminMode ? 'Back' : 'Admin'}
+          </button>
+        )}
         {user && (
           <div className="flex items-center gap-3 pl-4 border-l border-[var(--border)]">
             <span className="text-[12px] text-[var(--subtle)] tabular-nums font-medium">
