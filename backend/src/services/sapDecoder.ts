@@ -137,39 +137,33 @@ export async function decodeSapCode(rawCode: string): Promise<DecodedSapCode> {
   // Try matching with-height and without.
   const codeNoHeight = code.replace(/\d+$/, '');
 
-  // First try door range codes (sap_ranges, typically 2 chars)
-  let matchedRange: { code: string; name: string; genericName: string; priceGroup: string } | null = null;
-  let withoutColour = code;
+  // Collect every candidate (door range + carcase suffix) that matches either
+  // the full code or the height-stripped version, then pick the LONGEST suffix.
+  // This stops 2-char "LS" (Sea Mist) beating 3-char "MLS" (Light Grey).
+  type Candidate = { suffix: string; range: { code: string; name: string; genericName: string; priceGroup: string }; base: string };
+  const candidates: Candidate[] = [];
+
   for (const r of ranges) {
     const rc = r.code.toUpperCase();
     if (code.endsWith(rc)) {
-      matchedRange = { code: r.code, name: r.range_name, genericName: r.generic_name, priceGroup: r.price_group };
-      withoutColour = code.slice(0, -rc.length);
-      break;
+      candidates.push({ suffix: rc, range: { code: r.code, name: r.range_name, genericName: r.generic_name, priceGroup: r.price_group }, base: code.slice(0, -rc.length) });
+    } else if (codeNoHeight.length < code.length && codeNoHeight.endsWith(rc)) {
+      candidates.push({ suffix: rc, range: { code: r.code, name: r.range_name, genericName: r.generic_name, priceGroup: r.price_group }, base: codeNoHeight.slice(0, -rc.length) });
     }
-    if (codeNoHeight.length < code.length && codeNoHeight.endsWith(rc)) {
-      matchedRange = { code: r.code, name: r.range_name, genericName: r.generic_name, priceGroup: r.price_group };
-      withoutColour = codeNoHeight.slice(0, -rc.length);
-      break;
+  }
+  for (const c of carcaseColours) {
+    const cs = c.suffix.toUpperCase();
+    if (code.endsWith(cs)) {
+      candidates.push({ suffix: cs, range: { code: c.suffix, name: c.colour_name, genericName: c.colour_name, priceGroup: 'carcase' }, base: code.slice(0, -cs.length) });
+    } else if (codeNoHeight.length < code.length && codeNoHeight.endsWith(cs)) {
+      candidates.push({ suffix: cs, range: { code: c.suffix, name: c.colour_name, genericName: c.colour_name, priceGroup: 'carcase' }, base: codeNoHeight.slice(0, -cs.length) });
     }
   }
 
-  // If no door range match, try carcase colour suffixes (3-char like MCS)
-  if (!matchedRange) {
-    for (const c of carcaseColours) {
-      const cs = c.suffix.toUpperCase();
-      if (code.endsWith(cs)) {
-        matchedRange = { code: c.suffix, name: c.colour_name, genericName: c.colour_name, priceGroup: 'carcase' };
-        withoutColour = code.slice(0, -cs.length);
-        break;
-      }
-      if (codeNoHeight.length < code.length && codeNoHeight.endsWith(cs)) {
-        matchedRange = { code: c.suffix, name: c.colour_name, genericName: c.colour_name, priceGroup: 'carcase' };
-        withoutColour = codeNoHeight.slice(0, -cs.length);
-        break;
-      }
-    }
-  }
+  candidates.sort((a, b) => b.suffix.length - a.suffix.length);
+  const best = candidates[0] || null;
+  const matchedRange = best?.range || null;
+  const withoutColour = best?.base ?? code;
 
   const family = matchFamily(withoutColour);
   const { width, hand, height } = parseDimensions(code);
