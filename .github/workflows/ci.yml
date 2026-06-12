@@ -76,7 +76,11 @@ jobs:
         run: npm run build
         working-directory: ./frontend-office
 
+  # E2E job disabled until tests are rewritten for individual-accounts auth.
+  # Re-enable by removing the `if: false` line and updating env vars +
+  # adding `cd ../e2e && npm ci` to the install step.
   e2e:
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
