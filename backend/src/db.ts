@@ -51,6 +51,17 @@ export async function initDB(): Promise<void> {
   // Token versioning: bump to invalidate all existing tokens for a user
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0`).catch(swallowIfAlreadyExists);
 
+  // SAP code decoder lookup tables (read-only catalogue, populated by importer script)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sap_ranges (
+      code         VARCHAR(8)   PRIMARY KEY,
+      range_name   VARCHAR(200) NOT NULL,
+      generic_name VARCHAR(200) NOT NULL,
+      price_group  VARCHAR(10)  NOT NULL
+    )
+  `).catch(swallowIfAlreadyExists);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_sap_ranges_pg ON sap_ranges(price_group)`);
+
   // Web Push subscriptions — one row per device/browser per user
   await pool.query(`
     CREATE TABLE IF NOT EXISTS push_subscriptions (
