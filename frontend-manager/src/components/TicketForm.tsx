@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DeliveryRequest, LineItemInput } from '@shared/types';
 import FormSection, { CompleteTag } from './FormSection';
 import DeveloperCombobox from './DeveloperCombobox';
@@ -6,6 +6,8 @@ import LineItemBuilder from './LineItemBuilder';
 import DeliverySection from './DeliverySection';
 import PhotoUpload from './PhotoUpload';
 import KitchenPicker, { KitchenItem } from './KitchenPicker';
+import SapCombobox from './SapCombobox';
+import { apiFetch } from '../auth/apiClient';
 
 const SAP_DECODER_ENABLED = import.meta.env.VITE_SAP_DECODER_ENABLED === 'true';
 
@@ -37,6 +39,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   const [images, setImages] = useState<string[]>([]);
   const [kitchenOpen, setKitchenOpen] = useState(false);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+  const [kitchenItemCount, setKitchenItemCount] = useState<number | null>(null);
 
   const locationDone = !!(developer.trim() && site.trim() && plotNumber.trim());
   const filledItems = items.filter(isFilled);
@@ -47,8 +50,24 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   function resetForm() {
     setDeveloper(''); setSite(''); setPlotNumber('');
     setItems(makeInitialItems()); setDeliveryType(''); setDeliveryDate(''); setImages([]);
-    setKitchenOpen(false); setEditingItemIndex(null);
+    setKitchenOpen(false); setEditingItemIndex(null); setKitchenItemCount(null);
   }
+
+  // When SAP flag is on and all three fields are filled, peek at how many
+  // kitchen items exist so we can render a "Browse N items" button.
+  useEffect(() => {
+    if (!SAP_DECODER_ENABLED) return;
+    if (!developer.trim() || !site.trim() || !plotNumber.trim()) {
+      setKitchenItemCount(null);
+      return;
+    }
+    const controller = new AbortController();
+    const q = new URLSearchParams({ developer: developer.trim(), site: site.trim(), plot: plotNumber.trim() }).toString();
+    apiFetch(`/sap/kitchen?${q}`, { signal: controller.signal })
+      .then(async r => { if (r.ok) { const data = await r.json(); setKitchenItemCount(data.items?.length ?? 0); } })
+      .catch(() => { /* ignore */ });
+    return () => controller.abort();
+  }, [developer, site, plotNumber]);
 
   function handleKitchenPick(item: KitchenItem) {
     const description = item.description || item.sapCode;
@@ -98,14 +117,51 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           label="Where?"
           aux={<CompleteTag done={locationDone} />}
         >
-          <DeveloperCombobox value={developer} onChange={setDeveloper} disabled={disabled} />
-          <input className="input-field" placeholder="Site *" maxLength={100} value={site}
-            onChange={e => setSite(e.target.value)} disabled={disabled} required />
-          <input className="input-field" placeholder="Plot Number *" maxLength={50} value={plotNumber}
-            onChange={e => setPlotNumber(e.target.value)} disabled={disabled} required />
+          {SAP_DECODER_ENABLED ? (
+            <>
+              <SapCombobox
+                value={developer}
+                onChange={v => { setDeveloper(v); setSite(''); setPlotNumber(''); }}
+                placeholder="Developer *"
+                disabled={disabled}
+                required
+                buildUrl={q => `/sap/developers?q=${encodeURIComponent(q)}`}
+              />
+              <SapCombobox
+                value={site}
+                onChange={v => { setSite(v); setPlotNumber(''); }}
+                placeholder="Site *"
+                disabled={disabled || !developer.trim()}
+                required
+                buildUrl={q => developer.trim()
+                  ? `/sap/sites?developer=${encodeURIComponent(developer.trim())}&q=${encodeURIComponent(q)}`
+                  : null}
+                deps={[developer]}
+              />
+              <SapCombobox
+                value={plotNumber}
+                onChange={setPlotNumber}
+                placeholder="Plot Number *"
+                disabled={disabled || !developer.trim() || !site.trim()}
+                required
+                buildUrl={q => (developer.trim() && site.trim())
+                  ? `/sap/plots?developer=${encodeURIComponent(developer.trim())}&site=${encodeURIComponent(site.trim())}&q=${encodeURIComponent(q)}`
+                  : null}
+                deps={[developer, site]}
+              />
+            </>
+          ) : (
+            <>
+              <DeveloperCombobox value={developer} onChange={setDeveloper} disabled={disabled} />
+              <input className="input-field" placeholder="Site *" maxLength={100} value={site}
+                onChange={e => setSite(e.target.value)} disabled={disabled} required />
+              <input className="input-field" placeholder="Plot Number *" maxLength={50} value={plotNumber}
+                onChange={e => setPlotNumber(e.target.value)} disabled={disabled} required />
+            </>
+          )}
         </FormSection>
 
-        {SAP_DECODER_ENABLED && locationDone && (
+        {SAP_DECODER_ENABLED && locationDone && kitchenItemCount !== null && kitchenItemCount > 0 && (
           <div className="mb-3">
             <button
               type="button"
@@ -116,8 +172,13 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9.5 12 4l9 5.5" /><path d="M5 9v11h14V9" /><path d="M9 20v-6h6v6" />
               </svg>
-              Find this kitchen
+              Pick from kitchen <span className="text-[var(--subtle)] font-normal">· {kitchenItemCount} items</span>
             </button>
+          </div>
+        )}
+        {SAP_DECODER_ENABLED && locationDone && kitchenItemCount === 0 && (
+          <div className="mb-3 px-3 py-2.5 rounded-lg bg-stone-50 border border-[var(--border)] text-[12.5px] text-[var(--subtle)]">
+            No kitchen on record for plot {plotNumber.trim()} — add items manually below.
           </div>
         )}
 

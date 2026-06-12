@@ -92,3 +92,39 @@ export async function suggestDevelopers(query: string, limit = 10): Promise<Arra
   );
   return r.rows;
 }
+
+/** Sites under a developer, optionally filtered by a search query. */
+export async function suggestSites(developer: string, query: string, limit = 15): Promise<Array<{ name: string; count: number }>> {
+  const dev = developer.trim();
+  if (!dev) return [];
+  const q = query.trim();
+  const r = await pool.query(
+    `SELECT site AS name, COUNT(*)::int AS count
+       FROM sap_orders
+      WHERE developer ILIKE $1 AND site IS NOT NULL ${q ? 'AND site ILIKE $3' : ''}
+      GROUP BY site
+      ORDER BY count DESC
+      LIMIT $2`,
+    q ? [`%${dev}%`, limit, `%${q}%`] : [`%${dev}%`, limit]
+  );
+  return r.rows;
+}
+
+/** Plots under a developer + site, optionally filtered by query. */
+export async function suggestPlots(developer: string, site: string, query: string, limit = 30): Promise<Array<{ name: string; count: number }>> {
+  const dev = developer.trim();
+  const sit = site.trim();
+  if (!dev || !sit) return [];
+  const q = query.trim();
+  const r = await pool.query(
+    `SELECT plot_extracted AS name, COUNT(*)::int AS count
+       FROM sap_orders
+      WHERE developer ILIKE $1 AND site ILIKE $2 AND plot_extracted IS NOT NULL
+        ${q ? 'AND plot_extracted ILIKE $4' : ''}
+      GROUP BY plot_extracted
+      ORDER BY count DESC
+      LIMIT $3`,
+    q ? [`%${dev}%`, `%${sit}%`, limit, `%${q}%`] : [`%${dev}%`, `%${sit}%`, limit]
+  );
+  return r.rows;
+}

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { decodeSapCode, alternateColours } from '../services/sapDecoder';
-import { findKitchen, suggestDevelopers } from '../services/kitchenLookup';
+import { findKitchen, suggestDevelopers, suggestSites, suggestPlots } from '../services/kitchenLookup';
 
 const router = Router();
 
@@ -66,13 +66,47 @@ router.get('/sap/developers', requireAuth, async (req: Request, res: Response) =
     return res.status(404).json({ error: 'SAP decoder disabled' });
   }
   const q = String(req.query.q || '').trim();
-  if (!q || q.length < 2) return res.json({ suggestions: [] });
   if (q.length > 100) return res.status(400).json({ error: 'Query too long' });
   try {
-    const suggestions = await suggestDevelopers(q);
+    const suggestions = q.length >= 1 ? await suggestDevelopers(q) : await suggestDevelopers('%');
     return res.json({ suggestions });
   } catch (e) {
     console.error('[SAP] developer suggest error:', e);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/sap/sites', requireAuth, async (req: Request, res: Response) => {
+  if (!decoderEnabled()) {
+    return res.status(404).json({ error: 'SAP decoder disabled' });
+  }
+  const developer = String(req.query.developer || '').trim();
+  const q = String(req.query.q || '').trim();
+  if (!developer) return res.json({ suggestions: [] });
+  if (developer.length > 200 || q.length > 100) return res.status(400).json({ error: 'Query too long' });
+  try {
+    const suggestions = await suggestSites(developer, q);
+    return res.json({ suggestions });
+  } catch (e) {
+    console.error('[SAP] site suggest error:', e);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/sap/plots', requireAuth, async (req: Request, res: Response) => {
+  if (!decoderEnabled()) {
+    return res.status(404).json({ error: 'SAP decoder disabled' });
+  }
+  const developer = String(req.query.developer || '').trim();
+  const site = String(req.query.site || '').trim();
+  const q = String(req.query.q || '').trim();
+  if (!developer || !site) return res.json({ suggestions: [] });
+  if (developer.length > 200 || site.length > 200 || q.length > 100) return res.status(400).json({ error: 'Query too long' });
+  try {
+    const suggestions = await suggestPlots(developer, site, q);
+    return res.json({ suggestions });
+  } catch (e) {
+    console.error('[SAP] plot suggest error:', e);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
