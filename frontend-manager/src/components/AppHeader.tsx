@@ -4,7 +4,9 @@ import { Tab } from './BottomTabBar';
 
 interface Props {
   tab: Tab;
-  archivedCount: number;
+  archivePage: number;
+  archivePageSize: number;
+  archivePageCount: number;
 }
 
 const TABS: Tab[] = ['reports', 'new', 'archive'];
@@ -21,7 +23,12 @@ function HeaderText({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
-export default function AppHeader({ tab, archivedCount }: Props) {
+export default function AppHeader({ tab, archivePage, archivePageSize, archivePageCount }: Props) {
+  const archiveStart = archivePage * archivePageSize + 1;
+  const archiveEnd = archivePage * archivePageSize + archivePageCount;
+  const archiveSubtitle = archivePageCount === 0
+    ? 'No completed jobs'
+    : `Showing ${archiveStart}–${archiveEnd}`;
   const { user, logout } = useAuth();
   const { status, enable, disable } = useNotifications(!!user);
 
@@ -61,7 +68,7 @@ export default function AppHeader({ tab, archivedCount }: Props) {
           >
             <HeaderText title="Remedial"     subtitle="Ticket Dashboard" />
             <HeaderText title="New Remedial" subtitle="Fill in details" />
-            <HeaderText title="Archive"      subtitle={`${archivedCount} job${archivedCount === 1 ? '' : 's'} complete`} />
+            <HeaderText title="Archive"      subtitle={archiveSubtitle} />
           </div>
         </div>
         {user && (

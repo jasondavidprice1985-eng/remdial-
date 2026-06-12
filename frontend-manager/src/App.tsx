@@ -41,6 +41,8 @@ function AuthedApp({ token }: { token: string }) {
   function handleSwipe(index: number) { setTab(TABS[index]); }
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [archivedTickets, setArchivedTickets] = useState<Ticket[]>([]);
+  const [archivePage, setArchivePage] = useState(0);
+  const ARCHIVE_PAGE_SIZE = 10;
   const [loading, setLoading] = useState(true);
   const [loadingArchive, setLoadingArchive] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -77,10 +79,11 @@ function AuthedApp({ token }: { token: string }) {
     }
   }, [showError]);
 
-  const loadArchive = useCallback(async () => {
+  const loadArchive = useCallback(async (page: number) => {
     setLoadingArchive(true);
     try {
-      const res = await apiFetch('/tickets?viewer=manager&status=archived');
+      const offset = page * ARCHIVE_PAGE_SIZE;
+      const res = await apiFetch(`/tickets?viewer=manager&status=archived&limit=${ARCHIVE_PAGE_SIZE}&offset=${offset}`);
       const data = await res.json();
       setArchivedTickets(data.tickets || []);
     } catch (err) {
@@ -104,8 +107,8 @@ function AuthedApp({ token }: { token: string }) {
   }, []);
 
   useEffect(() => {
-    if (tab === 'archive') loadArchive();
-  }, [tab, loadArchive]);
+    if (tab === 'archive') loadArchive(archivePage);
+  }, [tab, archivePage, loadArchive]);
 
   useEffect(() => {
     const onUpdated = ({ ticket }: { ticket: Ticket }) => {
@@ -115,7 +118,7 @@ function AuthedApp({ token }: { token: string }) {
     const onArchived = ({ ticketId }: { ticketId: string }) => {
       console.log('[SOCKET] ticket:archived', ticketId);
       setTickets(prev => prev.filter(t => t.id !== ticketId));
-      if (tab === 'archive') loadArchive();
+      if (tab === 'archive') loadArchive(archivePage);
     };
     const onConnect = () => console.log('[SOCKET] connected id=', socket.id);
     const onDisconnect = (r: string) => console.log('[SOCKET] disconnected reason=', r);
@@ -132,7 +135,7 @@ function AuthedApp({ token }: { token: string }) {
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onError);
     };
-  }, [socket, tab, loadArchive]);
+  }, [socket, tab, archivePage, loadArchive]);
 
   useEffect(() => {
     if (banner === 'offline' || banner === 'none') return;
@@ -168,20 +171,65 @@ function AuthedApp({ token }: { token: string }) {
       <StatusBanner banner={banner} submittedRef={submittedRef} errorText={errorText} />
       <PwaInstallBanner />
       <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">
-        <AppHeader tab={tab} archivedCount={archivedTickets.length} />
+        <AppHeader tab={tab} archivePage={archivePage} archivePageSize={ARCHIVE_PAGE_SIZE} archivePageCount={archivedTickets.length} />
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
           <SwipeableViews activeIndex={tabIndex} onChangeIndex={handleSwipe} disabled={submitting}>
             <TicketList tickets={tickets} loading={loading} respondedQueries={respondedQueries} pendingCount={pendingCount}
               onTicketUpdate={t => handleTicketUpdate(t, setTickets)} onManagerResponded={handleManagerResponded} />
             <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />
-            <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
-              onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
-              heading="" emptyIcon="archive" emptyTitle="No archived tickets"
-              emptySubtitle="Completed tickets will appear here." />
+            <>
+              <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
+                onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
+                heading="" emptyIcon="archive" emptyTitle="No archived tickets"
+                emptySubtitle="Completed tickets will appear here." />
+              {!loadingArchive && (archivePage > 0 || archivedTickets.length >= ARCHIVE_PAGE_SIZE) && (
+                <ArchivePager
+                  page={archivePage}
+                  hasPrev={archivePage > 0}
+                  hasNext={archivedTickets.length >= ARCHIVE_PAGE_SIZE}
+                  onPrev={() => setArchivePage(p => Math.max(0, p - 1))}
+                  onNext={() => setArchivePage(p => p + 1)}
+                />
+              )}
+            </>
           </SwipeableViews>
         </main>
         <BottomTabBar active={tab} onChange={setTab} attentionCount={attentionCount(tickets)} />
       </div>
+    </div>
+  );
+}
+
+function ArchivePager({ page, hasPrev, hasNext, onPrev, onNext }: {
+  page: number; hasPrev: boolean; hasNext: boolean; onPrev: () => void; onNext: () => void;
+}) {
+  return (
+    <div className="px-5 py-4 flex items-center justify-between gap-3 border-t border-[var(--border)]">
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={!hasPrev}
+        className="h-10 px-4 rounded-lg border border-[var(--border)] text-[13px] font-semibold text-[var(--text)] inline-flex items-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label="Previous page"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        Prev
+      </button>
+      <span className="text-[12.5px] font-medium text-[var(--subtle)] tabular-nums">Page {page + 1}</span>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={!hasNext}
+        className="h-10 px-4 rounded-lg border border-[var(--border)] text-[13px] font-semibold text-[var(--text)] inline-flex items-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label="Next page"
+      >
+        Next
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
     </div>
   );
 }
