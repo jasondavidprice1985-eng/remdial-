@@ -112,7 +112,7 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
 
         {/* Scroll body */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="mx-auto max-w-[880px] px-8 lg:px-12 py-7">
+          <div className="mx-auto max-w-[760px] px-8 lg:px-12 py-12">
             {/* Header */}
             <div className="mb-6 flex items-start justify-between gap-6">
               <div className="min-w-0">
@@ -198,13 +198,13 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
 
         {/* Action bar */}
         {needsAcceptance && (
-          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 flex items-center justify-end gap-3 bg-[var(--surface)]">
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-5 flex items-center justify-between bg-[var(--surface)]">
             <button onClick={handleFlagQuery} disabled={accepting || flagging}
-              className="h-10 px-5 rounded-md bg-[var(--inbox)] text-white text-[13px] font-semibold hover:brightness-110 disabled:opacity-50 transition">
+              className="text-[13px] font-medium text-[var(--text)] hover:opacity-60 transition-opacity disabled:opacity-50">
               {flagging ? 'Flagging…' : 'Needs clarification'}
             </button>
             <button onClick={handleAccept} disabled={accepting || flagging}
-              className="h-10 px-5 rounded-md bg-[var(--text)] text-white text-[13px] font-semibold hover:bg-black disabled:opacity-50 inline-flex items-center gap-2">
+              className="h-10 px-6 rounded-md bg-[var(--text)] text-white text-[13px] font-semibold hover:bg-black disabled:opacity-50 inline-flex items-center gap-2 transition">
               {accepting ? 'Accepting…' : (
                 <>
                   Accept ticket
@@ -217,12 +217,12 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
           </div>
         )}
         {showOrder && (
-          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-4 bg-[var(--surface)] space-y-3">
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-5 bg-[var(--surface)] space-y-3">
             <OrderForm ticket={ticket} onOrdered={handleOrdered} />
             {ticket.status === 'query' && (
               <div className="flex justify-end">
                 <button onClick={handleClarified} disabled={clarifying}
-                  className="text-[12.5px] font-medium text-[var(--subtle)] hover:text-[var(--text)] underline-offset-2 hover:underline disabled:opacity-50 transition-colors">
+                  className="text-[13px] font-medium text-[var(--text)] hover:opacity-60 transition-opacity disabled:opacity-50">
                   {clarifying ? 'Saving…' : 'Mark clarified (no order yet)'}
                 </button>
               </div>
