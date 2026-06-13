@@ -31,9 +31,9 @@
   /* Status colours — kept semantically stable; the handoff's "premium" restyle
      refines the surrounding tokens (border, text, muted) without changing the
      status signal palette, which is referenced in 30+ components. */
-  --pending: var(--brand-accent);
-  --query: #c81e1e;
-  --ordered: #0f7a3a;
+  --pending: #374151;
+  --query: #b91c1c;
+  --ordered: #15803d;
   --inbox: #a16207;
   --ref: var(--brand-accent);
   --success: #0f7a3a;
