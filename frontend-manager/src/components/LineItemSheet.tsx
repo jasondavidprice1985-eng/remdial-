@@ -199,7 +199,6 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
               <DescriptionTypeahead
                 value={description}
                 onChange={(desc, sap) => { setDescription(desc); setSapCode(sap); }}
-                autoFocus
               />
             </div>
           </label>

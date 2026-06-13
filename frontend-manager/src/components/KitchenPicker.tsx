@@ -100,7 +100,7 @@ export default function KitchenPicker({ developer, site, plot, open, onClose, on
 
   return createPortal((
     <div
-      className="app-fieldrem fixed inset-0 z-40 bg-black/40 flex items-end sm:items-center justify-center animate-modal-backdrop"
+      className="app-fieldrem fixed inset-0 z-40 bg-black/40 flex items-center justify-center animate-modal-backdrop"
       onClick={onClose}
     >
       <div

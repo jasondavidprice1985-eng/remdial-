@@ -63,18 +63,29 @@ export default function SapCombobox({ value, onChange, placeholder, disabled, re
 
   return (
     <div ref={containerRef} className="relative">
-      <input
-        ref={inputRef}
-        type="text"
-        className="input-field"
-        placeholder={placeholder}
-        value={value}
-        onChange={e => { onChange(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        disabled={disabled}
-        required={required}
-        autoComplete="off"
-      />
+      <div className="relative">
+        <input
+          ref={inputRef}
+          type="text"
+          className="input-field pr-10"
+          placeholder={placeholder}
+          value={value}
+          onChange={e => { onChange(e.target.value); setOpen(true); }}
+          onFocus={e => { setOpen(true); e.target.select(); }}
+          disabled={disabled}
+          required={required}
+          autoComplete="off"
+        />
+        {value && !disabled && (
+          <button type="button" onClick={() => { onChange(''); setOpen(true); inputRef.current?.focus(); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-[var(--subtle)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]"
+            aria-label="Clear">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
       {open && (
         <div className="absolute left-0 right-0 mt-1 z-30 bg-white border border-[var(--border)] rounded-lg shadow-lg max-h-72 overflow-y-auto">
           {loading && suggestions.length === 0 && (
