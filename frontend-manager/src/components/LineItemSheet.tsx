@@ -39,12 +39,16 @@ function findDoorFor(unit: KitchenItem | null, kitchen?: KitchenItem[]): Kitchen
 }
 
 export default function LineItemSheet({ index, initial, canDelete, kitchenItems, onSave, onDelete, onClose }: Props) {
-  const [description, setDescription] = useState(initial.description);
+  // If the row came from a kitchen pick (has a sap_code) the description
+  // becomes an optional note; start it empty so the "Add a note" button
+  // shows. Otherwise (manual entry) keep whatever was there.
+  const [description, setDescription] = useState(initial.sap_code ? '' : initial.description);
   const [sapCode, setSapCode] = useState<string | undefined>(initial.sap_code);
   const [quantity, setQuantity] = useState(initial.quantity || 1);
   const [reason, setReason] = useState<string>(initial.reason);
   const [subset, setSubset] = useState<Subset>('full');
   const [subsetOpen, setSubsetOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
 
   // Original (full unit) values — we hold these so "Carcase only" or "Full unit"
   // can restore after the user has tried "The door".
@@ -65,30 +69,20 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
 
   function applySubset(next: Subset) {
     setSubset(next);
+    setSubsetOpen(false);
+    setQuantity(1);
     if (next === 'full' || next === 'carcase') {
       setSapCode(original.sapCode);
-      setDescription(original.description);
-      setQuantity(original.quantity);
-    } else if (next === 'door') {
-      if (doorMatch) {
-        setSapCode(doorMatch.sapCode);
-        setDescription(doorMatch.description ?? doorMatch.sapCode);
-        setQuantity(1);
-      } else {
-        // No matched door in kitchen — drop to free text so manager can type
-        setSapCode(undefined);
-        setDescription('');
-        setQuantity(1);
-      }
-    } else if (next === 'shelf') {
+    } else if (next === 'door' && doorMatch) {
+      setSapCode(doorMatch.sapCode);
+    } else {
+      // door (no match) / shelf / other: no specific SAP code,
+      // the badge + chip + optional note tell office what's needed.
       setSapCode(undefined);
-      setDescription(original.sapCode ? `Shelf for ${original.sapCode}` : '');
-      setQuantity(1);
-    } else if (next === 'other') {
-      setSapCode(undefined);
-      setDescription('');
-      setQuantity(1);
     }
+    // Always clear the optional note when switching modes
+    setDescription('');
+    setNoteOpen(false);
   }
 
   useEffect(() => {
@@ -97,11 +91,31 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const canSave = description.trim().length > 0 && quantity >= 1 && reason !== '';
+  // When the line came from a kitchen pick, description isn't required to save
+  // — the SAP code and "From kitchen" badge already say what the item is.
+  // For manual entries, description is still required.
+  const fromKitchen = !!original.sapCode;
+  const subsetLabel: Partial<Record<Subset, string>> = {
+    full: 'Full unit',
+    door: 'Door only',
+    carcase: 'Carcase only',
+    shelf: 'Shelf',
+    other: 'Other',
+  };
+  const canSave = quantity >= 1 && reason !== '' && (
+    fromKitchen ? true : description.trim().length > 0
+  );
 
   function handleSave() {
     if (!canSave) return;
-    onSave({ description: description.trim(), quantity, reason, sap_code: sapCode });
+    // If kitchen-picked and no manual description was added, fall back to
+    // a sensible string so office sees what was requested.
+    const finalDescription = description.trim() || (
+      fromKitchen
+        ? `${subsetLabel[subset] ?? 'Full unit'} of ${original.sapCode}${original.description ? ` (${original.description})` : ''}`
+        : ''
+    );
+    onSave({ description: finalDescription, quantity, reason, sap_code: sapCode });
   }
 
   return createPortal((
@@ -124,55 +138,58 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
           </div>
         )}
 
-        <div>
-          {sapCode && sapCode !== original.sapCode && (
-            <div className="mb-2.5">
-              <span className="text-[10px] font-bold text-[var(--ordered)] tracking-wider uppercase block">SAP code</span>
-              <p className="font-mono text-[18px] font-semibold text-[var(--text)] leading-tight mt-0.5">{sapCode}</p>
-            </div>
-          )}
+        {sapCode && sapCode !== original.sapCode && (
+          <div>
+            <span className="text-[10px] font-bold text-[var(--ordered)] tracking-wider uppercase block">SAP code</span>
+            <p className="font-mono text-[18px] font-semibold text-[var(--text)] leading-tight mt-0.5">{sapCode}</p>
+          </div>
+        )}
 
-          {showSubsetPicker && (
-            <div className="mb-3">
-              {!subsetOpen ? (
-                <button type="button" onClick={() => setSubsetOpen(true)}
-                  className="text-[12.5px] font-semibold text-[var(--action)] underline-offset-2 hover:underline">
-                  Only need part of this unit?
-                </button>
-              ) : (
-                <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
-                  <div className="text-[11.5px] font-bold uppercase tracking-wider text-[var(--muted)] mb-2">What do you need?</div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {([
-                      { value: 'full',    label: 'Full unit' },
-                      { value: 'door',    label: doorMatch ? `The door (${doorMatch.sapCode})` : 'The door' },
-                      { value: 'carcase', label: 'Carcase only' },
-                      { value: 'shelf',   label: 'Shelf' },
-                      { value: 'other',   label: 'Other' },
-                    ] as { value: Subset; label: string }[]).map(opt => {
-                      const selected = subset === opt.value;
-                      return (
-                        <button key={opt.value} type="button" onClick={() => applySubset(opt.value)}
-                          className={`px-3 py-1.5 text-[12.5px] font-semibold rounded-full border transition-colors ${
-                            selected
-                              ? 'bg-stone-800 text-white border-stone-800'
-                              : 'bg-white text-stone-700 border-stone-300 hover:border-stone-500'
-                          }`}>
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {subset === 'door' && !doorMatch && (
-                    <p className="mt-2 text-[11.5px] text-[var(--subtle)]">
-                      No matching door found in this kitchen — type the door details below.
-                    </p>
-                  )}
+        {showSubsetPicker && (
+          <div>
+            {!subsetOpen ? (
+              <button type="button" onClick={() => setSubsetOpen(true)}
+                className="w-full min-h-[52px] rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-white text-[var(--text)] text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14"/><path d="M5 12h14"/>
+                </svg>
+                {subset === 'full' ? 'Only need part of this unit?' : `Currently: ${subsetLabel[subset]}`}
+              </button>
+            ) : (
+              <div className="rounded-xl border border-[var(--border)] bg-stone-50 p-3 space-y-2">
+                <div className="text-[11.5px] font-bold uppercase tracking-wider text-[var(--muted)]">What do you need?</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { value: 'full',    label: 'Full unit' },
+                    { value: 'door',    label: doorMatch ? `Door only (${doorMatch.sapCode})` : 'Door only' },
+                    { value: 'carcase', label: 'Carcase only' },
+                    { value: 'shelf',   label: 'Shelf' },
+                    { value: 'other',   label: 'Other' },
+                  ] as { value: Subset; label: string }[]).map(opt => {
+                    const selected = subset === opt.value;
+                    return (
+                      <button key={opt.value} type="button" onClick={() => applySubset(opt.value)}
+                        className={`min-h-[44px] px-3 py-2 text-[13px] font-semibold rounded-lg border transition-colors text-center ${
+                          selected
+                            ? 'bg-stone-800 text-white border-stone-800'
+                            : 'bg-white text-stone-700 border-stone-300 hover:border-stone-500'
+                        }`}>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
-          )}
+                {subset === 'door' && !doorMatch && (
+                  <p className="mt-1 text-[11.5px] text-[var(--subtle)]">
+                    No matching door in this kitchen — add an optional note below if needed.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
+        {!fromKitchen && (
           <label className="block">
             <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Description</span>
             <div className="mt-1">
@@ -183,7 +200,7 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
               />
             </div>
           </label>
-        </div>
+        )}
 
         <label className="block">
           <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Quantity</span>
@@ -215,6 +232,29 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
             })}
           </div>
         </div>
+
+        {fromKitchen && (
+          <div>
+            {!noteOpen && !description.trim() ? (
+              <button type="button" onClick={() => setNoteOpen(true)}
+                className="text-[12.5px] font-semibold text-[var(--action)] hover:underline">
+                + Add a note (optional)
+              </button>
+            ) : (
+              <label className="block">
+                <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Note <span className="text-[var(--faint)] font-normal lowercase normal-case">(optional)</span></span>
+                <div className="mt-1">
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="Add any extra detail for the office team…"
+                    className="w-full min-h-[64px] px-3 py-2 text-[14px] rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:border-[var(--text)] resize-y"
+                  />
+                </div>
+              </label>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-2 pt-2">
           {canDelete && (
