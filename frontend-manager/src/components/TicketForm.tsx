@@ -126,7 +126,7 @@ export default function TicketForm({ onSubmit, submitting, disabled, isActive }:
   const photosCount = images.length;
 
   return (
-    <form onSubmit={handleSubmit} className="pb-36">
+    <form onSubmit={handleSubmit} className="pb-10">
       <div className="px-5">
         <FormSection
           step={1}
@@ -237,7 +237,15 @@ export default function TicketForm({ onSubmit, submitting, disabled, isActive }:
             <span>
               {filledItems.length} item{filledItems.length === 1 ? '' : 's'} · {photosCount} photo{photosCount === 1 ? '' : 's'}
             </span>
-            <span className="text-[var(--faint)]">Sending to office</span>
+            <span className="text-[var(--faint)]">
+              {!canSubmit ? (
+                <>
+                  {!locationDone && "Fill in location"}
+                  {locationDone && !itemsValid && "Add items"}
+                  {locationDone && itemsValid && !deliveryDone && "Set delivery"}
+                </>
+              ) : "Sending to office"}
+            </span>
           </div>
           <button type="button" onClick={() => setReviewOpen(true)} disabled={submitting || disabled}
             className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50">

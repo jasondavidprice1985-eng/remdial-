@@ -49,6 +49,8 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
   const [subset, setSubset] = useState<Subset>('full');
   const [subsetOpen, setSubsetOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [kitchenPickOpen, setKitchenPickOpen] = useState(false);
+  const [kitchenQuery, setKitchenQuery] = useState('');
 
   // Original (full unit) values — we hold these so "Carcase only" or "Full unit"
   // can restore after the user has tried "The door".
@@ -130,6 +132,54 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
           <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--muted)] bg-stone-100">×</button>
         </div>
 
+        {!fromKitchen && !description.trim() && !sapCode && kitchenItems && kitchenItems.length > 0 && !kitchenPickOpen && (
+          <button type="button" onClick={() => setKitchenPickOpen(true)}
+            className="w-full h-12 rounded-xl border border-[var(--border)] bg-white text-[var(--text)] text-[14px] font-semibold flex items-center justify-center gap-2 hover:border-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9.5 12 4l9 5.5" /><path d="M5 9v11h14V9" /><path d="M9 20v-6h6v6" />
+            </svg>
+            Pick from kitchen
+          </button>
+        )}
+
+        {kitchenPickOpen && kitchenItems && (
+          <div className="space-y-2">
+            <input type="search" placeholder="Search kitchen items…" value={kitchenQuery} autoFocus
+              onChange={e => setKitchenQuery(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[14px] text-[var(--text)] focus:outline-none focus:border-[var(--text)]" />
+            <div className="max-h-48 overflow-y-auto space-y-1">
+              {kitchenItems.filter(i => {
+                const q = kitchenQuery.toLowerCase();
+                return !q || i.sapCode.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q);
+              }).map((item, idx) => (
+                <button key={`${item.salesDoc}-${item.sapCode}-${idx}`} type="button"
+                  onClick={() => {
+                    setDescription(item.description || item.sapCode);
+                    setSapCode(item.sapCode);
+                    setQuantity(item.quantity ?? 1);
+                    setKitchenPickOpen(false);
+                    setKitchenQuery('');
+                  }}
+                  className="w-full text-left p-2.5 rounded-lg border border-[var(--border)] bg-white hover:border-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-mono text-[12px] font-semibold text-[var(--text)]">{item.sapCode}</span>
+                    <span className="text-[11px] text-[var(--subtle)] tabular-nums shrink-0">× {item.quantity ?? 1}</span>
+                  </div>
+                  {item.description && <p className="text-[11.5px] text-[var(--subtle)] mt-0.5 leading-tight truncate">{item.description}</p>}
+                </button>
+              ))}
+              {kitchenItems.filter(i => {
+                const q = kitchenQuery.toLowerCase();
+                return !q || i.sapCode.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q);
+              }).length === 0 && (
+                <p className="text-[12px] text-[var(--subtle)] text-center py-3">No items match your search</p>
+              )}
+            </div>
+            <button type="button" onClick={() => { setKitchenPickOpen(false); setKitchenQuery(''); }}
+              className="text-[11.5px] text-[var(--subtle)] hover:text-[var(--text)] font-medium">Cancel</button>
+          </div>
+        )}
+
         {original.sapCode && (
           <div className="rounded-lg bg-stone-50 border border-[var(--border)] px-3 py-2">
             <span className="text-[10px] font-bold text-[var(--muted)] tracking-wider uppercase block">From kitchen</span>
@@ -159,10 +209,11 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
 
         {showSubsetPicker && subsetOpen && (
           <div className="rounded-xl border border-[var(--border)] bg-stone-50 p-3 space-y-2">
-            <div className="flex items-center justify-between">
+            <button type="button" onClick={() => setSubsetOpen(false)}
+              className="w-full flex items-center justify-between">
               <div className="text-[11.5px] font-bold uppercase tracking-wider text-[var(--muted)]">What do you need?</div>
-              <span className="text-[11px] font-semibold text-[var(--ordered)]">{subsetLabel[subset]}</span>
-            </div>
+              <span className="text-[11px] font-semibold text-[var(--ordered)]">{subsetLabel[subset]} <span className="text-[10px]">▲</span></span>
+            </button>
             <div className="grid grid-cols-2 gap-2">
               {([
                 { value: 'full',    label: 'Full unit' },

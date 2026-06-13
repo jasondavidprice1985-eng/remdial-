@@ -45,7 +45,7 @@ export default function ReviewSheet({
 
   return createPortal((
     <div
-      className="app-fieldrem fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center animate-modal-backdrop"
+      className="app-fieldrem fixed inset-0 z-50 bg-black/40 flex items-center justify-center animate-modal-backdrop"
       onClick={onClose}
     >
       <div

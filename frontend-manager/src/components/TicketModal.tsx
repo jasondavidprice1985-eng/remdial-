@@ -163,7 +163,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
               </button>
             )}
           </div>
-          <div ref={chatAnchorRef} className="border-t border-[var(--border)]" style={{ height: '300px' }}>
+          <div ref={chatAnchorRef} className="border-t border-[var(--border)] min-h-[250px] flex-1">
             <ChatPanel ticketId={ticket.id} role="manager"
               onTicketViewed={onTicketUpdate} onManagerResponded={onManagerResponded}
               draft={chatDraft} draftToken={draftToken} readOnly={locked} />

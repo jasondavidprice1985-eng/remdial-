@@ -81,16 +81,7 @@ export default function AppHeader({ tab, archivePage, archivePageSize, archivePa
             }}
             aria-hidden={!showReportsActions}
           >
-            <button
-              type="button"
-              className="w-9 h-9 rounded-[8px] border border-[var(--border)] grid place-items-center text-[var(--text)] hover:bg-[var(--surface-2)]"
-              title="Search"
-              aria-label="Search"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-              </svg>
-            </button>
+
             <button
               type="button"
               onClick={bellAction}
