@@ -90,6 +90,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const body = await res.json().catch(() => ({}));
       throw new Error(body.error || 'Password change failed');
     }
+    const data = await res.json();
+    if (data.token) {
+      setAuthToken(data.token);
+      setToken(data.token);
+      const payload = decodeJwt(data.token);
+      const uname = payload?.username || data.display_name || '';
+      setUser({
+        username: uname,
+        role: data.role,
+        displayName: data.display_name || uname,
+      });
+    }
     setMustChangePassword(false);
   }
 

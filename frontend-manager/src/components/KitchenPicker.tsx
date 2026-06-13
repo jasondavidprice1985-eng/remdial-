@@ -104,7 +104,7 @@ export default function KitchenPicker({ developer, site, plot, open, onClose, on
       onClick={onClose}
     >
       <div
-        className="bg-[var(--surface)] w-full max-w-lg max-h-[85vh] rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col animate-modal-panel"
+        className="bg-[var(--surface)] w-full h-full sm:max-w-xl sm:h-auto sm:max-h-[90vh] sm:rounded-2xl shadow-xl flex flex-col animate-modal-panel"
         onClick={e => e.stopPropagation()}
       >
         <div className="px-5 pt-5 pb-3 border-b border-[var(--border)] flex items-center justify-between">

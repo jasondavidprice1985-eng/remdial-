@@ -67,15 +67,15 @@ export async function loginUser(
   };
 }
 
-export async function changePassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+export async function changePassword(userId: string, currentPassword: string, newPassword: string): Promise<number | null> {
   const result = await pool.query('SELECT password_hash FROM users WHERE id=$1', [userId]);
-  if (result.rows.length === 0) return false;
+  if (result.rows.length === 0) return null;
   const valid = await bcrypt.compare(currentPassword, result.rows[0].password_hash);
-  if (!valid) return false;
+  if (!valid) return null;
   const hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-  await pool.query(
-    'UPDATE users SET password_hash=$1, must_change_password=false, token_version = token_version + 1 WHERE id=$2',
+  const r = await pool.query(
+    'UPDATE users SET password_hash=$1, must_change_password=false, token_version = token_version + 1 WHERE id=$2 RETURNING token_version',
     [hash, userId]
   );
-  return true;
+  return r.rows[0].token_version as number;
 }

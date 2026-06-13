@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { pool } from '../db';
 import { sanitise } from '../utils/sanitise';
 import { requireAuth, requireRole, validateIdParam, AuthenticatedRequest } from '../middleware/auth';
@@ -144,9 +145,18 @@ router.patch('/users/me/password', requireAuth, async (req: Request, res: Respon
   }
 
   try {
-    const ok = await changePassword(userId, String(current_password), String(new_password));
-    if (!ok) return res.status(401).json({ error: 'Current password is incorrect' });
-    return res.json({ ok: true });
+    const newTokenVersion = await changePassword(userId, String(current_password), String(new_password));
+    if (!newTokenVersion) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    const user = (req as AuthenticatedRequest).user!;
+    const newPayload = {
+      userId: user.userId,
+      username: user.username,
+      role: user.role,
+      tokenVersion: newTokenVersion,
+    };
+    const newToken = jwt.sign(newPayload, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    return res.json({ ok: true, token: newToken, role: user.role, display_name: user.username });
   } catch (e) {
     console.error('[USERS] password change error:', e);
     return res.status(500).json({ error: 'Internal server error' });

@@ -121,7 +121,7 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
   }
 
   return createPortal((
-    <div className="app-fieldrem fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="app-fieldrem fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 animate-slide-up" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-[var(--surface)] rounded-t-2xl sm:rounded-2xl border border-[var(--border)]
                       shadow-xl p-5 space-y-4 animate-slide-up max-h-[90vh] overflow-y-auto">
