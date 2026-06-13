@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Ticket } from '@shared/types';
 import TicketListCard from './TicketListCard';
-import TicketModal from './TicketModal';
 import EmptyState from './EmptyState';
 import { brand } from '@shared/brand';
 import { sortTickets } from '../utils/sortTickets';
@@ -12,8 +11,8 @@ interface Props {
   loading?: boolean;
   respondedQueries: Set<string>;
   pendingCount?: number;
-  onTicketUpdate: (ticket: Ticket) => void;
-  onManagerResponded: (ticketId: string) => void;
+  selectedTicket: Ticket | null;
+  onSelectTicket: (ticket: Ticket) => void;
   emptyTitle?: string;
   emptySubtitle?: string;
   emptyIcon?: 'reports' | 'archive';
@@ -21,13 +20,12 @@ interface Props {
 }
 
 export default function TicketList({
-  tickets, loading, respondedQueries, pendingCount = 0, onTicketUpdate, onManagerResponded,
+  tickets, loading, respondedQueries, pendingCount = 0, selectedTicket, onSelectTicket,
   emptyTitle = 'No tickets yet',
   emptySubtitle = `Tap ${brand.copy.newReport} below to submit your first report.`,
   emptyIcon = 'reports',
   heading = 'Your tickets',
 }: Props) {
-  const [selected, setSelected] = useState<Ticket | null>(null);
   const sorted = useMemo(() => sortTickets(tickets, respondedQueries), [tickets, respondedQueries]);
   const needsAttention = countNeedingAttention(tickets, respondedQueries);
 
@@ -88,16 +86,10 @@ export default function TicketList({
         {sorted.map((ticket, i) => (
           <div key={ticket.id} className="stagger-in" style={{ animationDelay: `${i * 0.04}s` }}>
             <TicketListCard ticket={ticket} respondedQueries={respondedQueries}
-              onClick={() => setSelected(ticket)} />
+              onClick={() => onSelectTicket(ticket)} />
           </div>
         ))}
       </div>
-
-      {selected && (
-        <TicketModal ticket={selected} onClose={() => setSelected(null)}
-          onTicketUpdate={t => { onTicketUpdate(t); setSelected(t); }}
-          onManagerResponded={() => onManagerResponded(selected.id)} />
-      )}
     </div>
   );
 }

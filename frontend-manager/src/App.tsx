@@ -9,6 +9,7 @@ import { useRespondedQueries } from './hooks/useRespondedQueries';
 import { savePendingReport, getAllPendingReports } from './hooks/useIndexedDB';
 import TicketForm, { TicketFormPayload } from './components/TicketForm';
 import TicketList from './components/TicketList';
+import TicketModal from './components/TicketModal';
 import StatusBanner from './components/StatusBanner';
 import PwaInstallBanner from './components/PwaInstallBanner';
 import AppHeader from './components/AppHeader';
@@ -50,7 +51,14 @@ function AuthedApp({ token }: { token: string }) {
   const [submittedRef, setSubmittedRef] = useState('');
   const [errorText, setErrorText] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const { respondedQueries, handleTicketUpdate, handleManagerResponded, attentionCount } = useRespondedQueries();
+
+  const updateSelectedTicket = useCallback((t: Ticket) => {
+    setSelectedTicket(t);
+    handleTicketUpdate(t, setTickets);
+    setArchivedTickets(prev => prev.map(x => x.id === t.id ? t : x));
+  }, [handleTicketUpdate]);
 
   // Check for unsent reports on load and when online status changes
   useEffect(() => {
@@ -175,11 +183,11 @@ function AuthedApp({ token }: { token: string }) {
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
           <SwipeableViews activeIndex={tabIndex} onChangeIndex={handleSwipe} disabled={submitting}>
             <TicketList tickets={tickets} loading={loading} respondedQueries={respondedQueries} pendingCount={pendingCount}
-              onTicketUpdate={t => handleTicketUpdate(t, setTickets)} onManagerResponded={handleManagerResponded} />
+              selectedTicket={selectedTicket} onSelectTicket={setSelectedTicket} />
             <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} isActive={tab === 'new'} />
             <>
               <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
-                onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}
+                selectedTicket={selectedTicket} onSelectTicket={setSelectedTicket}
                 heading="" emptyIcon="archive" emptyTitle="No archived tickets"
                 emptySubtitle="Completed tickets will appear here." />
               {!loadingArchive && (archivePage > 0 || archivedTickets.length >= ARCHIVE_PAGE_SIZE) && (
@@ -196,6 +204,11 @@ function AuthedApp({ token }: { token: string }) {
         </main>
         <BottomTabBar active={tab} onChange={setTab} attentionCount={attentionCount(tickets)} />
       </div>
+      {selectedTicket && (
+        <TicketModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)}
+          onTicketUpdate={updateSelectedTicket}
+          onManagerResponded={() => handleManagerResponded(selectedTicket.id)} />
+      )}
     </div>
   );
 }
