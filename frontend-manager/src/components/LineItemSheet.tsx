@@ -1,23 +1,91 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { LineItemInput } from '@shared/types';
 import { REASONS } from '../constants/reasons';
 import DescriptionTypeahead from './DescriptionTypeahead';
+import { KitchenItem } from './KitchenPicker';
 
 interface Props {
   index: number;
   initial: LineItemInput;
   canDelete: boolean;
+  kitchenItems?: KitchenItem[];
   onSave: (item: LineItemInput) => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-export default function LineItemSheet({ index, initial, canDelete, onSave, onDelete, onClose }: Props) {
+type Subset = 'full' | 'door' | 'carcase' | 'shelf' | 'other';
+
+/**
+ * Heuristic match for "the door for this unit". The picked SAP code carries
+ * the width (e.g. 60 = 600mm) and hand (L/R). We search the same kitchen for
+ * a D-prefix line (door) sharing both, ranking matches at the same Sales Doc
+ * first since those typically belong to the same physical assembly.
+ */
+function findDoorFor(unit: KitchenItem | null, kitchen?: KitchenItem[]): KitchenItem | null {
+  if (!unit || !kitchen) return null;
+  const m = unit.sapCode.match(/^[A-Z]+(\d{2,4})([LR])/);
+  if (!m) return null;
+  const widthToken = m[1];
+  const hand = m[2];
+  const candidates = kitchen.filter(k => {
+    if (!/^D/.test(k.sapCode) || k.sapCode === unit.sapCode) return false;
+    const rx = new RegExp(`^D${widthToken}${hand}`);
+    return rx.test(k.sapCode);
+  });
+  candidates.sort((a, b) => (a.salesDoc === unit.salesDoc ? -1 : 1) - (b.salesDoc === unit.salesDoc ? -1 : 1));
+  return candidates[0] ?? null;
+}
+
+export default function LineItemSheet({ index, initial, canDelete, kitchenItems, onSave, onDelete, onClose }: Props) {
   const [description, setDescription] = useState(initial.description);
   const [sapCode, setSapCode] = useState<string | undefined>(initial.sap_code);
   const [quantity, setQuantity] = useState(initial.quantity || 1);
   const [reason, setReason] = useState<string>(initial.reason);
+  const [subset, setSubset] = useState<Subset>('full');
+  const [subsetOpen, setSubsetOpen] = useState(false);
+
+  // Original (full unit) values — we hold these so "Carcase only" or "Full unit"
+  // can restore after the user has tried "The door".
+  const original = useMemo(() => ({
+    sapCode: initial.sap_code,
+    description: initial.description,
+    quantity: initial.quantity || 1,
+  }), [initial.sap_code, initial.description, initial.quantity]);
+
+  const originalKitchenItem: KitchenItem | null = useMemo(() => {
+    if (!original.sapCode || !kitchenItems) return null;
+    return kitchenItems.find(k => k.sapCode === original.sapCode) ?? null;
+  }, [original.sapCode, kitchenItems]);
+
+  const doorMatch = useMemo(() => findDoorFor(originalKitchenItem, kitchenItems), [originalKitchenItem, kitchenItems]);
+
+  const showSubsetPicker = !!original.sapCode && !!kitchenItems && kitchenItems.length > 0;
+
+  function applySubset(next: Subset) {
+    setSubset(next);
+    if (next === 'full' || next === 'carcase') {
+      setSapCode(original.sapCode);
+      setDescription(original.description);
+      setQuantity(original.quantity);
+    } else if (next === 'door') {
+      if (doorMatch) {
+        setSapCode(doorMatch.sapCode);
+        setDescription(doorMatch.description ?? doorMatch.sapCode);
+        setQuantity(1);
+      } else {
+        // No matched door in kitchen — drop to free text so manager can type
+        setSapCode(undefined);
+        setDescription('');
+        setQuantity(1);
+      }
+    } else if (next === 'shelf' || next === 'other') {
+      setSapCode(undefined);
+      setDescription('');
+      setQuantity(1);
+    }
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -49,6 +117,48 @@ export default function LineItemSheet({ index, initial, canDelete, onSave, onDel
               <p className="font-mono text-[18px] font-semibold text-[var(--text)] leading-tight mt-0.5">{sapCode}</p>
             </div>
           )}
+
+          {showSubsetPicker && (
+            <div className="mb-3">
+              {!subsetOpen ? (
+                <button type="button" onClick={() => setSubsetOpen(true)}
+                  className="text-[12.5px] font-semibold text-[var(--action)] underline-offset-2 hover:underline">
+                  Only need part of this unit?
+                </button>
+              ) : (
+                <div className="rounded-lg border border-[var(--border)] bg-stone-50 p-3">
+                  <div className="text-[11.5px] font-bold uppercase tracking-wider text-[var(--muted)] mb-2">What do you need?</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {([
+                      { value: 'full',    label: 'Full unit' },
+                      { value: 'door',    label: doorMatch ? `The door (${doorMatch.sapCode})` : 'The door' },
+                      { value: 'carcase', label: 'Carcase only' },
+                      { value: 'shelf',   label: 'Shelf' },
+                      { value: 'other',   label: 'Other' },
+                    ] as { value: Subset; label: string }[]).map(opt => {
+                      const selected = subset === opt.value;
+                      return (
+                        <button key={opt.value} type="button" onClick={() => applySubset(opt.value)}
+                          className={`px-3 py-1.5 text-[12.5px] font-semibold rounded-full border transition-colors ${
+                            selected
+                              ? 'bg-stone-800 text-white border-stone-800'
+                              : 'bg-white text-stone-700 border-stone-300 hover:border-stone-500'
+                          }`}>
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {subset === 'door' && !doorMatch && (
+                    <p className="mt-2 text-[11.5px] text-[var(--subtle)]">
+                      No matching door found in this kitchen — type the door details below.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <label className="block">
             <span className="text-xs font-bold text-[var(--muted)] tracking-wider uppercase">Description</span>
             <div className="mt-1">

@@ -39,7 +39,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   const [images, setImages] = useState<string[]>([]);
   const [kitchenOpen, setKitchenOpen] = useState(false);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
-  const [kitchenItemCount, setKitchenItemCount] = useState<number | null>(null);
+  const [kitchenItems, setKitchenItems] = useState<KitchenItem[] | null>(null);
 
   const locationDone = !!(developer.trim() && site.trim() && plotNumber.trim());
   const filledItems = items.filter(isFilled);
@@ -50,24 +50,26 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   function resetForm() {
     setDeveloper(''); setSite(''); setPlotNumber('');
     setItems(makeInitialItems()); setDeliveryType(''); setDeliveryDate(''); setImages([]);
-    setKitchenOpen(false); setEditingItemIndex(null); setKitchenItemCount(null);
+    setKitchenOpen(false); setEditingItemIndex(null); setKitchenItems(null);
   }
 
-  // When SAP flag is on and all three fields are filled, peek at how many
-  // kitchen items exist so we can render a "Browse N items" button.
+  // When SAP flag is on and all three fields are filled, load the kitchen
+  // items once so both the picker and the line-item editor can use them.
   useEffect(() => {
     if (!SAP_DECODER_ENABLED) return;
     if (!developer.trim() || !site.trim() || !plotNumber.trim()) {
-      setKitchenItemCount(null);
+      setKitchenItems(null);
       return;
     }
     const controller = new AbortController();
     const q = new URLSearchParams({ developer: developer.trim(), site: site.trim(), plot: plotNumber.trim() }).toString();
     apiFetch(`/sap/kitchen?${q}`, { signal: controller.signal })
-      .then(async r => { if (r.ok) { const data = await r.json(); setKitchenItemCount(data.items?.length ?? 0); } })
+      .then(async r => { if (r.ok) { const data = await r.json(); setKitchenItems(data.items || []); } })
       .catch(() => { /* ignore */ });
     return () => controller.abort();
   }, [developer, site, plotNumber]);
+
+  const kitchenItemCount = kitchenItems?.length ?? null;
 
   function handleKitchenPick(item: KitchenItem) {
     const description = item.description || item.sapCode;
@@ -189,7 +191,8 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           aux={<CompleteTag done={itemsValid} label={itemsValid ? `${filledItems.length} item${filledItems.length === 1 ? '' : 's'}` : '0 items'} />}
         >
           <LineItemBuilder items={items} onChange={setItems} disabled={disabled}
-            openIndex={editingItemIndex} onOpenIndexChange={setEditingItemIndex} />
+            openIndex={editingItemIndex} onOpenIndexChange={setEditingItemIndex}
+            kitchenItems={SAP_DECODER_ENABLED ? (kitchenItems ?? undefined) : undefined} />
         </FormSection>
 
         <FormSection

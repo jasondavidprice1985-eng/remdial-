@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LineItemInput } from '@shared/types';
 import { REASON_LABEL } from '../constants/reasons';
 import LineItemSheet from './LineItemSheet';
+import { KitchenItem } from './KitchenPicker';
 
 interface Props {
   items: LineItemInput[];
@@ -11,6 +12,8 @@ interface Props {
   // at that row. Used by the kitchen picker to drop straight into reason entry.
   openIndex?: number | null;
   onOpenIndexChange?: (idx: number | null) => void;
+  /** Optional kitchen items, passed through to the editor for sub-part lookup. */
+  kitchenItems?: KitchenItem[];
 }
 
 const EMPTY: LineItemInput = { description: '', quantity: 1, reason: '' };
@@ -19,7 +22,7 @@ function isFilled(row: LineItemInput): boolean {
   return row.description.trim().length > 0 && row.quantity >= 1 && row.reason !== '';
 }
 
-export default function LineItemBuilder({ items, onChange, disabled, openIndex, onOpenIndexChange }: Props) {
+export default function LineItemBuilder({ items, onChange, disabled, openIndex, onOpenIndexChange, kitchenItems }: Props) {
   const [internalIndex, setInternalIndex] = useState<number | null>(null);
   const isControlled = openIndex !== undefined;
   const editingIndex = isControlled ? openIndex : internalIndex;
@@ -87,9 +90,9 @@ export default function LineItemBuilder({ items, onChange, disabled, openIndex, 
           index={editingIndex}
           initial={items[editingIndex]}
           canDelete={items.length > 1}
+          kitchenItems={kitchenItems}
           onSave={(item) => save(editingIndex, item)}
           onDelete={() => {
-            // If more than 1 row, remove it; otherwise just clear it.
             if (items.length > 1) {
               onChange(items.filter((_, idx) => idx !== editingIndex));
               setEditingIndex(null);
