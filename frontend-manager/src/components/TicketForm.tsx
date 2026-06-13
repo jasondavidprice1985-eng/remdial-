@@ -247,7 +247,7 @@ export default function TicketForm({ onSubmit, submitting, disabled, isActive }:
               ) : "Sending to office"}
             </span>
           </div>
-          <button type="button" onClick={() => setReviewOpen(true)} disabled={submitting || disabled}
+          <button type="button" onClick={() => setReviewOpen(true)} disabled={submitting || disabled || !canSubmit}
             className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50">
             {submitting
               ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending…</>
