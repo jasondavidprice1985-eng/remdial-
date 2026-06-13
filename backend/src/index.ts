@@ -15,6 +15,7 @@ import pushRouter from './routes/push';
 import productsRouter from './routes/products';
 import usersRouter from './routes/users';
 import sapRouter from './routes/sap';
+import syncRouter from './routes/sync';
 import { apiLimiter } from './middleware/rateLimiter';
 import { setupSocket } from './socket';
 import { verifyUpload, signJsonResponse } from './utils/signedUrls';
@@ -102,6 +103,7 @@ async function main(): Promise<void> {
   app.use('/api/v1', productsRouter);
   app.use('/api/v1', usersRouter);
   app.use('/api/v1', sapRouter);
+  app.use('/api/v1', syncRouter);
 
   // Global error handler — the safety net that catches anything unexpected
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -1,20 +1,22 @@
 /// <reference lib="webworker" />
 
 // Custom service worker for System22 Field PWA.
-// Handles: simple network-first caching + Web Push notifications.
+// Handles: network-first caching + API data cache + Web Push notifications.
 
 declare const self: ServiceWorkerGlobalScope & {
   __WB_MANIFEST: Array<{ url: string; revision?: string | null } | string>;
 };
 
-const CACHE_NAME = 'fieldrem-v1';
+const STATIC_CACHE = 'fieldrem-v2';
+const API_CACHE = 'fieldrem-api-v1';
+
 const PRECACHE_URLS: string[] = (self.__WB_MANIFEST || []).map(e =>
   typeof e === 'string' ? e : e.url,
 );
 
 self.addEventListener('install', (event: ExtendableEvent) => {
   event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(STATIC_CACHE);
     try { await cache.addAll(PRECACHE_URLS); } catch { /* offline at install, ignore */ }
     await self.skipWaiting();
   })());
@@ -22,43 +24,85 @@ self.addEventListener('install', (event: ExtendableEvent) => {
 
 self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil((async () => {
-    // Drop any old caches
     const names = await caches.keys();
-    await Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)));
+    await Promise.all(names.filter(n => n !== STATIC_CACHE && n !== API_CACHE).map(n => caches.delete(n)));
     await self.clients.claim();
   })());
 });
 
-// Network-first for GET, with cache fallback. Don't intercept API/uploads — let the browser handle.
 self.addEventListener('fetch', (event: FetchEvent) => {
   const req = event.request;
-  if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/') || url.pathname.startsWith('/socket.io/')) {
-    return; // pass through to network
+
+  // Socket.io and uploads always pass through
+  if (url.pathname.startsWith('/socket.io/') || url.pathname.startsWith('/uploads/')) {
+    return;
   }
-  event.respondWith((async () => {
-    try {
-      const fresh = await fetch(req);
-      if (fresh.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(req, fresh.clone());
-      }
-      return fresh;
-    } catch {
-      const cached = await caches.match(req);
-      if (cached) return cached;
-      // SPA fallback for navigations
-      if (req.mode === 'navigate') {
-        const index = await caches.match('/index.html') || await caches.match('/');
-        if (index) return index;
-      }
-      return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-    }
-  })());
+
+  // API GET: network-first with cache fallback (offline data)
+  if (url.pathname.startsWith('/api/') && req.method === 'GET') {
+    event.respondWith(apiNetworkFirst(req));
+    return;
+  }
+
+  // API POST/PATCH/DELETE: pass through to network (messages, form submissions)
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // Static assets: network-first with cache fallback
+  event.respondWith(staticNetworkFirst(req));
 });
 
-// Web Push: backend sends a JSON payload, we show a notification.
+// --- API data: network-first, cache fallback for offline ---
+async function apiNetworkFirst(req: Request): Promise<Response> {
+  try {
+    const fresh = await fetchWithTimeout(req, 5000);
+    if (fresh.ok) {
+      const cache = await caches.open(API_CACHE);
+      cache.put(req, fresh.clone()).catch(() => {});
+    }
+    return fresh;
+  } catch {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+    return new Response(JSON.stringify({ error: 'Offline', offline: true }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// --- Static assets: network-first, cache fallback, SPA fallback ---
+async function staticNetworkFirst(req: Request): Promise<Response> {
+  if (req.method !== 'GET') return fetch(req);
+
+  try {
+    const fresh = await fetch(req);
+    if (fresh.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(req, fresh.clone()).catch(() => {});
+    }
+    return fresh;
+  } catch {
+    const cached = await caches.match(req);
+    if (cached) return cached;
+    if (req.mode === 'navigate') {
+      const index = await caches.match('/index.html') || await caches.match('/');
+      if (index) return index;
+    }
+    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+  }
+}
+
+function fetchWithTimeout(req: Request, ms: number): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('timeout')), ms);
+    fetch(req).then(r => { clearTimeout(timeout); resolve(r); }, e => { clearTimeout(timeout); reject(e); });
+  });
+}
+
+// --- Web Push ---
 interface PushPayload {
   title: string;
   body:  string;

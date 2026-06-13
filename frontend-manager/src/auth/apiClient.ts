@@ -22,10 +22,27 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
   const headers = new Headers(init?.headers);
   if (token) headers.set('Authorization', `Bearer ${token}`);
   const url = path.startsWith('http') ? path : `${API}${path}`;
-  const res = await fetch(url, { ...init, headers });
-  if (res.status === 401) {
-    clearAuthToken();
-    onUnauthorized();
+
+  try {
+    const res = await fetch(url, { ...init, headers });
+    if (res.status === 401) {
+      clearAuthToken();
+      onUnauthorized();
+    }
+    return res;
+  } catch (err) {
+    // Network failure (offline) or timeout
+    const isGet = !init?.method || init.method === 'GET';
+
+    // For GET requests, try the SW cache directly
+    if (isGet && 'caches' in window) {
+      try {
+        const cache = await caches.open('fieldrem-api-v1');
+        const match = await cache.match(url);
+        if (match) return match;
+      } catch { /* ignore */ }
+    }
+
+    throw err;
   }
-  return res;
 }

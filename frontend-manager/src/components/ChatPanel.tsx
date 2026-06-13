@@ -4,6 +4,7 @@ import { getSocket } from '../hooks/useSocket';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { apiFetch } from '../auth/apiClient';
 import { resizeImageToBase64 } from '../utils/imageResize';
+import { useMessageQueue } from '../hooks/useMessageQueue';
 import ChatMessageList from './ChatMessageList';
 import ChatInputBar from './ChatInputBar';
 
@@ -32,6 +33,7 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
   const onViewedRef = useRef(onTicketViewed);
   onViewedRef.current = onTicketViewed;
   const { recording, startRecording, stopRecording, getAudioPayload } = useAudioRecorder();
+  const { queue: queueMessage } = useMessageQueue();
 
   // Auto-dismiss error banner after 4s
   useEffect(() => {
@@ -82,6 +84,15 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
         body: JSON.stringify({ sender: role, text: text.trim(), audio: null, audio_mime: null, is_query: false }),
       });
       if (res.ok) { setText(''); if (role === 'manager') onManagerResponded?.(); }
+      else if (res.status === 503) {
+        await queueMessage(ticketId, { sender: role, text: text.trim(), audio: null, audio_mime: null, is_query: false });
+        setText('');
+        flash('Message queued — will send when back online');
+      }
+    } catch {
+      await queueMessage(ticketId, { sender: role, text: text.trim(), audio: null, audio_mime: null, is_query: false });
+      setText('');
+      flash('Message queued — will send when back online');
     } finally { setSending(false); }
   }
 
@@ -101,8 +112,8 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
       }
       if (role === 'manager') onManagerResponded?.();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Network error';
-      flash(`Couldn't send photo. ${msg}`);
+      const offline = err instanceof TypeError && (err.message === 'Failed to fetch' || err.message === 'NetworkError');
+      flash(offline ? 'Offline — try again when connected' : `Couldn't send photo. ${err instanceof Error ? err.message : 'Network error'}`);
     } finally { setSending(false); }
   }
 
@@ -128,8 +139,8 @@ export default function ChatPanel({ ticketId, role, onTicketViewed, onManagerRes
         }
         if (role === 'manager') onManagerResponded?.();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Network error';
-        flash(`Couldn't send voice note. ${msg}`);
+        const offline = err instanceof TypeError && (err.message === 'Failed to fetch' || err.message === 'NetworkError');
+        flash(offline ? 'Offline — try again when connected' : `Couldn't send voice note. ${err instanceof Error ? err.message : 'Network error'}`);
       } finally { setSending(false); }
     } else {
       await startRecording();

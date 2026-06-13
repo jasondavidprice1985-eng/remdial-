@@ -7,6 +7,8 @@ import { useSocket } from './hooks/useSocket';
 import { useTicketSubmit } from './hooks/useTicketSubmit';
 import { useRespondedQueries } from './hooks/useRespondedQueries';
 import { savePendingReport, getAllPendingReports } from './hooks/useIndexedDB';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
+import { useMessageQueue } from './hooks/useMessageQueue';
 import TicketForm, { TicketFormPayload } from './components/TicketForm';
 import TicketList from './components/TicketList';
 import TicketModal from './components/TicketModal';
@@ -53,6 +55,8 @@ function AuthedApp({ token }: { token: string }) {
   const [pendingCount, setPendingCount] = useState(0);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const { respondedQueries, handleTicketUpdate, handleManagerResponded, attentionCount } = useRespondedQueries();
+  const isOnline = useOnlineStatus();
+  useMessageQueue(); // flushes queued messages when coming back online
 
   const updateSelectedTicket = useCallback((t: Ticket) => {
     setSelectedTicket(t);
@@ -178,6 +182,11 @@ function AuthedApp({ token }: { token: string }) {
     <div className="app-fieldrem min-h-screen bg-[var(--surface)] flex flex-col">
       <StatusBanner banner={banner} submittedRef={submittedRef} errorText={errorText} />
       <PwaInstallBanner />
+      {!isOnline && (
+        <div className="px-3 py-2 text-center text-[12px] font-semibold text-white bg-[var(--danger)]">
+          You're offline — data shown from cache. Changes will sync when connected.
+        </div>
+      )}
       <div className="max-w-lg mx-auto flex flex-col flex-1 w-full">
         <AppHeader tab={tab} archivePage={archivePage} archivePageSize={ARCHIVE_PAGE_SIZE} archivePageCount={archivedTickets.length} />
         <main className="flex-1 min-h-0 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
