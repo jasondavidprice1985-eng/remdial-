@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add VPS to known_hosts
+        run: ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Pull, build & restart
+        run: |
+          ssh -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} '
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}/remedial
+            git pull
+
+            echo "=== Building backend ==="
+            cd backend
+            npm ci 2>/dev/null || true
+            npm run build
+
+            echo "=== Building manager frontend ==="
+            cd ../frontend-manager
+            npm ci 2>/dev/null || true
+            npm run build
+
+            echo "=== Building office frontend ==="
+            cd ../frontend-office
+            npm ci 2>/dev/null || true
+            npm run build
+
+            echo "=== Restarting backend ==="
+            cd ..
+            pm2 restart remedial-backend
+            pm2 logs remedial-backend --lines 10 --nostream
+          '
