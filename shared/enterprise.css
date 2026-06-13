@@ -80,7 +80,7 @@
 .enterprise-card,
 .glass-panel {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 1rem;
   box-shadow: var(--shadow-lg);
 }
@@ -93,7 +93,7 @@
 
 .enterprise-office-header {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 0.875rem;
   box-shadow: var(--shadow-md);
 }
