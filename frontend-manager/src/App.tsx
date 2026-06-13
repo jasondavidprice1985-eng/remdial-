@@ -176,7 +176,7 @@ function AuthedApp({ token }: { token: string }) {
           <SwipeableViews activeIndex={tabIndex} onChangeIndex={handleSwipe} disabled={submitting}>
             <TicketList tickets={tickets} loading={loading} respondedQueries={respondedQueries} pendingCount={pendingCount}
               onTicketUpdate={t => handleTicketUpdate(t, setTickets)} onManagerResponded={handleManagerResponded} />
-            <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} />
+            <TicketForm onSubmit={handleSubmit} submitting={submitting} disabled={formLocked} isActive={tab === 'new'} />
             <>
               <TicketList tickets={archivedTickets} loading={loadingArchive} respondedQueries={respondedQueries}
                 onTicketUpdate={t => handleTicketUpdate(t, setArchivedTickets)} onManagerResponded={handleManagerResponded}

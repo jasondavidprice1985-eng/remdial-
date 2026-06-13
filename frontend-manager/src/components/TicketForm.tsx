@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { DeliveryRequest, LineItemInput } from '@shared/types';
 import FormSection, { CompleteTag } from './FormSection';
 import DeveloperCombobox from './DeveloperCombobox';
@@ -21,6 +22,10 @@ interface Props {
   onSubmit: (payload: TicketFormPayload) => void;
   submitting: boolean;
   disabled: boolean;
+  /** Whether this form is the visible swipe panel. The portaled submit
+   *  footer only renders while it is, otherwise it would show on the
+   *  Tickets and Archive tabs too. */
+  isActive: boolean;
 }
 
 const EMPTY: LineItemInput = { description: '', quantity: 1, reason: '' };
@@ -30,7 +35,7 @@ const makeInitialItems = (): LineItemInput[] =>
 const isFilled = (r: LineItemInput): boolean =>
   r.description.trim().length > 0 && r.quantity >= 1 && r.reason !== '';
 
-export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
+export default function TicketForm({ onSubmit, submitting, disabled, isActive }: Props) {
   const [developer, setDeveloper] = useState('');
   const [site, setSite] = useState('');
   const [plotNumber, setPlotNumber] = useState('');
@@ -225,26 +230,28 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
         </FormSection>
       </div>
 
-      <div className="fixed left-0 right-0 max-w-lg mx-auto z-20 bg-[var(--surface)] border-t border-[var(--border)] px-5 pt-3 pb-3"
-        style={{ bottom: 'calc(3.625rem + env(safe-area-inset-bottom))' }}>
-        <div className="flex items-center justify-between text-[12px] text-[var(--subtle)] mb-2.5 tabular-nums">
-          <span>
-            {filledItems.length} item{filledItems.length === 1 ? '' : 's'} · {photosCount} photo{photosCount === 1 ? '' : 's'}
-          </span>
-          <span className="text-[var(--faint)]">Sending to office</span>
+      {isActive && createPortal((
+        <div className="app-fieldrem fixed left-0 right-0 max-w-lg mx-auto z-20 bg-[var(--surface)] border-t border-[var(--border)] px-5 pt-3 pb-3"
+          style={{ bottom: 'calc(3.625rem + env(safe-area-inset-bottom))' }}>
+          <div className="flex items-center justify-between text-[12px] text-[var(--subtle)] mb-2.5 tabular-nums">
+            <span>
+              {filledItems.length} item{filledItems.length === 1 ? '' : 's'} · {photosCount} photo{photosCount === 1 ? '' : 's'}
+            </span>
+            <span className="text-[var(--faint)]">Sending to office</span>
+          </div>
+          <button type="button" onClick={() => setReviewOpen(true)} disabled={submitting || disabled}
+            className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50">
+            {submitting
+              ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending…</>
+              : <>Review &amp; submit
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+                  </svg>
+                </>
+            }
+          </button>
         </div>
-        <button type="submit" disabled={submitting || disabled}
-          className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50">
-          {submitting
-            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending…</>
-            : <>Review &amp; submit
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
-                </svg>
-              </>
-          }
-        </button>
-      </div>
+      ), document.body)}
 
       {SAP_DECODER_ENABLED && (
         <KitchenPicker
