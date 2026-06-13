@@ -69,7 +69,9 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
 
   function applySubset(next: Subset) {
     setSubset(next);
-    setSubsetOpen(false);
+    // Keep the chip group visible after a pick so the selection stays on
+    // screen — the highlighted chip tells the manager what they chose.
+    setSubsetOpen(true);
     setQuantity(1);
     if (next === 'full' || next === 'carcase') {
       setSapCode(original.sapCode);
@@ -145,46 +147,47 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
           </div>
         )}
 
-        {showSubsetPicker && (
-          <div>
-            {!subsetOpen ? (
-              <button type="button" onClick={() => setSubsetOpen(true)}
-                className="w-full min-h-[52px] rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-white text-[var(--text)] text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14"/><path d="M5 12h14"/>
-                </svg>
-                {subset === 'full' ? 'Only need part of this unit?' : `Currently: ${subsetLabel[subset]}`}
-              </button>
-            ) : (
-              <div className="rounded-xl border border-[var(--border)] bg-stone-50 p-3 space-y-2">
-                <div className="text-[11.5px] font-bold uppercase tracking-wider text-[var(--muted)]">What do you need?</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { value: 'full',    label: 'Full unit' },
-                    { value: 'door',    label: doorMatch ? `Door only (${doorMatch.sapCode})` : 'Door only' },
-                    { value: 'carcase', label: 'Carcase only' },
-                    { value: 'shelf',   label: 'Shelf' },
-                    { value: 'other',   label: 'Other' },
-                  ] as { value: Subset; label: string }[]).map(opt => {
-                    const selected = subset === opt.value;
-                    return (
-                      <button key={opt.value} type="button" onClick={() => applySubset(opt.value)}
-                        className={`min-h-[44px] px-3 py-2 text-[13px] font-semibold rounded-lg border transition-colors text-center ${
-                          selected
-                            ? 'bg-stone-800 text-white border-stone-800'
-                            : 'bg-white text-stone-700 border-stone-300 hover:border-stone-500'
-                        }`}>
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {subset === 'door' && !doorMatch && (
-                  <p className="mt-1 text-[11.5px] text-[var(--subtle)]">
-                    No matching door in this kitchen — add an optional note below if needed.
-                  </p>
-                )}
-              </div>
+        {showSubsetPicker && !subsetOpen && (
+          <button type="button" onClick={() => setSubsetOpen(true)}
+            className="w-full min-h-[52px] rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-white text-[var(--text)] text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14"/><path d="M5 12h14"/>
+            </svg>
+            Only need part of this unit?
+          </button>
+        )}
+
+        {showSubsetPicker && subsetOpen && (
+          <div className="rounded-xl border border-[var(--border)] bg-stone-50 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="text-[11.5px] font-bold uppercase tracking-wider text-[var(--muted)]">What do you need?</div>
+              <span className="text-[11px] font-semibold text-[var(--ordered)]">{subsetLabel[subset]}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: 'full',    label: 'Full unit' },
+                { value: 'door',    label: doorMatch ? `Door only (${doorMatch.sapCode})` : 'Door only' },
+                { value: 'carcase', label: 'Carcase only' },
+                { value: 'shelf',   label: 'Shelf' },
+                { value: 'other',   label: 'Other' },
+              ] as { value: Subset; label: string }[]).map(opt => {
+                const selected = subset === opt.value;
+                return (
+                  <button key={opt.value} type="button" onClick={() => applySubset(opt.value)}
+                    className={`min-h-[44px] px-3 py-2 text-[13px] font-semibold rounded-lg border transition-colors text-center ${
+                      selected
+                        ? 'bg-stone-800 text-white border-stone-800'
+                        : 'bg-white text-stone-700 border-stone-300 hover:border-stone-500'
+                    }`}>
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {subset === 'door' && !doorMatch && (
+              <p className="mt-1 text-[11.5px] text-[var(--subtle)]">
+                No matching door in this kitchen — add an optional note below if needed.
+              </p>
             )}
           </div>
         )}
