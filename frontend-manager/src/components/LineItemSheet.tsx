@@ -80,7 +80,11 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
         setDescription('');
         setQuantity(1);
       }
-    } else if (next === 'shelf' || next === 'other') {
+    } else if (next === 'shelf') {
+      setSapCode(undefined);
+      setDescription(original.sapCode ? `Shelf for ${original.sapCode}` : '');
+      setQuantity(1);
+    } else if (next === 'other') {
       setSapCode(undefined);
       setDescription('');
       setQuantity(1);
@@ -110,8 +114,18 @@ export default function LineItemSheet({ index, initial, canDelete, kitchenItems,
           <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--muted)] bg-stone-100">×</button>
         </div>
 
+        {original.sapCode && (
+          <div className="rounded-lg bg-stone-50 border border-[var(--border)] px-3 py-2">
+            <span className="text-[10px] font-bold text-[var(--muted)] tracking-wider uppercase block">From kitchen</span>
+            <p className="text-[13px] text-[var(--text)] leading-tight mt-0.5">
+              <span className="font-mono font-semibold">{original.sapCode}</span>
+              {original.description && <span className="text-[var(--subtle)]"> · {original.description}</span>}
+            </p>
+          </div>
+        )}
+
         <div>
-          {sapCode && (
+          {sapCode && sapCode !== original.sapCode && (
             <div className="mb-2.5">
               <span className="text-[10px] font-bold text-[var(--ordered)] tracking-wider uppercase block">SAP code</span>
               <p className="font-mono text-[18px] font-semibold text-[var(--text)] leading-tight mt-0.5">{sapCode}</p>
