@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Ticket } from '@shared/types';
 import TicketListRow from './TicketListRow';
 import TicketDetailsPanel from './TicketDetailsPanel';
 import ChatPanel from './ChatPanel';
+import { groupTicketsByDay } from '../utils/groupTicketsByDay';
 
 interface Props {
   queueTickets: Ticket[];
@@ -23,6 +24,7 @@ export default function QueueWorkspace({ queueTickets, selected, isDesktop, onSe
   }, [selected?.id, selected?.status, selected?.unread_count]);
 
   const showChat = isDesktop && !!selected && chatOpen;
+  const dayGroups = useMemo(() => groupTicketsByDay(queueTickets), [queueTickets]);
 
   return (
     <div className="h-full office-workspace">
@@ -33,10 +35,18 @@ export default function QueueWorkspace({ queueTickets, selected, isDesktop, onSe
           </p>
         </div>
         <div className="flex-1 overflow-y-auto min-h-0">
-          {queueTickets.map(t => (
-            <TicketListRow key={t.id} ticket={t} active={selected?.id === t.id} onClick={() => onSelect(t)} />
-          ))}
-          {queueTickets.length === 0 && (
+          {dayGroups.length > 0 ? (
+            dayGroups.map((group, gi) => (
+              <div key={group.label}>
+                <div className="px-4 py-2 text-[11px] font-semibold text-[var(--faint)] uppercase tracking-[0.06em] bg-[var(--surface-2)] border-b border-[var(--border)]">
+                  {group.label}
+                </div>
+                {group.tickets.map(t => (
+                  <TicketListRow key={t.id} ticket={t} active={selected?.id === t.id} onClick={() => onSelect(t)} />
+                ))}
+              </div>
+            ))
+          ) : (
             <p className="text-sm text-[var(--faint)] text-center py-12">Nothing in this queue</p>
           )}
         </div>
