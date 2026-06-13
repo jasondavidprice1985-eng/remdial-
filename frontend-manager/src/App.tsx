@@ -220,7 +220,7 @@ function ArchivePager({ page, hasPrev, hasNext, onPrev, onNext, onFirst }: {
   return (
     <div className="px-5 py-4 flex items-center justify-between gap-3 border-t border-[var(--border)]">
       <div className="flex items-center gap-2">
-        {page > 1 && (
+        {page > 0 && (
           <button type="button" onClick={onFirst}
             className="h-10 px-3 rounded-lg border border-[var(--border)] text-[13px] font-semibold text-[var(--text)] hover:bg-[var(--surface-2)]"
             aria-label="First page">
