@@ -7,6 +7,7 @@ import DeliverySection from './DeliverySection';
 import PhotoUpload from './PhotoUpload';
 import KitchenPicker, { KitchenItem } from './KitchenPicker';
 import SapCombobox from './SapCombobox';
+import ReviewSheet from './ReviewSheet';
 import { apiFetch } from '../auth/apiClient';
 
 const SAP_DECODER_ENABLED = import.meta.env.VITE_SAP_DECODER_ENABLED === 'true';
@@ -40,6 +41,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
   const [kitchenOpen, setKitchenOpen] = useState(false);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
   const [kitchenItems, setKitchenItems] = useState<KitchenItem[] | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const locationDone = !!(developer.trim() && site.trim() && plotNumber.trim());
   const filledItems = items.filter(isFilled);
@@ -51,6 +53,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
     setDeveloper(''); setSite(''); setPlotNumber('');
     setItems(makeInitialItems()); setDeliveryType(''); setDeliveryDate(''); setImages([]);
     setKitchenOpen(false); setEditingItemIndex(null); setKitchenItems(null);
+    setReviewOpen(false);
   }
 
   // When SAP flag is on and all three fields are filled, load the kitchen
@@ -99,6 +102,12 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // The form's submit button now opens the review sheet — the actual
+    // send happens from inside the sheet.
+    setReviewOpen(true);
+  }
+
+  function sendForReal() {
     if (!canSubmit || !deliveryType) return;
     onSubmit({
       developer: developer.trim(), site: site.trim(), plot_number: plotNumber.trim(),
@@ -106,6 +115,7 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
       delivery_request: { type: deliveryType, date: deliveryType === 'specific_date' ? deliveryDate : null },
       images,
     });
+    setReviewOpen(false);
   }
 
   const photosCount = images.length;
@@ -223,12 +233,11 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           </span>
           <span className="text-[var(--faint)]">Sending to office</span>
         </div>
-        <button type="submit" disabled={!canSubmit || submitting || disabled}
+        <button type="submit" disabled={submitting || disabled}
           className="w-full h-[52px] rounded-lg bg-[var(--text)] text-white text-[15px] font-semibold flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50">
-          {submitting && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
           {submitting
-            ? 'Submitting…'
-            : <>Submit Ticket
+            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Sending…</>
+            : <>Review &amp; submit
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
                 </svg>
@@ -247,6 +256,21 @@ export default function TicketForm({ onSubmit, submitting, disabled }: Props) {
           onPick={handleKitchenPick}
         />
       )}
+
+      <ReviewSheet
+        open={reviewOpen}
+        developer={developer}
+        site={site}
+        plot={plotNumber}
+        items={items}
+        deliveryType={deliveryType}
+        deliveryDate={deliveryDate}
+        photoCount={photosCount}
+        submitting={submitting}
+        onEdit={() => setReviewOpen(false)}
+        onClose={() => setReviewOpen(false)}
+        onSend={sendForReal}
+      />
     </form>
   );
 }
