@@ -12,7 +12,7 @@ function renderReview(props: Partial<{
   site: string;
   plot: string;
   items: LineItemInput[];
-  deliveryType: 'next_delivery' | 'specific_date' | '';
+  deliveryType: '' | 'next_delivery' | 'specific_date';
   deliveryDate: string;
   photoCount: number;
   submitting: boolean;
@@ -26,7 +26,7 @@ function renderReview(props: Partial<{
     site: 'Test Site',
     plot: 'P123',
     items: [filledItem],
-    deliveryType: 'next_delivery',
+    deliveryType: 'next_delivery' as '' | 'next_delivery' | 'specific_date',
     deliveryDate: '',
     photoCount: 0,
     submitting: false,
