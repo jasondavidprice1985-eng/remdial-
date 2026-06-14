@@ -1,8 +1,6 @@
 import QueueNav from './QueueNav';
 import QueueWorkspace from './QueueWorkspace';
-import MobileTicketWorkView from './MobileTicketWorkView';
 import { useQueueBoard } from '../hooks/useQueueBoard';
-import { useMediaQuery } from '../hooks/useMediaQuery';
 import { Ticket } from '@shared/types';
 
 interface Props {
@@ -11,8 +9,7 @@ interface Props {
 }
 
 export default function QueueBoard({ tickets, onUpdate }: Props) {
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const board = useQueueBoard(tickets, onUpdate, isDesktop);
+  const board = useQueueBoard(tickets, onUpdate);
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -36,23 +33,13 @@ export default function QueueBoard({ tickets, onUpdate }: Props) {
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden mt-3 border border-[var(--border)] rounded-lg bg-[var(--surface)]">
-        {!board.showMobileWork && (
-          <QueueWorkspace
-            queueTickets={board.queueTickets}
-            selected={board.selected}
-            isDesktop={isDesktop}
-            onSelect={board.setSelected}
-            onUpdate={board.handleUpdate}
-            onDeselect={board.goHome}
-          />
-        )}
-        {board.showMobileWork && board.selected && (
-          <MobileTicketWorkView
-            ticket={board.selected}
-            onClose={() => board.setSelected(null)}
-            onUpdate={board.handleUpdate}
-          />
-        )}
+        <QueueWorkspace
+          queueTickets={board.queueTickets}
+          selected={board.selected}
+          onSelect={board.setSelected}
+          onUpdate={board.handleUpdate}
+          onDeselect={board.goHome}
+        />
       </div>
     </div>
   );

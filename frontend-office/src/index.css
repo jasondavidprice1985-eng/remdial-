@@ -93,19 +93,13 @@ button:active:not(:disabled) { transform: translateY(1px) scale(0.995); }
 }
 
 .office-workspace {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 340px 1fr;
   height: 100%;
   min-height: 0;
 }
-@media (min-width: 1024px) {
-  .office-workspace {
-    display: grid;
-    grid-template-columns: 340px 1fr;
-  }
-  .office-workspace.with-chat {
-    grid-template-columns: 320px 1fr 440px;
-  }
+.office-workspace.with-chat {
+  grid-template-columns: 320px 1fr 440px;
 }
 
 @media (prefers-reduced-motion: reduce) {
