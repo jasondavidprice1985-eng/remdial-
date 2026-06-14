@@ -53,16 +53,17 @@ export default function OfficeHeader({ archiveMode, unreadTotal, onToggleArchive
           </button>
         )}
         {user && (
-          <div className="flex items-center gap-3 pl-4 border-l border-[var(--border)]">
-            <span className="text-[12px] text-[var(--subtle)] tabular-nums font-medium">
-              {user.displayName}
+          <button onClick={e => { e.stopPropagation(); logout(); }}
+            className="ml-2 flex items-center gap-2 h-8 px-3 rounded-md text-[12px] font-medium text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+            title={`Sign out ${user.username}`}>
+            <span className="w-5 h-5 rounded-full bg-[var(--text)] text-white grid place-items-center text-[10px] font-semibold">
+              {(user.displayName || user.username).charAt(0).toUpperCase()}
             </span>
-            <button onClick={e => { e.stopPropagation(); logout(); }}
-              className="text-[12px] font-medium text-[var(--subtle)] hover:text-[var(--text)] transition-colors"
-              title={`Sign out ${user.username}`}>
-              Sign out
-            </button>
-          </div>
+            <span>{user.displayName}</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--subtle)]">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
         )}
       </div>
     </header>

@@ -51,6 +51,9 @@ export async function initDB(): Promise<void> {
   // Token versioning: bump to invalidate all existing tokens for a user
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0`).catch(swallowIfAlreadyExists);
 
+  // SAP code per requested line item: lets office inherit the manager's pick.
+  await pool.query(`ALTER TABLE ticket_items ADD COLUMN IF NOT EXISTS sap_code VARCHAR(40)`).catch(swallowIfAlreadyExists);
+
   // SAP code decoder lookup tables (read-only catalogue, populated by importer script)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sap_ranges (

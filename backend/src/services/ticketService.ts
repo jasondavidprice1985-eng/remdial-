@@ -44,10 +44,10 @@ export async function createTicket(payload: CreateTicketPayload): Promise<Ticket
       console.log(`[LINE_ITEMS] Inserting ${payload.items.length} line item(s) for ticket ${ticket.id}`);
       for (const item of payload.items as LineItemInput[]) {
         await client.query(
-          'INSERT INTO ticket_items (ticket_id,description,quantity,reason) VALUES ($1,$2,$3,$4)',
-          [ticket.id, sanitise(item.description), item.quantity, item.reason]
+          'INSERT INTO ticket_items (ticket_id,description,quantity,reason,sap_code) VALUES ($1,$2,$3,$4,$5)',
+          [ticket.id, sanitise(item.description), item.quantity, item.reason, item.sap_code ? sanitise(item.sap_code).slice(0, 40) : null]
         );
-        console.log(`[LINE_ITEMS]  + "${item.description}" qty=${item.quantity} reason=${item.reason}`);
+        console.log(`[LINE_ITEMS]  + "${item.description}" qty=${item.quantity} reason=${item.reason} sap=${item.sap_code || '-'}`);
       }
     }
 
@@ -84,7 +84,7 @@ async function upsertLocationWithClient(client: PoolClient, p: CreateTicketPaylo
 
 export async function getLineItems(ticketId: string): Promise<TicketItem[]> {
   const r = await pool.query(
-    'SELECT id,ticket_id,description,quantity,reason FROM ticket_items WHERE ticket_id=$1',
+    'SELECT id,ticket_id,description,quantity,reason,sap_code FROM ticket_items WHERE ticket_id=$1',
     [ticketId]
   );
   return r.rows;

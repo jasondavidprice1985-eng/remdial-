@@ -35,7 +35,7 @@ router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
     const lineItemMap: Record<string, unknown[]> = {};
     if (ticketIds.length > 0) {
       const li = await pool.query(
-        'SELECT id,ticket_id,description,quantity,reason FROM ticket_items WHERE ticket_id=ANY($1::uuid[])',
+        'SELECT id,ticket_id,description,quantity,reason,sap_code FROM ticket_items WHERE ticket_id=ANY($1::uuid[])',
         [ticketIds]
       );
       for (const item of li.rows) {

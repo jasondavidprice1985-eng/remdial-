@@ -94,4 +94,5 @@ export interface LineItemInput {
   description: string;
   quantity:    number;
   reason:      string;
+  sap_code?:   string;
 }

@@ -21,10 +21,10 @@ interface Props {
 
 function SectionLabel({ children, aux }: { children: React.ReactNode; aux?: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between mb-4">
-      <span className="text-[11px] font-medium text-[var(--faint)] uppercase tracking-[0.06em]">
+    <div className="flex items-baseline justify-between mb-3">
+      <h2 className="text-[15px] font-semibold text-[var(--text)] tracking-[-0.01em] m-0">
         {children}
-      </span>
+      </h2>
       {aux && <span className="text-[12px] text-[var(--subtle)] tabular-nums">{aux}</span>}
     </div>
   );
@@ -114,22 +114,17 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="mx-auto max-w-[760px] px-8 lg:px-12 py-12">
             {/* Header */}
-            <div className="mb-6 flex items-start justify-between gap-6">
-              <div className="min-w-0">
-                <div className="font-mono text-[12px] text-[var(--muted)] font-medium mb-1.5">
-                  {ticket.ref}
-                </div>
-                <h1 className="text-[26px] leading-[1.15] font-semibold tracking-[-0.025em] text-[var(--text)] m-0">
-                  {ticket.developer}
-                </h1>
-                <div className="mt-1.5 text-[13.5px] text-[var(--subtle)] flex flex-wrap gap-x-3 gap-y-1">
-                  <span>{ticket.site}</span>
-                  <span className="text-[var(--ghost)]">·</span>
-                  <span>Plot {ticket.plot_number}</span>
-                </div>
+            <div className="mb-6 min-w-0">
+              <div className="font-mono text-[12px] text-[var(--muted)] font-medium mb-1.5">
+                {ticket.ref}
               </div>
-              <div className="shrink-0 pt-1">
-                <StatusBadge status={ticket.status} ticket={ticket} />
+              <h1 className="text-[26px] leading-[1.15] font-semibold tracking-[-0.025em] text-[var(--text)] m-0">
+                {ticket.developer}
+              </h1>
+              <div className="mt-1.5 text-[13.5px] text-[var(--subtle)] flex flex-wrap gap-x-3 gap-y-1">
+                <span>{ticket.site}</span>
+                <span className="text-[var(--ghost)]">·</span>
+                <span>Plot {ticket.plot_number}</span>
               </div>
             </div>
 
@@ -196,15 +191,15 @@ export default function TicketDetailsPanel({ ticket, onUpdate, onCompleted, chat
           </div>
         </div>
 
-        {/* Action bar */}
+        {/* Action bar — Accept dominant, "Needs clarification" demoted to secondary */}
         {needsAcceptance && (
-          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-5 flex items-center gap-4 bg-[var(--surface)]">
+          <div className="shrink-0 border-t border-[var(--border)] px-8 lg:px-12 py-5 flex items-center gap-3 bg-[var(--surface)]">
             <button onClick={handleFlagQuery} disabled={accepting || flagging}
-              className="flex-1 h-12 rounded-md bg-green-600 text-white text-[14px] font-semibold hover:bg-green-700 disabled:opacity-50 transition">
+              className="flex-1 h-12 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text)] text-[14px] font-semibold hover:bg-[var(--surface-2)] disabled:opacity-50 transition">
               {flagging ? 'Flagging…' : 'Needs clarification'}
             </button>
             <button onClick={handleAccept} disabled={accepting || flagging}
-              className="flex-1 h-12 rounded-md bg-[var(--text)] text-white text-[14px] font-semibold hover:bg-black disabled:opacity-50 inline-flex items-center justify-center gap-2 transition">
+              className="flex-[2] h-12 rounded-md bg-[var(--text)] text-white text-[14px] font-semibold hover:bg-black disabled:opacity-50 inline-flex items-center justify-center gap-2 transition">
               {accepting ? 'Accepting…' : (
                 <>
                   Accept ticket

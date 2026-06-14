@@ -36,6 +36,7 @@ function AuthedApp({ token }: { token: string }) {
   const [filterDev, setFilterDev] = useState('');
   const [filterSite, setFilterSite] = useState('');
   const [audioReady, setAudioReady] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(() => localStorage.getItem('office_notif_banner_dismissed') === '1');
   const audioUnlocked = useRef(false);
 
   function unlockAudio() {
@@ -72,9 +73,14 @@ function AuthedApp({ token }: { token: string }) {
 
   return (
     <div className="app-office h-screen flex flex-col bg-[var(--surface)]" onClick={unlockAudio}>
-      {!audioReady && (
-        <div className="text-center py-1.5 text-xs text-[var(--muted)] border-b border-[var(--border)]">
+      {!audioReady && !bannerDismissed && (
+        <div className="relative text-center py-1.5 text-xs text-[var(--muted)] border-b border-[var(--border)]">
           Click anywhere to enable notifications
+          <button type="button" aria-label="Dismiss"
+            onClick={e => { e.stopPropagation(); localStorage.setItem('office_notif_banner_dismissed', '1'); setBannerDismissed(true); }}
+            className="absolute top-1/2 -translate-y-1/2 right-2 w-6 h-6 grid place-items-center text-[var(--subtle)] hover:text-[var(--text)] rounded-full hover:bg-[var(--surface-2)]">
+            ×
+          </button>
         </div>
       )}
       <OfficeHeader archiveMode={archiveMode} unreadTotal={unreadTotal}

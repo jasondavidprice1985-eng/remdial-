@@ -37,7 +37,7 @@ export default function QueueWorkspace({ queueTickets, selected, onSelect, onUpd
           {dayGroups.length > 0 ? (
             dayGroups.map((group, gi) => (
               <div key={group.label}>
-                <div className="px-4 py-2 text-[11px] font-semibold text-[var(--faint)] uppercase tracking-[0.06em] bg-[var(--surface-2)] border-b border-[var(--border)]">
+                <div className="px-4 pt-3 pb-1.5 text-[11.5px] font-medium text-[var(--subtle)]">
                   {group.label}
                 </div>
                 {group.tickets.map(t => (

@@ -9,10 +9,16 @@ interface Props {
 }
 
 function requestedToOrdered(ticket: Ticket): OrderedLineItem[] {
-  const src = ticket.line_items?.length
-    ? ticket.line_items.map(i => ({ description: i.description, quantity: i.quantity }))
-    : [{ description: ticket.items, quantity: ticket.quantity }];
-  return src.map(s => ({ ...s, sap_code: '' }));
+  // Inherit the SAP code from each requested line item so the office team
+  // doesn't have to re-key anything the manager already provided.
+  if (ticket.line_items?.length) {
+    return ticket.line_items.map(i => ({
+      description: i.description,
+      quantity: i.quantity,
+      sap_code: i.sap_code || '',
+    }));
+  }
+  return [{ description: ticket.items, quantity: ticket.quantity, sap_code: '' }];
 }
 
 export default function OrderForm({ ticket, onOrdered }: Props) {
@@ -84,15 +90,21 @@ export default function OrderForm({ ticket, onOrdered }: Props) {
     } finally { setLoading(false); }
   }
 
+  const noRowsYet = orderedItems.length === 1 && !orderedItems[0].description.trim() && !orderedItems[0].sap_code?.trim();
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Mark as ordered</p>
+    <form onSubmit={handleSubmit} className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 space-y-4">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-[14px] font-semibold text-[var(--text)] tracking-[-0.01em] m-0">Mark as ordered</h3>
+      </div>
 
       <div className="space-y-2">
-        <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider">SAP items ordered</p>
-        <p className="text-[11px] text-[var(--muted)]">
-          Start typing a description or SAP code to search. Pick from the dropdown or type manually.
-        </p>
+        <label className="block text-[12px] font-medium text-[var(--subtle)]">SAP items ordered</label>
+        {noRowsYet && (
+          <p className="text-[11.5px] text-[var(--muted)]">
+            Pick from the dropdown or type to search by SAP code or description.
+          </p>
+        )}
         {orderedItems.map((row, i) => (
           <div key={i} className="grid grid-cols-12 gap-1.5 items-center">
             <ProductTypeahead
@@ -110,19 +122,25 @@ export default function OrderForm({ ticket, onOrdered }: Props) {
           </div>
         ))}
         <button type="button" onClick={addRow} disabled={loading}
-          className="text-xs font-semibold text-[var(--pending)]">+ Add row</button>
+          className="text-[12.5px] font-semibold text-[var(--pending)]">+ Add another row</button>
       </div>
 
       {error && <p className="text-xs text-[var(--query)]">{error}</p>}
 
-      <div className="grid grid-cols-2 gap-2">
-        <input className="input-field col-span-2 sm:col-span-1" placeholder="Order number *" maxLength={100} value={poNumber}
-          onChange={e => setPoNumber(e.target.value)} disabled={loading} required />
-        <input type="date" className="input-field col-span-2 sm:col-span-1" value={deliveryDate}
-          onChange={e => setDeliveryDate(e.target.value)} disabled={loading} required />
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block col-span-2 sm:col-span-1">
+          <span className="block text-[12px] font-medium text-[var(--subtle)] mb-1">Order number</span>
+          <input className="input-field" maxLength={100} value={poNumber}
+            onChange={e => setPoNumber(e.target.value)} disabled={loading} required />
+        </label>
+        <label className="block col-span-2 sm:col-span-1">
+          <span className="block text-[12px] font-medium text-[var(--subtle)] mb-1">Delivery date</span>
+          <input type="date" className="input-field" value={deliveryDate}
+            onChange={e => setDeliveryDate(e.target.value)} disabled={loading} required />
+        </label>
       </div>
       <button type="submit" disabled={!canSubmit}
-        className="w-full h-10 rounded-lg text-sm font-semibold text-white disabled:opacity-40 bg-[var(--ordered)] hover:opacity-90">
+        className="w-full h-12 rounded-md text-[14px] font-semibold text-white disabled:opacity-40 bg-[var(--ordered)] hover:opacity-90">
         {loading ? 'Saving…' : 'Mark ordered'}
       </button>
     </form>

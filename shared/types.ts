@@ -18,6 +18,7 @@ export interface TicketItem {
   description: string;
   quantity:    number;
   reason:      TicketReason;
+  sap_code?:   string;
 }
 
 export interface OrderedLineItem {
