@@ -6,6 +6,7 @@ import ChatPanel from './ChatPanel';
 import ImageLightbox, { useLightbox } from './ImageLightbox';
 import { useSwipeToClose } from '../hooks/useSwipeToClose';
 import { LineItemsList, ImageStrip } from '../utils/ticketDisplay';
+import { fmtDateUK } from '../utils/formatDate';
 import { apiFetch } from '../auth/apiClient';
 
 interface Props {
@@ -59,7 +60,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
   }
 
   const delivery = ticket.delivery_request?.type === 'specific_date'
-    ? ticket.delivery_request.date : 'Next delivery';
+    ? fmtDateUK(ticket.delivery_request.date) : 'Next delivery';
   const hasOrdered = ticket.status === 'ordered' && Array.isArray(ticket.ordered_items) && ticket.ordered_items.length > 0;
 
   return (
@@ -109,7 +110,7 @@ export default function TicketModal({ ticket, onClose, onTicketUpdate, onManager
               ))}
               {ticket.po_number && (
                 <p className="text-sm pt-2 border-t border-[var(--border)]" style={{ color: 'var(--success)' }}>
-                  Order: {ticket.po_number} · {ticket.delivery_date}
+                  Order: {ticket.po_number} · {fmtDateUK(ticket.delivery_date)}
                 </p>
               )}
             </div>
